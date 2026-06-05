@@ -1,0 +1,16 @@
+{
+  "id": "austin-tx-krieg-field-softball-complex",
+  "field_name": "Krieg Field Softball Complex",
+  "city": "Austin",
+  "state": "TX",
+  "address": "515 South Pleasant Valley Road, Austin, TX 78741",
+  "coordinates": {
+    "lat": 30.2464194,
+    "lon": -97.7141897
+  },
+  "sport": "softball",
+  "rainout_phone": "512-978-2680",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "agent_rule": "Official rainout status wins. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers."
+}

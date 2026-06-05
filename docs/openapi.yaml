@@ -1,0 +1,73 @@
+openapi: 3.0.3
+info:
+  title: Rainout Source API
+  version: 0.1.0
+  description: Agent-readable field and rainout status API for softball/baseball games.
+  x-creator: JEEZ Labs
+paths:
+  /v1/status:
+    get:
+      summary: Get official status, rain chance, and game-time play probability for a field/game.
+      parameters:
+        - in: query
+          name: field_id
+          required: true
+          schema:
+            type: string
+          example: austin-tx-krieg-field-softball-complex
+        - in: query
+          name: game_time
+          required: true
+          schema:
+            type: string
+          example: "2026-06-05T20:20:00-05:00"
+      responses:
+        "200":
+          description: Agent-readable status result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - field
+                  - official_status
+                  - rain_chance_percent
+                  - game_time_play_probability_percent
+                  - source
+                  - spoken_answer
+                properties:
+                  creator:
+                    type: string
+                    example: JEEZ Labs
+                  field:
+                    type: string
+                  official_status:
+                    type: string
+                    enum: [on, cancelled, delayed, field_closed, unknown]
+                  rain_chance_percent:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                  thunderstorm_likely:
+                    type: boolean
+                  game_time_play_probability_percent:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                  recommendation:
+                    type: string
+                    enum: [likely_safe_to_drive, check_again_before_leaving, do_not_drive, check_official_source]
+                  source:
+                    type: string
+                  spoken_answer:
+                    type: string
+              example:
+                creator: JEEZ Labs
+                field: Krieg Field Softball Complex
+                official_status: on
+                rain_chance_percent: 67
+                thunderstorm_likely: true
+                game_time_play_probability_percent: 25
+                recommendation: check_again_before_leaving
+                source: "Rainout phone: 512-978-2680; weather: National Weather Service"
+                spoken_answer: "Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving."
