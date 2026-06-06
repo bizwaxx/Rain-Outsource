@@ -14,11 +14,12 @@ The public docs and OpenAPI file are live on GitHub Pages. The first working bac
 
 Current backend status:
 
-1. Supports `/health`.
-2. Supports `/v1/status?field_id=Krieg&game_time=...`.
-3. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
-4. Pulls live game-time weather from the National Weather Service API.
-5. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
+1. Supports `/health` locally and on Vercel-style hosting.
+2. Supports `/v1/status?field_id=Krieg&game_time=...` locally.
+3. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
+4. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
+5. Pulls live game-time weather from the National Weather Service API.
+6. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
 
 ## Pilot field
 
