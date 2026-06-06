@@ -1,10 +1,30 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.1.0
-  description: Agent-readable field and rainout status API for softball/baseball games.
+  version: 0.2.0
+  description: Agent-readable field and rainout status API for softball/baseball games. The first backend supports Krieg Field and live National Weather Service game-time weather.
   x-creator: JEEZ Labs
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development backend
 paths:
+  /health:
+    get:
+      summary: Health check for the Rainout Source backend.
+      responses:
+        "200":
+          description: Backend is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  service:
+                    type: string
+                    example: rainout-source
   /v1/status:
     get:
       summary: Get official status, rain chance, and game-time play probability for a field/game.
@@ -14,7 +34,8 @@ paths:
           required: true
           schema:
             type: string
-          example: austin-tx-krieg-field-softball-complex
+          description: Field ID or supported alias.
+          example: Krieg
         - in: query
           name: game_time
           required: true

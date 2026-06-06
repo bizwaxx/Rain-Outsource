@@ -10,15 +10,15 @@ Open agent-readable source for softball/baseball rainout status and game-time pl
 **Creator:** JEEZ Labs
 
 ## Important status
-This project is ready to publish, but it is **not online until GitHub or another public host is connected**.
+The public docs and OpenAPI file are live on GitHub Pages. The first working backend has been added in this repo as a Python WSGI app.
 
-For ChatGPT, Claude, Grok, Dad Agent, and other agents to use it broadly, we still need to:
+Current backend status:
 
-1. Publish this repository publicly.
-2. Host the API endpoint.
-3. Publish the OpenAPI file at a stable URL.
-4. Add live source checking for official rainout numbers/pages.
-5. Register or document the API so agents can discover it.
+1. Supports `/health`.
+2. Supports `/v1/status?field_id=Krieg&game_time=...`.
+3. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
+4. Pulls live game-time weather from the National Weather Service API.
+5. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
 
 ## Pilot field
 
@@ -46,6 +46,18 @@ See `openapi.yaml`.
 ```bash
 python -m pytest -q
 python examples/krieg_820_demo.py
+```
+
+## Run the backend locally
+
+```bash
+python -m rainout_agent.http_app
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/v1/status?field_id=Krieg&game_time=2026-06-05T20:20:00-05:00
 ```
 
 ## Public hosting plan
