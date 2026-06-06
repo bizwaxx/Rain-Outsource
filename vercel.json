@@ -10,6 +10,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/fields.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "api/openapi.py",
       "use": "@vercel/python"
     }
@@ -26,6 +30,10 @@
     {
       "src": "/openapi.yaml",
       "dest": "/api/openapi.py"
+    },
+    {
+      "src": "/v1/fields",
+      "dest": "/api/fields.py"
     },
     {
       "src": "/v1/status",

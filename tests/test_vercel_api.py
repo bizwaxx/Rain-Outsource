@@ -2,6 +2,7 @@ import io
 import json
 from http.server import BaseHTTPRequestHandler
 
+from api.fields import handler as FieldsHandler
 from api.index import handler as IndexHandler
 from api.openapi import handler as OpenApiHandler
 from api.status import handler as StatusHandler
@@ -38,6 +39,7 @@ class HandlerHarness:
 
 
 def test_vercel_handlers_are_base_http_handlers():
+    assert issubclass(FieldsHandler, BaseHTTPRequestHandler)
     assert issubclass(IndexHandler, BaseHTTPRequestHandler)
     assert issubclass(StatusHandler, BaseHTTPRequestHandler)
     assert issubclass(OpenApiHandler, BaseHTTPRequestHandler)
@@ -51,6 +53,7 @@ def test_vercel_index_handler_reports_service_ready_and_discovery_links():
     assert body["status"] == "ok"
     assert body["service"] == "rainout-source"
     assert body["openapi_url"] == "https://rainout-agent-source.vercel.app/openapi.yaml"
+    assert body["fields_endpoint"] == "https://rainout-agent-source.vercel.app/v1/fields"
     assert body["status_endpoint"].startswith("https://rainout-agent-source.vercel.app/v1/status")
     assert body["supported_fields"][0]["field_id"] == "austin-tx-krieg-field-softball-complex"
 
@@ -63,6 +66,21 @@ def test_vercel_openapi_handler_serves_yaml_contract():
     assert "openapi: 3.0.3" in body
     assert "https://rainout-agent-source.vercel.app" in body
     assert "/v1/status:" in body
+    assert "/v1/fields:" in body
+
+
+def test_vercel_fields_handler_lists_supported_fields_for_agents():
+    status_code, headers, body = HandlerHarness(FieldsHandler, "/v1/fields").get_json()
+
+    assert status_code == 200
+    assert headers["Content-Type"] == "application/json"
+    assert body["service"] == "rainout-source"
+    assert body["count"] >= 1
+    krieg = body["fields"][0]
+    assert krieg["field_id"] == "austin-tx-krieg-field-softball-complex"
+    assert krieg["name"] == "Krieg Field Softball Complex"
+    assert "Krieg" in krieg["aliases"]
+    assert krieg["status_url"].startswith("https://rainout-agent-source.vercel.app/v1/status?field_id=")
 
 
 def test_vercel_status_handler_returns_krieg_status_with_mock_weather(monkeypatch):

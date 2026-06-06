@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.2.0
-  description: Agent-readable field and rainout status API for softball/baseball games. The first backend supports Krieg Field and live National Weather Service game-time weather.
+  version: 0.3.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The first backend supports Krieg Field and live National Weather Service game-time weather.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -27,6 +27,74 @@ paths:
                   service:
                     type: string
                     example: rainout-source
+  /v1/fields:
+    get:
+      summary: List fields currently supported by Rainout Source.
+      description: Agents should call this endpoint to discover supported field IDs, aliases, status URLs, and official rainout sources before asking for status.
+      responses:
+        "200":
+          description: Supported field directory
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - service
+                  - creator
+                  - count
+                  - fields
+                properties:
+                  service:
+                    type: string
+                    example: rainout-source
+                  creator:
+                    type: string
+                    example: JEEZ Labs
+                  count:
+                    type: integer
+                    example: 1
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - field_id
+                        - name
+                        - aliases
+                        - status_url
+                      properties:
+                        field_id:
+                          type: string
+                          example: austin-tx-krieg-field-softball-complex
+                        name:
+                          type: string
+                          example: Krieg Field Softball Complex
+                        city:
+                          type: string
+                          example: Austin
+                        state:
+                          type: string
+                          example: TX
+                        address:
+                          type: string
+                          example: 515 South Pleasant Valley Road, Austin, TX 78741
+                        sport:
+                          type: string
+                          example: softball
+                        rainout_phone:
+                          type: string
+                          example: 512-978-2680
+                        aliases:
+                          type: array
+                          items:
+                            type: string
+                          example: [Krieg, Krieg Field, Krieg Softball, austin-tx-krieg-field-softball-complex]
+                        weather_source:
+                          type: string
+                          example: National Weather Service API
+                        status_url:
+                          type: string
+                          example: https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time={ISO-8601-game-time}
   /v1/status:
     get:
       summary: Get official status, rain chance, and game-time play probability for a field/game.
@@ -87,10 +155,10 @@ paths:
               example:
                 creator: JEEZ Labs
                 field: Krieg Field Softball Complex
-                official_status: on
-                rain_chance_percent: 67
+                official_status: unknown
+                rain_chance_percent: 16
                 thunderstorm_likely: true
-                game_time_play_probability_percent: 25
+                game_time_play_probability_percent: 50
                 recommendation: check_again_before_leaving
                 source: "Rainout phone: 512-978-2680; weather: National Weather Service"
-                spoken_answer: "Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving."
+                spoken_answer: "Official rainout status is unknown for Krieg Field Softball Complex. At game time, 8:20 PM, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving."

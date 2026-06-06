@@ -13,6 +13,7 @@ class handler(BaseHTTPRequestHandler):
             "description": "Open public API for rainout and game-time play probability. Pilot field: Krieg Field Softball Complex in Austin.",
             "live_base_url": BASE_URL,
             "openapi_url": f"{BASE_URL}/openapi.yaml",
+            "fields_endpoint": f"{BASE_URL}/v1/fields",
             "docs_url": "https://bizwaxx.github.io/Rain-Outsource/",
             "status_endpoint": f"{BASE_URL}/v1/status?field_id=Krieg&game_time=2026-06-06T20:20:00-05:00",
             "supported_fields": [

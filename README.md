@@ -27,11 +27,12 @@ https://rainout-agent-source.vercel.app/openapi.yaml
 Current backend status:
 
 1. Supports `/health` locally and on Vercel-style hosting.
-2. Supports `/v1/status?field_id=Krieg&game_time=...` locally.
-3. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
-4. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
-5. Pulls live game-time weather from the National Weather Service API.
-6. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
+2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields and aliases.
+3. Supports `/v1/status?field_id=Krieg&game_time=...` locally and on live Vercel hosting.
+4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
+5. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
+6. Pulls live game-time weather from the National Weather Service API.
+7. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
 
 ## Pilot field
 
@@ -53,6 +54,17 @@ Official status is on. At game time, rain chance is 67% with storms likely. Esti
 ## API contract
 
 See `openapi.yaml`.
+
+## Outside-agent test
+
+Use this prompt in ChatGPT, Grok, Dad Agent, or another web-capable agent:
+
+```text
+You are checking an outdoor game status. Use the public Rainout Source API.
+Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Krieg Field for 2026-06-06T20:20:00-05:00. Answer in plain English. If official status is unknown, do not guess; tell the user to call the rainout line before leaving. Use the word rain, not rainfall.
+```
+
+More examples: `docs/agent-examples.md`.
 
 ## Local test
 

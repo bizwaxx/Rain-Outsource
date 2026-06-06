@@ -5,29 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rainout Source — JEEZ Labs</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 820px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
+    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
     code, pre { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+    pre { overflow-x: auto; padding: 14px; }
     .card { border: 1px solid #ddd; border-radius: 12px; padding: 18px; margin: 18px 0; }
+    a { color: #0b63ce; }
   </style>
 </head>
 <body>
   <h1>Rainout Source</h1>
   <p><strong>Creator:</strong> JEEZ Labs</p>
-  <p>Open agent-readable source for softball/baseball rainout status and game-time play probability.</p>
+  <p>Open agent-readable source for rainout status and game-time play probability for outdoor events.</p>
+
+  <div class="card">
+    <h2>Live agent endpoints</h2>
+    <p><strong>Service discovery:</strong> <a href="https://rainout-agent-source.vercel.app">https://rainout-agent-source.vercel.app</a></p>
+    <p><strong>OpenAPI contract:</strong> <a href="https://rainout-agent-source.vercel.app/openapi.yaml">https://rainout-agent-source.vercel.app/openapi.yaml</a></p>
+    <p><strong>Supported fields:</strong> <a href="https://rainout-agent-source.vercel.app/v1/fields">https://rainout-agent-source.vercel.app/v1/fields</a></p>
+    <p><strong>Krieg status example:</strong> <a href="https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&amp;game_time=2026-06-06T20:20:00-05:00">live status query</a></p>
+  </div>
 
   <div class="card">
     <h2>Pilot: Krieg Field Softball Complex</h2>
     <p><strong>Rainout phone:</strong> 512-978-2680</p>
-    <p><strong>Agent rule:</strong> Official rainout status wins. Weather gives drive risk and game-time play probability.</p>
+    <p><strong>Weather source:</strong> National Weather Service API</p>
+    <p><strong>Agent rule:</strong> Official rainout status wins. Weather gives drive risk and game-time play probability. If official status is unknown, tell the user to call the rainout line before leaving.</p>
   </div>
 
   <div class="card">
-    <h2>Example answer</h2>
-    <p>Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving.</p>
+    <h2>Outside-agent test prompt</h2>
+    <pre>You are checking an outdoor game status. Use the public Rainout Source API.
+
+1. Open: https://rainout-agent-source.vercel.app
+2. Read: https://rainout-agent-source.vercel.app/openapi.yaml
+3. Discover supported fields: https://rainout-agent-source.vercel.app/v1/fields
+4. Query Krieg Field for: 2026-06-06T20:20:00-05:00
+5. Answer in plain English. If official status is unknown, do not guess. Tell the user to call the rainout line before leaving.
+6. Use the word "rain," not "rainfall."</pre>
   </div>
 
-  <h2>Agent API contract</h2>
-  <p>Agents can read the OpenAPI contract here when publicly hosted:</p>
-  <p><a href="openapi.yaml">openapi.yaml</a></p>
+  <div class="card">
+    <h2>Example safe answer</h2>
+    <p>Official rainout status is unknown for Krieg Field Softball Complex. At game time, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving.</p>
+  </div>
+
+  <h2>Developer files</h2>
+  <ul>
+    <li><a href="openapi.yaml">GitHub Pages copy of openapi.yaml</a></li>
+    <li><a href="agent-examples.md">Agent examples and curl smoke tests</a></li>
+  </ul>
 </body>
 </html>
