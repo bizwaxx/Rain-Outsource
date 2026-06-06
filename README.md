@@ -1,5 +1,10 @@
 # Rainout Source
 
+**Mission Statement:**  
+Rain-Outsource is building a free, open public API that delivers real-time weather and rainout status for any outdoor event across the United States.  
+Our mission is simple: Make it effortless for anyone to know whether their outdoor event is still happening — whether it’s a little league game, a concert, a festival, or any outdoor gathering.  
+We believe this information should be freely available to the public, voice assistants, apps, and developers with no restrictions.
+
 Open agent-readable source for softball/baseball rainout status and game-time play probability.
 
 **Creator:** JEEZ Labs
