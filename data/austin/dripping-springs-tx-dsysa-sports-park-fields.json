@@ -1,0 +1,30 @@
+{
+  "id": "dripping-springs-tx-dsysa-sports-park-fields",
+  "field_name": "DSYSA Sports Park Fields",
+  "city": "Dripping Springs",
+  "state": "TX",
+  "address": "370 Sports Park Rd, Dripping Springs, TX 78620",
+  "coordinates": {
+    "lat": 30.185358,
+    "lon": -98.0809708
+  },
+  "sport": "baseball_softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_organization_field_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.dsysasports.org/fields",
+  "official_status_source_name": "Dripping Springs Youth Sports Association field status page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Sports Park Fields",
+    "DSYSA Sports Park",
+    "Dripping Springs Sports Park Fields",
+    "370 Sports Park",
+    "Dripping Springs Youth Sports Sports Park",
+    "dripping-springs-tx-dsysa-sports-park-fields"
+  ],
+  "future_status_protocol": "DSYSA has an official Field Status page and a lightning/cancellation protocol. Current visible text is policy-oriented, not a clear live open/closed feed. If DSYSA publishes clear per-field statuses, set poll_official_status to true only after parser tests.",
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. The DSYSA status page is an official protocol/source, but the current page must not be treated as a live open/closed feed until clear per-field statuses are available. Tell the user to check the official DSYSA source before leaving when official status is unknown."
+}

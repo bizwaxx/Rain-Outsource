@@ -55,6 +55,9 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "austin-tx-downs-field-ambl",
         "austin-tx-anderson-high-school-baseball-field-ambl",
         "georgetown-tx-san-gabriel-park-gyba-field-8-ambl",
+        "dripping-springs-tx-ctx-field-of-dreams",
+        "dripping-springs-tx-dsysa-baseball-softball-sports-complex",
+        "dripping-springs-tx-dsysa-sports-park-fields",
     }
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
@@ -65,6 +68,8 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["cedar-park-tx-brushy-creek-sports-park-softball-fields"]["status_source_type"] == "official_field_status_page"
     assert by_id["austin-tx-downs-field-ambl"]["official_status_source_name"] == "Austin Metro Baseball League fields page"
     assert by_id["georgetown-tx-san-gabriel-park-gyba-field-8-ambl"]["city"] == "Georgetown"
+    assert by_id["dripping-springs-tx-ctx-field-of-dreams"]["city"] == "Dripping Springs"
+    assert by_id["dripping-springs-tx-dsysa-baseball-softball-sports-complex"]["official_status_source_name"] == "Dripping Springs Youth Sports Association field status page"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -88,6 +93,13 @@ def test_resolve_field_id_accepts_austin_metro_baseball_league_aliases():
     assert resolve_field_id("Anderson High School") == "austin-tx-anderson-high-school-baseball-field-ambl"
     assert resolve_field_id("Georgetown Fields") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
     assert resolve_field_id("GYBA Field 8") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
+
+
+def test_resolve_field_id_accepts_dripping_springs_aliases():
+    assert resolve_field_id("Field of Dreams") == "dripping-springs-tx-ctx-field-of-dreams"
+    assert resolve_field_id("Dripping Springs Field of Dreams") == "dripping-springs-tx-ctx-field-of-dreams"
+    assert resolve_field_id("DSYSA Baseball") == "dripping-springs-tx-dsysa-baseball-softball-sports-complex"
+    assert resolve_field_id("Sports Park Fields") == "dripping-springs-tx-dsysa-sports-park-fields"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():

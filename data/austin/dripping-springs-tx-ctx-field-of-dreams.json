@@ -1,0 +1,30 @@
+{
+  "id": "dripping-springs-tx-ctx-field-of-dreams",
+  "field_name": "CTX Field of Dreams",
+  "city": "Dripping Springs",
+  "state": "TX",
+  "address": "7398 Creek Rd, Dripping Springs, TX 78620",
+  "coordinates": {
+    "lat": 30.1899808,
+    "lon": -98.2068498
+  },
+  "sport": "baseball",
+  "ownership_type": "private_league_used",
+  "status_source_type": "official_directory_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.atxyouthbaseball.com/directory-resources/ctx-field-of-dreams",
+  "official_status_source_name": "ATX Youth Baseball CTX Field of Dreams directory page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Field of Dreams",
+    "CTX Field of Dreams",
+    "Central Texas Field of Dreams",
+    "Dripping Springs Field of Dreams",
+    "Field of Dreams Dripping Springs",
+    "dripping-springs-tx-ctx-field-of-dreams"
+  ],
+  "future_status_protocol": "If the field or league publishes a live rainout/status protocol, update official_status_source_url, set poll_official_status to true only after parser tests, and keep official status unknown when the feed is ambiguous.",
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. This directory page confirms the field identity but is not a live rainout feed, so do not guess. Tell the user to check the official source before leaving when official status is unknown."
+}
