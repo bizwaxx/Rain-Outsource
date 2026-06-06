@@ -1,0 +1,30 @@
+{
+  "id": "round-rock-tx-old-settlers-softball-complex",
+  "field_name": "Old Settlers Hall of Fame Softball Complex",
+  "city": "Round Rock",
+  "state": "TX",
+  "address": "3300 E Palm Valley Blvd, Round Rock, TX 78665",
+  "coordinates": {
+    "lat": 30.5381378,
+    "lon": -97.6268329
+  },
+  "sport": "softball",
+  "ownership_type": "public",
+  "status_source_type": "official_park_page",
+  "poll_official_status": false,
+  "rainout_phone": "512-218-5540",
+  "official_status_source_url": "https://www.roundrocktexas.gov/city-departments/parks-and-recreation/old-settlers-softball/",
+  "official_status_source_name": "City of Round Rock Old Settlers Softball page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Old Settlers Softball",
+    "Old Settlers Softball Complex",
+    "Old Settlers Hall of Fame Softball",
+    "Hall of Fame Softball Complex",
+    "OSP Softball",
+    "Round Rock Old Settlers Softball",
+    "round-rock-tx-old-settlers-softball-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. This official page is a facility page, not a live field-status feed, so do not guess. Tell the user to call the Round Rock Parks office before leaving when official status is unknown."
+}

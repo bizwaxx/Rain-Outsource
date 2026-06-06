@@ -1,0 +1,29 @@
+{
+  "id": "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields",
+  "field_name": "Elizabeth Milburn Park Multipurpose Fields",
+  "city": "Cedar Park",
+  "state": "TX",
+  "address": "1901 Sun Chase Blvd, Cedar Park, TX 78613",
+  "coordinates": {
+    "lat": 30.4802882,
+    "lon": -97.8401571
+  },
+  "sport": "multipurpose fields",
+  "ownership_type": "public",
+  "status_source_type": "official_field_status_page",
+  "poll_official_status": true,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.cedarparktexas.gov/947/Athletic-Facilities",
+  "official_status_source_name": "City of Cedar Park Athletic Field Status page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Elizabeth Milburn Park",
+    "Milburn Park",
+    "Elizabeth Milburn Fields",
+    "Milburn Multipurpose Fields",
+    "Cedar Park Milburn",
+    "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Use the Cedar Park athletic field status page for official open/closed signals. If unclear, tell the user to check the official field status page before leaving."
+}

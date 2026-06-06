@@ -12,7 +12,7 @@ def calculate_play_probability(
     status = (official_status or "unknown").strip().lower()
     rain_chance = max(0, min(100, int(round(precipitation_chance_percent))))
 
-    if status in {"cancelled", "canceled", "field closed", "closed"}:
+    if status in {"cancelled", "canceled", "field closed", "field_closed", "closed"}:
         return {
             "play_probability_percent": 0,
             "risk_level": "officially cancelled",

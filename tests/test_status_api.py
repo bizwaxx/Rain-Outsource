@@ -48,12 +48,18 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "austin-tx-balcones-youth-sports",
         "austin-tx-northwest-little-league",
         "austin-tx-western-hills-little-league",
+        "round-rock-tx-old-settlers-baseball-complex",
+        "round-rock-tx-old-settlers-softball-complex",
+        "cedar-park-tx-brushy-creek-sports-park-softball-fields",
+        "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields",
     }
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
     assert by_id["austin-tx-oak-hill-youth-sports-association"]["ownership_type"] == "private_nonprofit"
     assert by_id["austin-tx-town-and-country-sports-complex"]["status_source_type"] == "official_field_status_page"
     assert by_id["austin-tx-balcones-youth-sports"]["ownership_type"] == "private_nonprofit"
+    assert by_id["round-rock-tx-old-settlers-baseball-complex"]["rainout_phone"] == "512-218-5540"
+    assert by_id["cedar-park-tx-brushy-creek-sports-park-softball-fields"]["status_source_type"] == "official_field_status_page"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -62,6 +68,13 @@ def test_resolve_field_id_accepts_new_private_field_aliases():
     assert resolve_field_id("Balcones") == "austin-tx-balcones-youth-sports"
     assert resolve_field_id("NWLL") == "austin-tx-northwest-little-league"
     assert resolve_field_id("Western Hills") == "austin-tx-western-hills-little-league"
+
+
+def test_resolve_field_id_accepts_round_rock_and_cedar_park_aliases():
+    assert resolve_field_id("Old Settlers Baseball") == "round-rock-tx-old-settlers-baseball-complex"
+    assert resolve_field_id("OSP Softball") == "round-rock-tx-old-settlers-softball-complex"
+    assert resolve_field_id("Brushy Creek Softball") == "cedar-park-tx-brushy-creek-sports-park-softball-fields"
+    assert resolve_field_id("Milburn Park") == "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():
@@ -164,6 +177,7 @@ def test_parse_official_rainout_status_handles_private_field_status_widgets():
     assert parse_official_rainout_status('<li class="skItem skClose"><p>Balcones Youth Sports</p></li>') == "field_closed"
     assert parse_official_rainout_status("Baseball: Fields 1-9 Open. Subject to closure at time of play.") == "on"
     assert parse_official_rainout_status("Softball: All diamonds Closed due to weather.") == "field_closed"
+    assert parse_official_rainout_status("Brushy Creek Sports Park Softball Fields: CLOSED") == "field_closed"
 
 
 def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_clear_signal(monkeypatch):

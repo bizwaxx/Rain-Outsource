@@ -1,0 +1,29 @@
+{
+  "id": "cedar-park-tx-brushy-creek-sports-park-softball-fields",
+  "field_name": "Brushy Creek Sports Park Softball Fields",
+  "city": "Cedar Park",
+  "state": "TX",
+  "address": "2310 Brushy Creek Road, Cedar Park, TX 78613",
+  "coordinates": {
+    "lat": 30.5072979,
+    "lon": -97.7814196
+  },
+  "sport": "softball",
+  "ownership_type": "public",
+  "status_source_type": "official_field_status_page",
+  "poll_official_status": true,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.cedarparktexas.gov/947/Athletic-Facilities",
+  "official_status_source_name": "City of Cedar Park Athletic Field Status page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Brushy Creek Sports Park",
+    "Brushy Creek Softball",
+    "Brushy Creek Sports Park Softball",
+    "BCSP Softball",
+    "Cedar Park Brushy Creek Softball",
+    "cedar-park-tx-brushy-creek-sports-park-softball-fields"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Use the Cedar Park athletic field status page for official open/closed signals. If unclear, tell the user to check the official field status page before leaving."
+}
