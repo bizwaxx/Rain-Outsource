@@ -134,10 +134,35 @@ def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
 
 def parse_official_rainout_status(source_text: str) -> str:
     """Parse clear official rainout signals from source text conservatively."""
-    text = unescape(re.sub(r"<[^>]+>", " ", source_text or "")).lower()
+    raw_text = source_text or ""
+    raw_lower = raw_text.lower()
+
+    # SportsConnect/Blue Sombrero field-status widgets use CSS classes such as
+    # skOpen and skClose instead of plain text labels. Promote those only when
+    # the page has a clear one-sided signal.
+    open_count = len(re.findall(r"\bskopen\b", raw_lower))
+    close_count = len(re.findall(r"\bskclose\b", raw_lower))
+    if close_count and close_count > open_count:
+        return "field_closed"
+    if open_count and not close_count:
+        return "on"
+
+    text = unescape(re.sub(r"<[^>]+>", " ", raw_text)).lower()
     text = " ".join(text.split())
     if not text:
         return "unknown"
+
+    # Some private complexes publish sport-specific lines like
+    # "Baseball: Field 1 Open". Prefer those over generic page words like
+    # "closure" that may only explain weather policy.
+    sport_status = re.search(r"\b(baseball|softball)\b.{0,200}\b(open|closed|cancelled|canceled|delayed|postponed)\b", text)
+    if sport_status:
+        status_word = sport_status.group(2)
+        if status_word == "open":
+            return "on"
+        if status_word in {"closed", "cancelled", "canceled"}:
+            return "field_closed" if status_word == "closed" else "cancelled"
+        return "delayed"
 
     if re.search(r"\b(cancelled|canceled|cancellations?|rain(?:ed)? out|rainedout)\b", text):
         return "cancelled"

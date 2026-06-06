@@ -1,0 +1,29 @@
+{
+  "id": "austin-tx-northwest-little-league",
+  "field_name": "Northwest Little League",
+  "city": "Austin",
+  "state": "TX",
+  "address": "3105 Hunt Trail, Austin, TX 78757",
+  "coordinates": {
+    "lat": 30.3445655,
+    "lon": -97.749693
+  },
+  "sport": "baseball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_field_status_page",
+  "poll_official_status": true,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.nwll-austin.org/",
+  "official_status_source_name": "Northwest Little League official site field status widget",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Northwest Little League",
+    "NWLL",
+    "NWLL Austin",
+    "Northwest Austin Little League",
+    "Northwest Baseball",
+    "austin-tx-northwest-little-league"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official field status page before leaving."
+}

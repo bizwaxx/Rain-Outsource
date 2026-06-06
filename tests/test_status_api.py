@@ -44,11 +44,24 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "austin-metro-southeast-metropolitan-park",
         "austin-tx-oak-hill-youth-sports-association",
         "manchaca-tx-manchaca-optimist-youth-sports-complex",
+        "austin-tx-town-and-country-sports-complex",
+        "austin-tx-balcones-youth-sports",
+        "austin-tx-northwest-little-league",
+        "austin-tx-western-hills-little-league",
     }
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
     assert by_id["austin-tx-oak-hill-youth-sports-association"]["ownership_type"] == "private_nonprofit"
+    assert by_id["austin-tx-town-and-country-sports-complex"]["status_source_type"] == "official_field_status_page"
+    assert by_id["austin-tx-balcones-youth-sports"]["ownership_type"] == "private_nonprofit"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
+
+
+def test_resolve_field_id_accepts_new_private_field_aliases():
+    assert resolve_field_id("T&C Sports") == "austin-tx-town-and-country-sports-complex"
+    assert resolve_field_id("Balcones") == "austin-tx-balcones-youth-sports"
+    assert resolve_field_id("NWLL") == "austin-tx-northwest-little-league"
+    assert resolve_field_id("Western Hills") == "austin-tx-western-hills-little-league"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():
@@ -144,6 +157,13 @@ def test_parse_official_rainout_status_is_conservative():
     assert parse_official_rainout_status("Fields are closed due to wet conditions") == "field_closed"
     assert parse_official_rainout_status("Games delayed 30 minutes for lightning") == "delayed"
     assert parse_official_rainout_status("Registration is open for summer softball") == "unknown"
+
+
+def test_parse_official_rainout_status_handles_private_field_status_widgets():
+    assert parse_official_rainout_status('<li class="skItem skOpen"><p>Northwest Little League</p></li>') == "on"
+    assert parse_official_rainout_status('<li class="skItem skClose"><p>Balcones Youth Sports</p></li>') == "field_closed"
+    assert parse_official_rainout_status("Baseball: Fields 1-9 Open. Subject to closure at time of play.") == "on"
+    assert parse_official_rainout_status("Softball: All diamonds Closed due to weather.") == "field_closed"
 
 
 def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_clear_signal(monkeypatch):

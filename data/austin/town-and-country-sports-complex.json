@@ -1,0 +1,30 @@
+{
+  "id": "austin-tx-town-and-country-sports-complex",
+  "field_name": "Town & Country Sports Complex",
+  "city": "Austin",
+  "state": "TX",
+  "address": "9100 Meadowheath Drive, Austin, TX 78729",
+  "coordinates": {
+    "lat": 30.464768,
+    "lon": -97.772201
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_field_status_page",
+  "poll_official_status": true,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.tandcsports.org/field-status/",
+  "official_status_source_name": "T&C Sports official field status page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Town and Country",
+    "Town & Country",
+    "T&C Sports",
+    "T and C Sports",
+    "Town and Country Sports Complex",
+    "Town & Country Sports Complex",
+    "austin-tx-town-and-country-sports-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official field status page before leaving."
+}

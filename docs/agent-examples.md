@@ -9,6 +9,7 @@ Use these examples to test whether outside agents can discover and query Rainout
 - Supported fields: https://rainout-agent-source.vercel.app/v1/fields
 - Krieg status example: https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-06-06T20:20:00-05:00
 - Havins status example: https://rainout-agent-source.vercel.app/v1/status?field_id=Havins&game_time=2026-06-06T20:20:00-05:00
+- Private-field status example: https://rainout-agent-source.vercel.app/v1/status?field_id=Balcones&game_time=2026-06-06T20:20:00-05:00
 
 ## ChatGPT / Grok / general agent prompt
 

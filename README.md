@@ -30,7 +30,7 @@ Current backend status:
 2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields, ownership type, aliases, status URLs, and official sources.
 3. Supports `/v1/status?field_id=Krieg&game_time=...`, `/v1/status?field_id=Craig&game_time=...`, `/v1/status?field_id=Havins&game_time=...`, plus the Austin metro public/private expansion fields locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
-5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, and full field IDs.
+5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
 8. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
@@ -67,6 +67,26 @@ Current backend status:
 - Ownership: private nonprofit
 - Address: West FM 1626, Manchaca, TX 78652
 - Official source page: https://www.facebook.com/ManchacaOptimist/
+
+- Field: Town & Country Sports Complex
+- Ownership: private nonprofit
+- Address: 9100 Meadowheath Drive, Austin, TX 78729
+- Official field status page: https://www.tandcsports.org/field-status/
+
+- Field: Balcones Youth Sports
+- Ownership: private nonprofit
+- Address: 3106 Adelphi Lane, Austin, TX 78727
+- Official field status page: https://www.balconesyouthsports.org/
+
+- Field: Northwest Little League
+- Ownership: private nonprofit
+- Address: 3105 Hunt Trail, Austin, TX 78757
+- Official field status page: https://www.nwll-austin.org/
+
+- Field: Western Hills Little League
+- Ownership: private nonprofit
+- Address: Austin, TX
+- Official source page: https://www.westernhillslittleleague.com/
 
 ## Agent rule
 

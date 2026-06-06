@@ -1,0 +1,29 @@
+{
+  "id": "austin-tx-balcones-youth-sports",
+  "field_name": "Balcones Youth Sports",
+  "city": "Austin",
+  "state": "TX",
+  "address": "3106 Adelphi Lane, Austin, TX 78727",
+  "coordinates": {
+    "lat": 30.4199731,
+    "lon": -97.7075863
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_field_status_page",
+  "poll_official_status": true,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.balconesyouthsports.org/",
+  "official_status_source_name": "Balcones Youth Sports official site field status widget",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Balcones",
+    "Balcones Youth Sports",
+    "Balcones Baseball",
+    "Balcones Softball",
+    "BYS",
+    "austin-tx-balcones-youth-sports"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official field status page before leaving."
+}

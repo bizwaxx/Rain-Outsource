@@ -116,7 +116,7 @@ paths:
           required: true
           schema:
             type: string
-          description: Field ID or supported alias. Current aliases include Krieg, Craig, Havins, Northeast Metro, Southeast Metro, Oak Hill Youth Sports, and Manchaca Optimist.
+          description: Field ID or supported alias. Current aliases include Krieg, Craig, Havins, Northeast Metro, Southeast Metro, Oak Hill Youth Sports, Manchaca Optimist, T&C Sports, Balcones, NWLL, and Western Hills.
           example: Havins
         - in: query
           name: game_time
