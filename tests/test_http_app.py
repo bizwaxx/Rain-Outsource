@@ -56,3 +56,13 @@ def test_health_endpoint_is_ready():
 
     assert status["status"].startswith("200")
     assert data["status"] == "ok"
+
+
+def test_fields_endpoint_lists_supported_fields():
+    status, data = call_app("/v1/fields")
+
+    assert status["status"].startswith("200")
+    assert data["count"] >= 2
+    field_ids = {field["field_id"] for field in data["fields"]}
+    assert "austin-tx-krieg-field-softball-complex" in field_ids
+    assert "austin-tx-havins-softball-complex" in field_ids

@@ -4,7 +4,7 @@ import json
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
-from rainout_agent.status_api import build_status_result
+from rainout_agent.status_api import build_status_result, list_supported_fields
 
 
 def _json_response(start_response, status: str, payload: dict):
@@ -32,6 +32,19 @@ def application(environ, start_response):
 
     if path == "/health":
         return _json_response(start_response, "200 OK", {"status": "ok", "service": "rainout-source"})
+
+    if path == "/v1/fields":
+        fields = list_supported_fields()
+        return _json_response(
+            start_response,
+            "200 OK",
+            {
+                "service": "rainout-source",
+                "creator": "JEEZ Labs",
+                "count": len(fields),
+                "fields": fields,
+            },
+        )
 
     if path != "/v1/status":
         return _json_response(start_response, "404 Not Found", {"error": "not_found"})

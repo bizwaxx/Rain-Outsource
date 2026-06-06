@@ -1,6 +1,8 @@
 import json
 from http.server import BaseHTTPRequestHandler
 
+from rainout_agent.status_api import list_supported_fields
+
 BASE_URL = "https://rainout-agent-source.vercel.app"
 
 
@@ -10,19 +12,13 @@ class handler(BaseHTTPRequestHandler):
             "status": "ok",
             "service": "rainout-source",
             "creator": "JEEZ Labs",
-            "description": "Open public API for rainout and game-time play probability. Pilot field: Krieg Field Softball Complex in Austin.",
+            "description": "Open public API for rainout and game-time play probability. Pilot fields: Krieg Field and Havins Softball Complex in Austin.",
             "live_base_url": BASE_URL,
             "openapi_url": f"{BASE_URL}/openapi.yaml",
             "fields_endpoint": f"{BASE_URL}/v1/fields",
             "docs_url": "https://bizwaxx.github.io/Rain-Outsource/",
             "status_endpoint": f"{BASE_URL}/v1/status?field_id=Krieg&game_time=2026-06-06T20:20:00-05:00",
-            "supported_fields": [
-                {
-                    "field_id": "austin-tx-krieg-field-softball-complex",
-                    "name": "Krieg Field Softball Complex",
-                    "aliases": ["Krieg", "Krieg Field", "Krieg Softball"],
-                }
-            ],
+            "supported_fields": list_supported_fields(),
         }
         self._send_json(200, payload)
 

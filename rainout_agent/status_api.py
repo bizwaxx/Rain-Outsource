@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import math
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,35 +9,67 @@ from typing import Any
 from rainout_agent.agent_response import build_agent_status_response
 from rainout_agent.play_probability import calculate_play_probability
 
-FIELD_ID = "austin-tx-krieg-field-softball-complex"
-DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "austin" / "krieg-field-softball-complex.json"
-
-ALIASES = {
-    FIELD_ID: FIELD_ID,
-    "krieg": FIELD_ID,
-    "krieg field": FIELD_ID,
-    "krieg fields": FIELD_ID,
-    "krieg field softball complex": FIELD_ID,
-    "krieg softball": FIELD_ID,
-    "austin krieg": FIELD_ID,
-}
+DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "austin"
 
 
 def _normalize(value: str) -> str:
     return " ".join((value or "").strip().lower().replace("-", " ").split())
 
 
+def _load_all_fields() -> list[dict[str, Any]]:
+    fields = []
+    for path in sorted(DATA_DIR.glob("*.json")):
+        fields.append(json.loads(path.read_text(encoding="utf-8")))
+    return fields
+
+
+def _alias_map() -> dict[str, str]:
+    aliases = {}
+    for field in _load_all_fields():
+        field_id = field["id"]
+        aliases[_normalize(field_id)] = field_id
+        aliases[field_id] = field_id
+        aliases[_normalize(field["field_name"])] = field_id
+        for alias in field.get("aliases", []):
+            aliases[_normalize(alias)] = field_id
+    return aliases
+
+
 def resolve_field_id(field_query: str) -> str | None:
     """Resolve a field name or alias to a canonical Rainout Source field ID."""
-    if field_query == FIELD_ID:
-        return FIELD_ID
-    return ALIASES.get(_normalize(field_query))
+    return _alias_map().get(field_query) or _alias_map().get(_normalize(field_query))
 
 
 def load_field(field_id: str) -> dict[str, Any]:
-    if field_id != FIELD_ID:
-        raise ValueError(f"Unsupported field_id: {field_id}")
-    return json.loads(DATA_PATH.read_text(encoding="utf-8"))
+    for field in _load_all_fields():
+        if field["id"] == field_id:
+            return field
+    raise ValueError(f"Unsupported field_id: {field_id}")
+
+
+def list_supported_fields() -> list[dict[str, Any]]:
+    """Return agent-readable metadata for every supported field."""
+    supported = []
+    for field in _load_all_fields():
+        field_id = field["id"]
+        aliases = field.get("aliases", [field["field_name"], field_id])
+        supported.append(
+            {
+                "field_id": field_id,
+                "name": field["field_name"],
+                "city": field["city"],
+                "state": field["state"],
+                "address": field["address"],
+                "sport": field["sport"],
+                "rainout_phone": field["rainout_phone"],
+                "aliases": aliases,
+                "weather_source": field["weather_source"],
+                "official_status_source_url": field.get("official_status_source_url"),
+                "official_status_source_name": field.get("official_status_source_name"),
+                "status_url": f"https://rainout-agent-source.vercel.app/v1/status?field_id={aliases[0]}&game_time={{ISO-8601-game-time}}",
+            }
+        )
+    return supported
 
 
 def _parse_time(value: str | None) -> datetime | None:
@@ -119,10 +150,12 @@ def build_status_result(
     """Build the live API JSON result for one field and game time."""
     field_id = resolve_field_id(field_query)
     if not field_id:
+        supported_names = ", ".join(field["name"] for field in list_supported_fields())
         return {
             "creator": "JEEZ Labs",
             "error": "unknown_field",
-            "spoken_answer": "I do not know that field yet. Right now Rain-Outsource supports Krieg Field in Austin.",
+            "supported_fields_url": "https://rainout-agent-source.vercel.app/v1/fields",
+            "spoken_answer": f"I do not know that field yet. Right now Rain-Outsource supports: {supported_names}.",
         }
 
     field = load_field(field_id)
@@ -147,6 +180,8 @@ def build_status_result(
         {
             "field_id": field_id,
             "address": field["address"],
+            "official_status_source_url": field.get("official_status_source_url"),
+            "official_status_source_name": field.get("official_status_source_name"),
             "recommendation": probability["recommendation"],
             "risk_level": probability["risk_level"],
             "reason": probability["reason"],

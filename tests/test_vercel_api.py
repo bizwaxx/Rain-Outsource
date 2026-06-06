@@ -55,7 +55,9 @@ def test_vercel_index_handler_reports_service_ready_and_discovery_links():
     assert body["openapi_url"] == "https://rainout-agent-source.vercel.app/openapi.yaml"
     assert body["fields_endpoint"] == "https://rainout-agent-source.vercel.app/v1/fields"
     assert body["status_endpoint"].startswith("https://rainout-agent-source.vercel.app/v1/status")
-    assert body["supported_fields"][0]["field_id"] == "austin-tx-krieg-field-softball-complex"
+    field_ids = {field["field_id"] for field in body["supported_fields"]}
+    assert "austin-tx-krieg-field-softball-complex" in field_ids
+    assert "austin-tx-havins-softball-complex" in field_ids
 
 
 def test_vercel_openapi_handler_serves_yaml_contract():
@@ -75,11 +77,14 @@ def test_vercel_fields_handler_lists_supported_fields_for_agents():
     assert status_code == 200
     assert headers["Content-Type"] == "application/json"
     assert body["service"] == "rainout-source"
-    assert body["count"] >= 1
-    krieg = body["fields"][0]
-    assert krieg["field_id"] == "austin-tx-krieg-field-softball-complex"
+    assert body["count"] >= 2
+    fields = {field["field_id"]: field for field in body["fields"]}
+    krieg = fields["austin-tx-krieg-field-softball-complex"]
+    havins = fields["austin-tx-havins-softball-complex"]
     assert krieg["name"] == "Krieg Field Softball Complex"
     assert "Krieg" in krieg["aliases"]
+    assert havins["name"] == "Havins Softball Complex"
+    assert "Havins" in havins["aliases"]
     assert krieg["status_url"].startswith("https://rainout-agent-source.vercel.app/v1/status?field_id=")
 
 

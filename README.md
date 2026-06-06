@@ -28,17 +28,23 @@ Current backend status:
 
 1. Supports `/health` locally and on Vercel-style hosting.
 2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields and aliases.
-3. Supports `/v1/status?field_id=Krieg&game_time=...` locally and on live Vercel hosting.
+3. Supports `/v1/status?field_id=Krieg&game_time=...` and `/v1/status?field_id=Havins&game_time=...` locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
-5. Resolves aliases like `Krieg`, `krieg field`, and the full field ID.
+5. Resolves aliases like `Krieg`, `Havins`, `krieg field`, `havins complex`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
 7. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
 
-## Pilot field
+## Pilot fields
 
 - Field: Krieg Field Softball Complex
 - Address: 515 South Pleasant Valley Road, Austin, TX 78741
 - Rainout phone: 512-978-2680
+- Weather source: National Weather Service API
+
+- Field: Havins Softball Complex
+- Address: 12138 N Lamar Blvd, Austin, TX 78753
+- Rainout phone: 512-978-2680
+- Official source page: https://www.austintexas.gov/department/athletics
 - Weather source: National Weather Service API
 
 ## Agent rule
@@ -61,7 +67,7 @@ Use this prompt in ChatGPT, Grok, Dad Agent, or another web-capable agent:
 
 ```text
 You are checking an outdoor game status. Use the public Rainout Source API.
-Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Krieg Field for 2026-06-06T20:20:00-05:00. Answer in plain English. If official status is unknown, do not guess; tell the user to call the rainout line before leaving. Use the word rain, not rainfall.
+Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Havins Field for 2026-06-06T20:20:00-05:00. Answer in plain English. If official status is unknown, do not guess; tell the user to call the rainout line before leaving. Use the word rain, not rainfall.
 ```
 
 More examples: `docs/agent-examples.md`.

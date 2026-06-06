@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.3.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The first backend supports Krieg Field and live National Weather Service game-time weather.
+  version: 0.4.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg Field and Havins Softball Complex with live National Weather Service game-time weather.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -52,7 +52,7 @@ paths:
                     example: JEEZ Labs
                   count:
                     type: integer
-                    example: 1
+                    example: 2
                   fields:
                     type: array
                     items:
@@ -65,10 +65,10 @@ paths:
                       properties:
                         field_id:
                           type: string
-                          example: austin-tx-krieg-field-softball-complex
+                          example: austin-tx-havins-softball-complex
                         name:
                           type: string
-                          example: Krieg Field Softball Complex
+                          example: Havins Softball Complex
                         city:
                           type: string
                           example: Austin
@@ -77,7 +77,7 @@ paths:
                           example: TX
                         address:
                           type: string
-                          example: 515 South Pleasant Valley Road, Austin, TX 78741
+                          example: 12138 N Lamar Blvd, Austin, TX 78753
                         sport:
                           type: string
                           example: softball
@@ -88,13 +88,19 @@ paths:
                           type: array
                           items:
                             type: string
-                          example: [Krieg, Krieg Field, Krieg Softball, austin-tx-krieg-field-softball-complex]
+                          example: [Havins, Havins Complex, Havins Softball, austin-tx-havins-softball-complex]
                         weather_source:
                           type: string
                           example: National Weather Service API
+                        official_status_source_url:
+                          type: string
+                          example: https://www.austintexas.gov/department/athletics
+                        official_status_source_name:
+                          type: string
+                          example: Austin Parks and Recreation Athletics page
                         status_url:
                           type: string
-                          example: https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time={ISO-8601-game-time}
+                          example: https://rainout-agent-source.vercel.app/v1/status?field_id=Havins&game_time={ISO-8601-game-time}
   /v1/status:
     get:
       summary: Get official status, rain chance, and game-time play probability for a field/game.
@@ -104,14 +110,14 @@ paths:
           required: true
           schema:
             type: string
-          description: Field ID or supported alias.
-          example: Krieg
+          description: Field ID or supported alias. Current aliases include Krieg and Havins.
+          example: Havins
         - in: query
           name: game_time
           required: true
           schema:
             type: string
-          example: "2026-06-05T20:20:00-05:00"
+          example: "2026-06-06T20:20:00-05:00"
       responses:
         "200":
           description: Agent-readable status result
@@ -132,9 +138,17 @@ paths:
                     example: JEEZ Labs
                   field:
                     type: string
+                  field_id:
+                    type: string
+                  address:
+                    type: string
                   official_status:
                     type: string
                     enum: [on, cancelled, delayed, field_closed, unknown]
+                  official_status_source_url:
+                    type: string
+                  official_status_source_name:
+                    type: string
                   rain_chance_percent:
                     type: integer
                     minimum: 0
@@ -154,11 +168,15 @@ paths:
                     type: string
               example:
                 creator: JEEZ Labs
-                field: Krieg Field Softball Complex
+                field: Havins Softball Complex
+                field_id: austin-tx-havins-softball-complex
+                address: 12138 N Lamar Blvd, Austin, TX 78753
                 official_status: unknown
+                official_status_source_url: https://www.austintexas.gov/department/athletics
+                official_status_source_name: Austin Parks and Recreation Athletics page
                 rain_chance_percent: 16
                 thunderstorm_likely: true
                 game_time_play_probability_percent: 50
                 recommendation: check_again_before_leaving
                 source: "Rainout phone: 512-978-2680; weather: National Weather Service"
-                spoken_answer: "Official rainout status is unknown for Krieg Field Softball Complex. At game time, 8:20 PM, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving."
+                spoken_answer: "Official rainout status is unknown for Havins Softball Complex. At game time, 8:20 PM, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving."
