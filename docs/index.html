@@ -15,7 +15,7 @@
 <body>
   <h1>Rainout Source</h1>
   <p><strong>Creator:</strong> JEEZ Labs</p>
-  <p>Open agent-readable source for rainout status and game-time play probability for outdoor events. The Austin pilot now supports Krieg Field and Havins Softball Complex.</p>
+  <p>Open agent-readable source for rainout status and game-time play probability for outdoor events. The Austin pilot now supports Krieg/Craig, Havins, and a public/private Austin metro expansion batch.</p>
 
   <div class="card">
     <h2>Live agent endpoints</h2>
@@ -29,6 +29,10 @@
     <h2>Pilot fields</h2>
     <p><strong>Krieg Field Softball Complex:</strong> 515 S Pleasant Valley Rd.</p>
     <p><strong>Havins Softball Complex:</strong> 12138 N Lamar Blvd.</p>
+    <p><strong>Northeast Metropolitan Park:</strong> public field source in Pflugerville.</p>
+    <p><strong>Southeast Metropolitan Park:</strong> public field source in Del Valle.</p>
+    <p><strong>Oak Hill Youth Sports Association:</strong> private nonprofit field source in Austin.</p>
+    <p><strong>Manchaca Optimist Youth Sports Complex:</strong> private nonprofit field source in Manchaca.</p>
     <p><strong>Rainout phone:</strong> 512-978-2680</p>
     <p><strong>Official source page:</strong> <a href="https://www.austintexas.gov/department/athletics">Austin Parks and Recreation Athletics</a></p>
     <p><strong>Weather source:</strong> National Weather Service API</p>
@@ -43,8 +47,9 @@
 2. Read: https://rainout-agent-source.vercel.app/openapi.yaml
 3. Discover supported fields: https://rainout-agent-source.vercel.app/v1/fields
 4. Query Krieg Field for: 2026-06-06T20:20:00-05:00
-5. Answer in plain English. If official status is unknown after the official source check, do not guess. Tell the user to call the rainout line before leaving.
-6. Use the word "rain," not "rainfall."</pre>
+5. Follow the API answer_requirements.
+6. Answer in plain English. If official status is unknown after the official source check, do not guess. Say official status is unknown and tell the user to call 512-978-2680 before leaving when that phone is published.
+7. Use the word "rain," not "rainfall."</pre>
   </div>
 
   <div class="card">

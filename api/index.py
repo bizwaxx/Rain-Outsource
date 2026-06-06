@@ -12,7 +12,7 @@ class handler(BaseHTTPRequestHandler):
             "status": "ok",
             "service": "rainout-source",
             "creator": "JEEZ Labs",
-            "description": "Open public API for rainout and game-time play probability. Pilot fields: Krieg Field and Havins Softball Complex in Austin.",
+            "description": "Open public API for rainout and game-time play probability. Pilot fields include Krieg/Craig, Havins, and an Austin metro public/private baseball and softball expansion batch.",
             "live_base_url": BASE_URL,
             "openapi_url": f"{BASE_URL}/openapi.yaml",
             "fields_endpoint": f"{BASE_URL}/v1/fields",

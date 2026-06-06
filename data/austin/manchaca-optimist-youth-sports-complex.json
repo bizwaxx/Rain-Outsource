@@ -1,0 +1,29 @@
+{
+  "id": "manchaca-tx-manchaca-optimist-youth-sports-complex",
+  "field_name": "Manchaca Optimist Youth Sports Complex",
+  "city": "Manchaca",
+  "state": "TX",
+  "address": "West FM 1626, Manchaca, TX 78652",
+  "coordinates": {
+    "lat": 30.132802,
+    "lon": -97.8522373
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_social_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.facebook.com/ManchacaOptimist/",
+  "official_status_source_name": "Manchaca Optimist official Facebook page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Manchaca Optimist",
+    "Manchaca Optimist Youth Sports",
+    "Manchaca Optimist Youth Sports Complex",
+    "Manchaca Baseball",
+    "Manchaca Softball",
+    "manchaca-tx-manchaca-optimist-youth-sports-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving."
+}

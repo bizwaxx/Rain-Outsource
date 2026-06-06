@@ -14,8 +14,11 @@
   "official_status_source_name": "Austin Parks and Recreation Athletics page",
   "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
   "weather_source": "National Weather Service API",
-  "aliases": [
+    "aliases": [
     "Krieg",
+    "Craig",
+    "Craig Field",
+    "Craig Softball Fields",
     "Krieg Field",
     "Krieg Fields",
     "Krieg Field Softball Complex",

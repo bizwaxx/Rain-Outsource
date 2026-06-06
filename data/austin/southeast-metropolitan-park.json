@@ -1,0 +1,28 @@
+{
+  "id": "austin-metro-southeast-metropolitan-park",
+  "field_name": "Southeast Metropolitan Park",
+  "city": "Del Valle",
+  "state": "TX",
+  "address": "4511 Highway 71 East, Del Valle, TX 78617",
+  "coordinates": {
+    "lat": 30.1938892,
+    "lon": -97.6085555
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "public",
+  "status_source_type": "official_county_park_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://parks.traviscountytx.gov/parks/southeast-metro",
+  "official_status_source_name": "Travis County Parks Southeast Metropolitan Park page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Southeast Metro",
+    "Southeast Metropolitan Park",
+    "SE Metro Park",
+    "Del Valle Southeast Metro",
+    "austin-metro-southeast-metropolitan-park"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving."
+}

@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.5.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg Field and Havins Softball Complex with live National Weather Service game-time weather plus conservative official source polling.
+  version: 0.6.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather, conservative official source polling, and stricter outside-agent answer requirements.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -52,7 +52,7 @@ paths:
                     example: JEEZ Labs
                   count:
                     type: integer
-                    example: 2
+                    example: 6
                   fields:
                     type: array
                     items:
@@ -84,6 +84,12 @@ paths:
                         rainout_phone:
                           type: string
                           example: 512-978-2680
+                        ownership_type:
+                          type: string
+                          example: public
+                        status_source_type:
+                          type: string
+                          example: official_county_park_page
                         aliases:
                           type: array
                           items:
@@ -110,7 +116,7 @@ paths:
           required: true
           schema:
             type: string
-          description: Field ID or supported alias. Current aliases include Krieg and Havins.
+          description: Field ID or supported alias. Current aliases include Krieg, Craig, Havins, Northeast Metro, Southeast Metro, Oak Hill Youth Sports, and Manchaca Optimist.
           example: Havins
         - in: query
           name: game_time
@@ -173,6 +179,9 @@ paths:
                     type: string
                   spoken_answer:
                     type: string
+                  answer_requirements:
+                    type: object
+                    description: Required wording outside agents must include in the final user-facing answer.
               example:
                 creator: JEEZ Labs
                 field: Havins Softball Complex
@@ -188,4 +197,7 @@ paths:
                 game_time_play_probability_percent: 50
                 recommendation: check_again_before_leaving
                 source: "Rainout phone: 512-978-2680; weather: National Weather Service"
-                spoken_answer: "Official rainout status is unknown for Havins Softball Complex. At game time, 8:20 PM, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving."
+                spoken_answer: "Official rainout status is unknown for Havins Softball Complex. At game time, 8:20 PM, rain chance is 16% with storms possible. Estimated play probability is 50%. Please call 512-978-2680 before leaving."
+                answer_requirements:
+                  must_include: [field name, official status, rain chance, play probability, rainout phone or official source]
+                  if_official_status_unknown: "Say official status is unknown and tell the user to call 512-978-2680 before leaving."

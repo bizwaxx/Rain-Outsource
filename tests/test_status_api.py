@@ -19,6 +19,11 @@ def test_resolve_field_id_accepts_havins_aliases():
     assert resolve_field_id("austin-tx-havins-softball-complex") == "austin-tx-havins-softball-complex"
 
 
+def test_resolve_field_id_accepts_craig_as_voice_alias_for_krieg():
+    assert resolve_field_id("Craig") == "austin-tx-krieg-field-softball-complex"
+    assert resolve_field_id("Craig Field") == "austin-tx-krieg-field-softball-complex"
+
+
 def test_list_supported_fields_includes_krieg_and_havins():
     fields = list_supported_fields()
 
@@ -28,6 +33,22 @@ def test_list_supported_fields_includes_krieg_and_havins():
     havins = next(field for field in fields if field["field_id"] == "austin-tx-havins-softball-complex")
     assert havins["name"] == "Havins Softball Complex"
     assert havins["official_status_source_url"] == "https://www.austintexas.gov/department/athletics"
+
+
+def test_list_supported_fields_includes_austin_public_and_private_expansion_batch():
+    fields = list_supported_fields()
+
+    by_id = {field["field_id"]: field for field in fields}
+    expected = {
+        "austin-metro-northeast-metropolitan-park",
+        "austin-metro-southeast-metropolitan-park",
+        "austin-tx-oak-hill-youth-sports-association",
+        "manchaca-tx-manchaca-optimist-youth-sports-complex",
+    }
+    assert expected.issubset(by_id)
+    assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
+    assert by_id["austin-tx-oak-hill-youth-sports-association"]["ownership_type"] == "private_nonprofit"
+    assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():
@@ -77,6 +98,34 @@ def test_build_status_result_supports_havins_with_same_voice_safety_rule():
     assert result["rain_chance_percent"] == 35
     assert "official rainout status is unknown" in result["spoken_answer"].lower()
     assert "rain chance" in result["spoken_answer"].lower()
+    assert result["answer_requirements"]["must_include"] == [
+        "field name",
+        "official status",
+        "rain chance",
+        "play probability",
+        "rainout phone or official source",
+    ]
+    assert result["answer_requirements"]["if_official_status_unknown"] == "Say official status is unknown and tell the user to call 512-978-2680 before leaving."
+
+
+def test_build_status_result_for_field_without_phone_points_to_official_source():
+    result = build_status_result(
+        field_query="Oak Hill Youth Sports",
+        game_time="2026-06-06T20:20:00-05:00",
+        weather={
+            "rain_chance_percent": 20,
+            "thunderstorm_likely": False,
+            "source": "National Weather Service API test data",
+            "last_checked": "2026-06-06T19:00:00-05:00",
+        },
+        official_status="unknown",
+    )
+
+    assert result["field"] == "Oak Hill Youth Sports Association"
+    assert result["official_status"] == "unknown"
+    assert "official source" in result["spoken_answer"].lower()
+    assert "not published" not in result["spoken_answer"].lower()
+    assert result["answer_requirements"]["if_official_status_unknown"] == "Say official status is unknown and tell the user to check the official source before leaving."
 
 
 def test_build_status_result_returns_error_for_unknown_field():
@@ -128,6 +177,41 @@ def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_c
     assert result["checked"] is True
     assert "last_checked" in result
     assert requests == [("https://www.austintexas.gov/department/athletics", 20, "Rainout Source by JEEZ Labs (public pilot)")]
+
+
+def test_fetch_official_rainout_status_stays_unknown_when_source_unavailable(monkeypatch):
+    def fake_urlopen(request, timeout):
+        raise OSError("network blocked")
+
+    monkeypatch.setattr("rainout_agent.status_api.urllib.request.urlopen", fake_urlopen)
+    field = {
+        "official_status_source_url": "https://example.invalid/status",
+        "official_status_source_name": "Example status page",
+    }
+
+    result = fetch_official_rainout_status(field)
+
+    assert result["official_status"] == "unknown"
+    assert result["checked"] is False
+    assert result["error"] == "official_source_unavailable"
+
+
+def test_fetch_official_rainout_status_does_not_poll_directory_pages(monkeypatch):
+    def fake_urlopen(request, timeout):
+        raise AssertionError("directory pages should not be polled as rainout feeds")
+
+    monkeypatch.setattr("rainout_agent.status_api.urllib.request.urlopen", fake_urlopen)
+    field = {
+        "official_status_source_url": "https://parks.example.test/venue",
+        "official_status_source_name": "Venue information page",
+        "poll_official_status": False,
+    }
+
+    result = fetch_official_rainout_status(field)
+
+    assert result["official_status"] == "unknown"
+    assert result["checked"] is False
+    assert result["polling_skipped"] == "not_a_status_feed"
 
 
 def test_build_status_result_uses_fetched_official_status_when_not_provided(monkeypatch):

@@ -69,6 +69,8 @@ def test_vercel_openapi_handler_serves_yaml_contract():
     assert "https://rainout-agent-source.vercel.app" in body
     assert "/v1/status:" in body
     assert "/v1/fields:" in body
+    assert "version: 0.6.0" in body
+    assert "answer_requirements" in body
 
 
 def test_vercel_fields_handler_lists_supported_fields_for_agents():
@@ -77,14 +79,17 @@ def test_vercel_fields_handler_lists_supported_fields_for_agents():
     assert status_code == 200
     assert headers["Content-Type"] == "application/json"
     assert body["service"] == "rainout-source"
-    assert body["count"] >= 2
+    assert body["count"] >= 6
     fields = {field["field_id"]: field for field in body["fields"]}
     krieg = fields["austin-tx-krieg-field-softball-complex"]
     havins = fields["austin-tx-havins-softball-complex"]
     assert krieg["name"] == "Krieg Field Softball Complex"
     assert "Krieg" in krieg["aliases"]
+    assert "Craig" in krieg["aliases"]
     assert havins["name"] == "Havins Softball Complex"
     assert "Havins" in havins["aliases"]
+    assert "austin-metro-northeast-metropolitan-park" in fields
+    assert "austin-tx-oak-hill-youth-sports-association" in fields
     assert krieg["status_url"].startswith("https://rainout-agent-source.vercel.app/v1/status?field_id=")
 
 
@@ -110,6 +115,7 @@ def test_vercel_status_handler_returns_krieg_status_with_mock_weather(monkeypatc
     assert body["field_id"] == "austin-tx-krieg-field-softball-complex"
     assert body["rain_chance_percent"] == 22
     assert "rain chance" in body["spoken_answer"].lower()
+    assert body["answer_requirements"]["if_official_status_unknown"] == "Say official status is unknown and tell the user to call 512-978-2680 before leaving."
 
 
 def test_vercel_status_handler_rejects_missing_game_time():

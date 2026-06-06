@@ -1,0 +1,28 @@
+{
+  "id": "austin-metro-northeast-metropolitan-park",
+  "field_name": "Northeast Metropolitan Park",
+  "city": "Pflugerville",
+  "state": "TX",
+  "address": "2703 Pecan Street, Pflugerville, TX 78660",
+  "coordinates": {
+    "lat": 30.4135485,
+    "lon": -97.5963453
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "public",
+  "status_source_type": "official_county_park_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://parks.traviscountytx.gov/parks/northeast-metro",
+  "official_status_source_name": "Travis County Parks Northeast Metropolitan Park page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Northeast Metro",
+    "Northeast Metropolitan Park",
+    "NE Metro Park",
+    "Pflugerville Northeast Metro",
+    "austin-metro-northeast-metropolitan-park"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving."
+}

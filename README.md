@@ -27,12 +27,13 @@ https://rainout-agent-source.vercel.app/openapi.yaml
 Current backend status:
 
 1. Supports `/health` locally and on Vercel-style hosting.
-2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields and aliases.
-3. Supports `/v1/status?field_id=Krieg&game_time=...` and `/v1/status?field_id=Havins&game_time=...` locally and on live Vercel hosting.
+2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields, ownership type, aliases, status URLs, and official sources.
+3. Supports `/v1/status?field_id=Krieg&game_time=...`, `/v1/status?field_id=Craig&game_time=...`, `/v1/status?field_id=Havins&game_time=...`, plus the Austin metro public/private expansion fields locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
-5. Resolves aliases like `Krieg`, `Havins`, `krieg field`, `havins complex`, and full field IDs.
+5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
-7. Checks the official Austin Athletics source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line before leaving.
+7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
+8. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
 
 ## Pilot fields
 
@@ -46,6 +47,26 @@ Current backend status:
 - Rainout phone: 512-978-2680
 - Official source page: https://www.austintexas.gov/department/athletics
 - Weather source: National Weather Service API
+
+- Field: Northeast Metropolitan Park
+- Ownership: public
+- Address: 2703 Pecan Street, Pflugerville, TX 78660
+- Official source page: https://parks.traviscountytx.gov/parks/northeast-metro
+
+- Field: Southeast Metropolitan Park
+- Ownership: public
+- Address: 4511 Highway 71 East, Del Valle, TX 78617
+- Official source page: https://parks.traviscountytx.gov/parks/southeast-metro
+
+- Field: Oak Hill Youth Sports Association
+- Ownership: private nonprofit
+- Address: 6300 Joe Tanner Lane, Austin, TX 78749
+- Official source page: https://www.ohysa.com/
+
+- Field: Manchaca Optimist Youth Sports Complex
+- Ownership: private nonprofit
+- Address: West FM 1626, Manchaca, TX 78652
+- Official source page: https://www.facebook.com/ManchacaOptimist/
 
 ## Agent rule
 
@@ -67,7 +88,7 @@ Use this prompt in ChatGPT, Grok, Dad Agent, or another web-capable agent:
 
 ```text
 You are checking an outdoor game status. Use the public Rainout Source API.
-Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Havins Field for 2026-06-06T20:20:00-05:00. Answer in plain English. If official status is unknown, do not guess; tell the user to call the rainout line before leaving. Use the word rain, not rainfall.
+Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Havins Field for 2026-06-06T20:20:00-05:00. Follow the `answer_requirements` returned by the API. Answer in plain English. If official status is unknown, do not guess; clearly say official status is unknown and tell the user to call 512-978-2680 before leaving. Use the word rain, not rainfall.
 ```
 
 More examples: `docs/agent-examples.md`.

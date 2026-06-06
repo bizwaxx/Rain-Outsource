@@ -64,6 +64,8 @@ def list_supported_fields() -> list[dict[str, Any]]:
                 "address": field["address"],
                 "sport": field["sport"],
                 "rainout_phone": field["rainout_phone"],
+                "ownership_type": field.get("ownership_type", "unknown"),
+                "status_source_type": field.get("status_source_type", "official_source"),
                 "aliases": aliases,
                 "weather_source": field["weather_source"],
                 "official_status_source_url": field.get("official_status_source_url"),
@@ -112,11 +114,18 @@ def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
     }
     if not source_url:
         return result
+    if field.get("poll_official_status") is False:
+        result["polling_skipped"] = "not_a_status_feed"
+        return result
 
     headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
     request = urllib.request.Request(source_url, headers=headers)
-    with urllib.request.urlopen(request, timeout=20) as response:
-        raw_text = response.read().decode("utf-8", errors="replace")
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            raw_text = response.read().decode("utf-8", errors="replace")
+    except Exception:
+        result["error"] = "official_source_unavailable"
+        return result
 
     result["official_status"] = parse_official_rainout_status(raw_text)
     result["checked"] = True
@@ -137,6 +146,35 @@ def parse_official_rainout_status(source_text: str) -> str:
     if re.search(r"\b(delayed?|postponed|lightning delay)\b", text):
         return "delayed"
     return "unknown"
+
+
+def _has_published_rainout_phone(field: dict[str, Any]) -> bool:
+    phone = (field.get("rainout_phone") or "").strip().lower()
+    return bool(phone and phone not in {"not_published", "unknown", "none", "n/a"})
+
+
+def _unknown_status_instruction(field: dict[str, Any]) -> str:
+    if _has_published_rainout_phone(field):
+        return f"call {field['rainout_phone']} before leaving"
+    return "check the official source before leaving"
+
+
+def _answer_requirements(field: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "must_include": [
+            "field name",
+            "official status",
+            "rain chance",
+            "play probability",
+            "rainout phone or official source",
+        ],
+        "must_not_do": [
+            "do not guess official status",
+            "do not omit the rainout phone when one is published",
+            "do not use the word rainfall in Dad-facing answers",
+        ],
+        "if_official_status_unknown": f"Say official status is unknown and tell the user to {_unknown_status_instruction(field)}.",
+    }
 
 
 def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
@@ -247,6 +285,7 @@ def build_status_result(
             "risk_level": probability["risk_level"],
             "reason": probability["reason"],
             "weather_source": weather_data["source"],
+            "answer_requirements": _answer_requirements(field),
             "last_checked": weather_data.get("last_checked"),
             "forecast": weather_data.get("forecast"),
             "forecast_period_start": weather_data.get("forecast_period_start"),
@@ -255,11 +294,12 @@ def build_status_result(
 
     if response["official_status"] == "unknown":
         storm_phrase = " with storms possible" if response["thunderstorm_likely"] else ""
+        source_instruction = _unknown_status_instruction(field)
         response["spoken_answer"] = (
             f"Official rainout status is unknown for {field['field_name']}. "
             f"At game time, {_display_game_time(game_time)}, rain chance is {response['rain_chance_percent']}%{storm_phrase}. "
             f"Estimated play probability is {response['game_time_play_probability_percent']}%. "
-            f"Call the rainout line, {field['rainout_phone']}, before leaving."
+            f"Please {source_instruction}."
         )
     return response
 

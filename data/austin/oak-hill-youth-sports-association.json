@@ -1,0 +1,29 @@
+{
+  "id": "austin-tx-oak-hill-youth-sports-association",
+  "field_name": "Oak Hill Youth Sports Association",
+  "city": "Austin",
+  "state": "TX",
+  "address": "6300 Joe Tanner Lane, Austin, TX 78749",
+  "coordinates": {
+    "lat": 30.2338776,
+    "lon": -97.855502
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.ohysa.com/",
+  "official_status_source_name": "Oak Hill Youth Sports Association official site",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Oak Hill Youth Sports",
+    "Oak Hill Youth Sports Association",
+    "OHYSA",
+    "Oak Hill Baseball",
+    "Oak Hill Softball",
+    "austin-tx-oak-hill-youth-sports-association"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving."
+}
