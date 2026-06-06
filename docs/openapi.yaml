@@ -5,6 +5,8 @@ info:
   description: Agent-readable field and rainout status API for softball/baseball games. The first backend supports Krieg Field and live National Weather Service game-time weather.
   x-creator: JEEZ Labs
 servers:
+  - url: https://rainout-agent-source.vercel.app
+    description: Live production backend
   - url: http://127.0.0.1:8000
     description: Local development backend
 paths:

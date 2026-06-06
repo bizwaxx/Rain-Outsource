@@ -1,40 +1,49 @@
+import io
 import json
-from urllib.parse import urlencode
+from http.server import BaseHTTPRequestHandler
 
-from api.index import handler as index_handler
-from api.status import handler as status_handler
-
-
-class FakeRequest:
-    def __init__(self, path="/", query=None):
-        self.path = path
-        self.query = query or {}
+from api.index import handler as IndexHandler
+from api.status import handler as StatusHandler
 
 
-class FakeResponse:
-    def __init__(self):
+class HandlerHarness:
+    def __init__(self, handler_class, path):
+        self.instance = handler_class.__new__(handler_class)
+        self.instance.path = path
+        self.instance.wfile = io.BytesIO()
         self.status_code = None
         self.headers = {}
-        self.body = None
 
-    def status(self, code):
-        self.status_code = code
-        return self
+        def send_response(code, message=None):
+            self.status_code = code
 
-    def json(self, payload):
-        self.headers["Content-Type"] = "application/json"
-        self.body = payload
-        return self
+        def send_header(name, value):
+            self.headers[name] = value
+
+        def end_headers():
+            pass
+
+        self.instance.send_response = send_response
+        self.instance.send_header = send_header
+        self.instance.end_headers = end_headers
+
+    def get(self):
+        self.instance.do_GET()
+        return self.status_code, self.headers, json.loads(self.instance.wfile.getvalue().decode("utf-8"))
+
+
+def test_vercel_handlers_are_base_http_handlers():
+    assert issubclass(IndexHandler, BaseHTTPRequestHandler)
+    assert issubclass(StatusHandler, BaseHTTPRequestHandler)
 
 
 def test_vercel_index_handler_reports_service_ready():
-    response = FakeResponse()
+    status_code, headers, body = HandlerHarness(IndexHandler, "/api").get()
 
-    index_handler(FakeRequest(), response)
-
-    assert response.status_code == 200
-    assert response.body["status"] == "ok"
-    assert response.body["service"] == "rainout-source"
+    assert status_code == 200
+    assert headers["Content-Type"] == "application/json"
+    assert body["status"] == "ok"
+    assert body["service"] == "rainout-source"
 
 
 def test_vercel_status_handler_returns_krieg_status_with_mock_weather(monkeypatch):
@@ -48,23 +57,21 @@ def test_vercel_status_handler_returns_krieg_status_with_mock_weather(monkeypatc
             "forecast": "Slight Chance Rain Showers",
         },
     )
-    response = FakeResponse()
 
-    status_handler(
-        FakeRequest(query={"field_id": "Krieg", "game_time": "2026-06-06T20:20:00-05:00"}),
-        response,
-    )
+    status_code, headers, body = HandlerHarness(
+        StatusHandler,
+        "/api/status?field_id=Krieg&game_time=2026-06-06T20:20:00-05:00",
+    ).get()
 
-    assert response.status_code == 200
-    assert response.body["field_id"] == "austin-tx-krieg-field-softball-complex"
-    assert response.body["rain_chance_percent"] == 22
-    assert "rain chance" in response.body["spoken_answer"].lower()
+    assert status_code == 200
+    assert headers["Content-Type"] == "application/json"
+    assert body["field_id"] == "austin-tx-krieg-field-softball-complex"
+    assert body["rain_chance_percent"] == 22
+    assert "rain chance" in body["spoken_answer"].lower()
 
 
 def test_vercel_status_handler_rejects_missing_game_time():
-    response = FakeResponse()
+    status_code, headers, body = HandlerHarness(StatusHandler, "/api/status?field_id=Krieg").get()
 
-    status_handler(FakeRequest(query={"field_id": "Krieg"}), response)
-
-    assert response.status_code == 400
-    assert response.body["error"] == "missing_game_time"
+    assert status_code == 400
+    assert body["error"] == "missing_game_time"

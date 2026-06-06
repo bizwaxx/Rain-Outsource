@@ -1,33 +1,48 @@
+import json
+from http.server import BaseHTTPRequestHandler
+from urllib.parse import parse_qs, urlparse
+
 from rainout_agent.status_api import build_status_result
 
 
-def _query_value(request, name):
-    value = getattr(request, "query", {}).get(name)
-    if isinstance(value, list):
-        return value[0] if value else ""
-    return value or ""
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query, keep_blank_values=True)
+        field_query = _first(params, "field_id") or _first(params, "field")
+        game_time = _first(params, "game_time")
+
+        if not field_query:
+            return self._send_json(400, {"error": "missing_field_id"})
+        if not game_time:
+            return self._send_json(400, {"error": "missing_game_time"})
+
+        try:
+            payload = build_status_result(field_query=field_query, game_time=game_time)
+        except Exception as exc:  # pragma: no cover - live host safety net
+            return self._send_json(
+                502,
+                {
+                    "creator": "JEEZ Labs",
+                    "error": "weather_source_unavailable",
+                    "message": str(exc),
+                    "spoken_answer": "I could not reach the live weather source right now. Please check the official rainout line before leaving.",
+                },
+            )
+
+        status_code = 404 if payload.get("error") == "unknown_field" else 200
+        return self._send_json(status_code, payload)
+
+    def _send_json(self, status_code, payload):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status_code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
 
-def handler(request, response):
-    field_query = _query_value(request, "field_id") or _query_value(request, "field")
-    game_time = _query_value(request, "game_time")
-
-    if not field_query:
-        return response.status(400).json({"error": "missing_field_id"})
-    if not game_time:
-        return response.status(400).json({"error": "missing_game_time"})
-
-    try:
-        payload = build_status_result(field_query=field_query, game_time=game_time)
-    except Exception as exc:  # pragma: no cover - live host safety net
-        return response.status(502).json(
-            {
-                "creator": "JEEZ Labs",
-                "error": "weather_source_unavailable",
-                "message": str(exc),
-                "spoken_answer": "I could not reach the live weather source right now. Please check the official rainout line before leaving.",
-            }
-        )
-
-    status_code = 404 if payload.get("error") == "unknown_field" else 200
-    return response.status(status_code).json(payload)
+def _first(params, name):
+    values = params.get(name) or []
+    return values[0] if values else ""

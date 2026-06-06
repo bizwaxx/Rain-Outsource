@@ -10,7 +10,13 @@ Open agent-readable source for softball/baseball rainout status and game-time pl
 **Creator:** JEEZ Labs
 
 ## Important status
-The public docs and OpenAPI file are live on GitHub Pages. The first working backend has been added in this repo as a Python WSGI app.
+The public docs and OpenAPI file are live on GitHub Pages. The first working backend is live on Vercel and also available in this repo as a Python app.
+
+Live backend URL:
+
+```text
+https://rainout-agent-source.vercel.app
+```
 
 Current backend status:
 
