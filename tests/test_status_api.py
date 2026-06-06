@@ -1,4 +1,10 @@
-from rainout_agent.status_api import build_status_result, list_supported_fields, resolve_field_id
+from rainout_agent.status_api import (
+    build_status_result,
+    fetch_official_rainout_status,
+    list_supported_fields,
+    parse_official_rainout_status,
+    resolve_field_id,
+)
 
 
 def test_resolve_field_id_accepts_krieg_aliases():
@@ -82,3 +88,72 @@ def test_build_status_result_returns_error_for_unknown_field():
 
     assert result["error"] == "unknown_field"
     assert "Krieg" in result["spoken_answer"]
+
+
+def test_parse_official_rainout_status_is_conservative():
+    assert parse_official_rainout_status("All adult softball games are cancelled tonight") == "cancelled"
+    assert parse_official_rainout_status("Fields are closed due to wet conditions") == "field_closed"
+    assert parse_official_rainout_status("Games delayed 30 minutes for lightning") == "delayed"
+    assert parse_official_rainout_status("Registration is open for summer softball") == "unknown"
+
+
+def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_clear_signal(monkeypatch):
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return b"<html><body>Austin Parks Athletics registration is open.</body></html>"
+
+    requests = []
+
+    def fake_urlopen(request, timeout):
+        requests.append((request.full_url, timeout, request.headers.get("User-agent")))
+        return FakeResponse()
+
+    monkeypatch.setattr("rainout_agent.status_api.urllib.request.urlopen", fake_urlopen)
+    field = {
+        "official_status_source_url": "https://www.austintexas.gov/department/athletics",
+        "official_status_source_name": "Austin Parks and Recreation Athletics page",
+    }
+
+    result = fetch_official_rainout_status(field)
+
+    assert result["official_status"] == "unknown"
+    assert result["source_url"] == "https://www.austintexas.gov/department/athletics"
+    assert result["source_name"] == "Austin Parks and Recreation Athletics page"
+    assert result["checked"] is True
+    assert "last_checked" in result
+    assert requests == [("https://www.austintexas.gov/department/athletics", 20, "Rainout Source by JEEZ Labs (public pilot)")]
+
+
+def test_build_status_result_uses_fetched_official_status_when_not_provided(monkeypatch):
+    monkeypatch.setattr(
+        "rainout_agent.status_api.fetch_official_rainout_status",
+        lambda field: {
+            "official_status": "cancelled",
+            "source_url": field["official_status_source_url"],
+            "source_name": field["official_status_source_name"],
+            "checked": True,
+            "last_checked": "2026-06-06T19:10:00+00:00",
+        },
+    )
+
+    result = build_status_result(
+        field_query="Krieg",
+        game_time="2026-06-06T20:20:00-05:00",
+        weather={
+            "rain_chance_percent": 5,
+            "thunderstorm_likely": False,
+            "source": "National Weather Service API test data",
+            "last_checked": "2026-06-06T19:00:00-05:00",
+        },
+    )
+
+    assert result["official_status"] == "cancelled"
+    assert result["official_status_checked"] is True
+    assert result["official_status_last_checked"] == "2026-06-06T19:10:00+00:00"
+    assert result["recommendation"] == "do not drive"

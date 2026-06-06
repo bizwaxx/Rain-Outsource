@@ -32,7 +32,7 @@
     <p><strong>Rainout phone:</strong> 512-978-2680</p>
     <p><strong>Official source page:</strong> <a href="https://www.austintexas.gov/department/athletics">Austin Parks and Recreation Athletics</a></p>
     <p><strong>Weather source:</strong> National Weather Service API</p>
-    <p><strong>Agent rule:</strong> Official rainout status wins. Weather gives drive risk and game-time play probability. If official status is unknown, tell the user to call the rainout line before leaving.</p>
+    <p><strong>Agent rule:</strong> Official rainout status wins. Rainout Source checks the Austin Athletics source page, but stays conservative: if no clear cancelled, delayed, or closed signal appears, official status remains unknown and agents should tell the user to call the rainout line before leaving.</p>
   </div>
 
   <div class="card">
@@ -43,7 +43,7 @@
 2. Read: https://rainout-agent-source.vercel.app/openapi.yaml
 3. Discover supported fields: https://rainout-agent-source.vercel.app/v1/fields
 4. Query Krieg Field for: 2026-06-06T20:20:00-05:00
-5. Answer in plain English. If official status is unknown, do not guess. Tell the user to call the rainout line before leaving.
+5. Answer in plain English. If official status is unknown after the official source check, do not guess. Tell the user to call the rainout line before leaving.
 6. Use the word "rain," not "rainfall."</pre>
   </div>
 

@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.4.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg Field and Havins Softball Complex with live National Weather Service game-time weather.
+  version: 0.5.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg Field and Havins Softball Complex with live National Weather Service game-time weather plus conservative official source polling.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -149,6 +149,13 @@ paths:
                     type: string
                   official_status_source_name:
                     type: string
+                  official_status_checked:
+                    type: boolean
+                    description: True when Rainout Source checked the official source page for this request.
+                  official_status_last_checked:
+                    type: string
+                    nullable: true
+                    description: ISO-8601 timestamp for the official source check when available.
                   rain_chance_percent:
                     type: integer
                     minimum: 0
@@ -174,6 +181,8 @@ paths:
                 official_status: unknown
                 official_status_source_url: https://www.austintexas.gov/department/athletics
                 official_status_source_name: Austin Parks and Recreation Athletics page
+                official_status_checked: true
+                official_status_last_checked: "2026-06-06T19:10:00+00:00"
                 rain_chance_percent: 16
                 thunderstorm_likely: true
                 game_time_play_probability_percent: 50

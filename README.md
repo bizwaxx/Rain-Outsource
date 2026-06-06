@@ -32,7 +32,7 @@ Current backend status:
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
 5. Resolves aliases like `Krieg`, `Havins`, `krieg field`, `havins complex`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
-7. Treats the official rainout status as `unknown` until an official Austin rainout source can be read automatically, so the spoken answer tells the user to call the rainout line before leaving.
+7. Checks the official Austin Athletics source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line before leaving.
 
 ## Pilot fields
 
@@ -49,7 +49,7 @@ Current backend status:
 
 ## Agent rule
 
-Official rainout status wins. Weather gives drive risk and game-time play probability.
+Official rainout status wins. Weather gives drive risk and game-time play probability. If the official source is checked but unclear, keep status as `unknown` instead of guessing.
 
 Use the word **rain**, not **rainfall**, in Dad-facing answers.
 

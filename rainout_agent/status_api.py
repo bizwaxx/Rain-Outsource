@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import re
 import urllib.request
 from datetime import datetime, timezone
+from html import unescape
 from pathlib import Path
 from typing import Any
 
@@ -91,6 +93,52 @@ def _display_game_time(value: str) -> str:
     return f"{hour}{minute} {am_pm}"
 
 
+def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
+    """Safely check the official status page without guessing.
+
+    The first public Austin source is a general athletics page, not a structured
+    rainout feed. This poller only promotes clear closure/cancellation/delay
+    language; otherwise it returns unknown with provenance so agents know the
+    source was checked.
+    """
+    source_url = field.get("official_status_source_url")
+    source_name = field.get("official_status_source_name")
+    result = {
+        "official_status": "unknown",
+        "source_url": source_url,
+        "source_name": source_name,
+        "checked": False,
+        "last_checked": datetime.now(timezone.utc).isoformat(),
+    }
+    if not source_url:
+        return result
+
+    headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
+    request = urllib.request.Request(source_url, headers=headers)
+    with urllib.request.urlopen(request, timeout=20) as response:
+        raw_text = response.read().decode("utf-8", errors="replace")
+
+    result["official_status"] = parse_official_rainout_status(raw_text)
+    result["checked"] = True
+    return result
+
+
+def parse_official_rainout_status(source_text: str) -> str:
+    """Parse clear official rainout signals from source text conservatively."""
+    text = unescape(re.sub(r"<[^>]+>", " ", source_text or "")).lower()
+    text = " ".join(text.split())
+    if not text:
+        return "unknown"
+
+    if re.search(r"\b(cancelled|canceled|cancellations?|rain(?:ed)? out|rainedout)\b", text):
+        return "cancelled"
+    if re.search(r"\b(fields?|diamonds?)\b.{0,40}\b(closed|closure)\b|\b(closed|closure)\b.{0,40}\b(fields?|diamonds?)\b", text):
+        return "field_closed"
+    if re.search(r"\b(delayed?|postponed|lightning delay)\b", text):
+        return "delayed"
+    return "unknown"
+
+
 def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
     """Fetch real forecast data from the National Weather Service API.
 
@@ -145,7 +193,7 @@ def build_status_result(
     field_query: str,
     game_time: str,
     weather: dict[str, Any] | None = None,
-    official_status: str = "unknown",
+    official_status: str | None = None,
 ) -> dict[str, Any]:
     """Build the live API JSON result for one field and game time."""
     field_id = resolve_field_id(field_query)
@@ -159,9 +207,20 @@ def build_status_result(
         }
 
     field = load_field(field_id)
+    official_data = {
+        "official_status": official_status or "unknown",
+        "source_url": field.get("official_status_source_url"),
+        "source_name": field.get("official_status_source_name"),
+        "checked": False,
+        "last_checked": None,
+    }
+    if official_status is None:
+        official_data = fetch_official_rainout_status(field)
+    official_status_value = official_data.get("official_status") or "unknown"
+
     weather_data = weather or fetch_nws_weather(field, game_time)
     probability = calculate_play_probability(
-        official_status=official_status,
+        official_status=official_status_value,
         precipitation_chance_percent=weather_data["rain_chance_percent"],
         thunderstorm_likely=bool(weather_data["thunderstorm_likely"]),
         hours_until_game=_hours_until_game(game_time),
@@ -170,7 +229,7 @@ def build_status_result(
     response = build_agent_status_response(
         field_name=field["field_name"],
         game_time=_display_game_time(game_time),
-        official_status=official_status,
+        official_status=official_status_value,
         rain_chance_percent=weather_data["rain_chance_percent"],
         thunderstorm_likely=bool(weather_data["thunderstorm_likely"]),
         play_probability_percent=probability["play_probability_percent"],
@@ -180,8 +239,10 @@ def build_status_result(
         {
             "field_id": field_id,
             "address": field["address"],
-            "official_status_source_url": field.get("official_status_source_url"),
-            "official_status_source_name": field.get("official_status_source_name"),
+            "official_status_source_url": official_data.get("source_url"),
+            "official_status_source_name": official_data.get("source_name"),
+            "official_status_checked": bool(official_data.get("checked")),
+            "official_status_last_checked": official_data.get("last_checked"),
             "recommendation": probability["recommendation"],
             "risk_level": probability["risk_level"],
             "reason": probability["reason"],

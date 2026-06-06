@@ -20,7 +20,7 @@ You are checking an outdoor game status. Use the public Rainout Source API.
 3. Discover supported fields at: https://rainout-agent-source.vercel.app/v1/fields
 4. Query Havins Field for this game time: 2026-06-06T20:20:00-05:00
 5. Answer in plain English and cite the official rainout phone/source and weather source.
-6. If official rainout status is unknown, do not guess. Say that the user should call the rainout line before leaving.
+6. If official rainout status is unknown after the official source check, do not guess. Say that the user should call the rainout line before leaving.
 7. Use the word "rain," not "rainfall."
 ```
 
@@ -40,4 +40,4 @@ curl -s 'https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_t
 
 ## Agent integration rule
 
-Official rainout status wins. Weather gives game-time risk and play probability. When the official status is unknown, agents must say so and point users to the official rainout phone before they drive.
+Official rainout status wins. Rainout Source checks the official source page when the status endpoint runs. Weather gives game-time risk and play probability. When the official status is still unknown, agents must say so and point users to the official rainout phone before they drive.
