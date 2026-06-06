@@ -1,0 +1,29 @@
+{
+  "id": "austin-tx-downs-field-ambl",
+  "field_name": "Downs Field",
+  "city": "Austin",
+  "state": "TX",
+  "address": "2816 E. 12th Street, Austin, TX 78702",
+  "coordinates": {
+    "lat": 30.275729,
+    "lon": -97.7097767
+  },
+  "sport": "baseball",
+  "ownership_type": "public_league_used",
+  "status_source_type": "official_league_field_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.austinmetrobaseball.com/fields.php",
+  "official_status_source_name": "Austin Metro Baseball League fields page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Downs",
+    "Downs Field",
+    "Austin Downs Field",
+    "AMBL Downs",
+    "Austin Metro Baseball Downs",
+    "austin-tx-downs-field-ambl"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. AMBL lists this as a league field, but this page is not a live rainout feed, so do not guess. Tell the user to check the official league source before leaving when official status is unknown."
+}

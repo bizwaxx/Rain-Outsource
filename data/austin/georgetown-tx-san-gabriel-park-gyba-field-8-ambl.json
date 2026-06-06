@@ -1,0 +1,31 @@
+{
+  "id": "georgetown-tx-san-gabriel-park-gyba-field-8-ambl",
+  "field_name": "San Gabriel Park - GYBA Field 8",
+  "city": "Georgetown",
+  "state": "TX",
+  "address": "E. Morrow Street & N. College Street, Georgetown, TX 78626",
+  "coordinates": {
+    "lat": 30.653,
+    "lon": -97.6667
+  },
+  "sport": "baseball",
+  "ownership_type": "public_league_used",
+  "status_source_type": "official_league_field_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.austinmetrobaseball.com/fields.php",
+  "official_status_source_name": "Austin Metro Baseball League fields page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "San Gabriel",
+    "San Gabriel Park",
+    "GYBA Field 8",
+    "Georgetown Field",
+    "Georgetown Fields",
+    "AMBL Georgetown",
+    "Austin Metro Baseball Georgetown",
+    "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. AMBL lists this as GYBA Field 8 at San Gabriel Park, but this page is not a live rainout feed, so do not guess. Tell the user to check the official league source before leaving when official status is unknown."
+}

@@ -52,6 +52,9 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "round-rock-tx-old-settlers-softball-complex",
         "cedar-park-tx-brushy-creek-sports-park-softball-fields",
         "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields",
+        "austin-tx-downs-field-ambl",
+        "austin-tx-anderson-high-school-baseball-field-ambl",
+        "georgetown-tx-san-gabriel-park-gyba-field-8-ambl",
     }
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
@@ -60,6 +63,8 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["austin-tx-balcones-youth-sports"]["ownership_type"] == "private_nonprofit"
     assert by_id["round-rock-tx-old-settlers-baseball-complex"]["rainout_phone"] == "512-218-5540"
     assert by_id["cedar-park-tx-brushy-creek-sports-park-softball-fields"]["status_source_type"] == "official_field_status_page"
+    assert by_id["austin-tx-downs-field-ambl"]["official_status_source_name"] == "Austin Metro Baseball League fields page"
+    assert by_id["georgetown-tx-san-gabriel-park-gyba-field-8-ambl"]["city"] == "Georgetown"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -75,6 +80,14 @@ def test_resolve_field_id_accepts_round_rock_and_cedar_park_aliases():
     assert resolve_field_id("OSP Softball") == "round-rock-tx-old-settlers-softball-complex"
     assert resolve_field_id("Brushy Creek Softball") == "cedar-park-tx-brushy-creek-sports-park-softball-fields"
     assert resolve_field_id("Milburn Park") == "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields"
+
+
+def test_resolve_field_id_accepts_austin_metro_baseball_league_aliases():
+    assert resolve_field_id("Downs") == "austin-tx-downs-field-ambl"
+    assert resolve_field_id("Downs Field") == "austin-tx-downs-field-ambl"
+    assert resolve_field_id("Anderson High School") == "austin-tx-anderson-high-school-baseball-field-ambl"
+    assert resolve_field_id("Georgetown Fields") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
+    assert resolve_field_id("GYBA Field 8") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():

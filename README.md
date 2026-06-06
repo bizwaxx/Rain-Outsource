@@ -30,7 +30,7 @@ Current backend status:
 2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields, ownership type, aliases, status URLs, and official sources.
 3. Supports `/v1/status?field_id=Krieg&game_time=...`, `/v1/status?field_id=Craig&game_time=...`, `/v1/status?field_id=Havins&game_time=...`, plus the Austin metro public/private expansion fields locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
-5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, `Old Settlers Baseball`, `OSP Softball`, `Brushy Creek Softball`, `Milburn Park`, and full field IDs.
+5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, `Old Settlers Baseball`, `OSP Softball`, `Brushy Creek Softball`, `Milburn Park`, `Downs Field`, `Anderson High School`, `Georgetown Fields`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
 8. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
@@ -109,6 +109,21 @@ Current backend status:
 - Ownership: public
 - Address: 1901 Sun Chase Blvd, Cedar Park, TX 78613
 - Official field status page: https://www.cedarparktexas.gov/947/Athletic-Facilities
+
+- Field: Downs Field
+- Ownership: public / league-used
+- Address: 2816 E. 12th Street, Austin, TX 78702
+- Official league field page: https://www.austinmetrobaseball.com/fields.php
+
+- Field: Anderson High School Baseball Field
+- Ownership: school / league-used
+- Address: 8403 Mesa Drive, Austin, TX 78759
+- Official league field page: https://www.austinmetrobaseball.com/fields.php
+
+- Field: San Gabriel Park - GYBA Field 8
+- Ownership: public / league-used
+- Address: E. Morrow Street & N. College Street, Georgetown, TX 78626
+- Official league field page: https://www.austinmetrobaseball.com/fields.php
 
 ## Agent rule
 
