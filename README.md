@@ -18,6 +18,12 @@ Live backend URL:
 https://rainout-agent-source.vercel.app
 ```
 
+Live OpenAPI URL:
+
+```text
+https://rainout-agent-source.vercel.app/openapi.yaml
+```
+
 Current backend status:
 
 1. Supports `/health` locally and on Vercel-style hosting.
