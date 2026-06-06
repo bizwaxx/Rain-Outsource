@@ -10,9 +10,10 @@
   },
   "sport": "softball",
   "rainout_phone": "512-978-2680",
-  "official_status_source_url": "https://www.austintexas.gov/department/athletics",
-  "official_status_source_name": "Austin Parks and Recreation Athletics page",
+  "official_status_source_url": "https://rainoutline.com/search/dnis/5124000060/",
+  "official_status_source_name": "Austin Sports and Social Club Rainout Line (512-400-0060)",
   "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "poll_official_status": true,
   "weather_source": "National Weather Service API",
   "aliases": [
     "Havins",

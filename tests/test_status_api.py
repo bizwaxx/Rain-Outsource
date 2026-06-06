@@ -32,7 +32,7 @@ def test_list_supported_fields_includes_krieg_and_havins():
     assert "austin-tx-havins-softball-complex" in field_ids
     havins = next(field for field in fields if field["field_id"] == "austin-tx-havins-softball-complex")
     assert havins["name"] == "Havins Softball Complex"
-    assert havins["official_status_source_url"] == "https://www.austintexas.gov/department/athletics"
+    assert havins["official_status_source_url"] == "https://rainoutline.com/search/dnis/5124000060/"
 
 
 def test_list_supported_fields_includes_austin_public_and_private_expansion_batch():
@@ -145,7 +145,7 @@ def test_build_status_result_supports_havins_with_same_voice_safety_rule():
     assert result["field_id"] == "austin-tx-havins-softball-complex"
     assert result["field"] == "Havins Softball Complex"
     assert result["address"] == "12138 N Lamar Blvd, Austin, TX 78753"
-    assert result["official_status_source_url"] == "https://www.austintexas.gov/department/athletics"
+    assert result["official_status_source_url"] == "https://rainoutline.com/search/dnis/5124000060/"
     assert result["rain_chance_percent"] == 35
     assert "official rainout status is unknown" in result["spoken_answer"].lower()
     assert "rain chance" in result["spoken_answer"].lower()
@@ -224,18 +224,18 @@ def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_c
 
     monkeypatch.setattr("rainout_agent.status_api.urllib.request.urlopen", fake_urlopen)
     field = {
-        "official_status_source_url": "https://www.austintexas.gov/department/athletics",
+        "official_status_source_url": "https://rainoutline.com/search/dnis/5124000060/",
         "official_status_source_name": "Austin Parks and Recreation Athletics page",
     }
 
     result = fetch_official_rainout_status(field)
 
     assert result["official_status"] == "unknown"
-    assert result["source_url"] == "https://www.austintexas.gov/department/athletics"
+    assert result["source_url"] == "https://rainoutline.com/search/dnis/5124000060/"
     assert result["source_name"] == "Austin Parks and Recreation Athletics page"
     assert result["checked"] is True
     assert "last_checked" in result
-    assert requests == [("https://www.austintexas.gov/department/athletics", 20, "Rainout Source by JEEZ Labs (public pilot)")]
+    assert requests == [("https://rainoutline.com/search/dnis/5124000060/", 20, "Rainout Source by JEEZ Labs (public pilot)")]
 
 
 def test_fetch_official_rainout_status_stays_unknown_when_source_unavailable(monkeypatch):

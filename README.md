@@ -156,6 +156,8 @@ See `openapi.yaml`.
 
 ## Outside-agent test
 
+Use the full "For AI Agents" guide at `docs/agent-examples.md` or the quick prompt below in ChatGPT, Grok, Dad Agent, or any other web-capable agent:
+
 Use this prompt in ChatGPT, Grok, Dad Agent, or another web-capable agent:
 
 ```text
