@@ -11,7 +11,7 @@ from typing import Any
 from rainout_agent.agent_response import build_agent_status_response
 from rainout_agent.play_probability import calculate_play_probability
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "austin"
+DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
 
 def _normalize(value: str) -> str:
@@ -20,7 +20,7 @@ def _normalize(value: str) -> str:
 
 def _load_all_fields() -> list[dict[str, Any]]:
     fields = []
-    for path in sorted(DATA_DIR.glob("*.json")):
+    for path in sorted(DATA_DIR.glob("**/*.json")):
         fields.append(json.loads(path.read_text(encoding="utf-8")))
     return fields
 
@@ -70,6 +70,7 @@ def list_supported_fields() -> list[dict[str, Any]]:
                 "weather_source": field["weather_source"],
                 "official_status_source_url": field.get("official_status_source_url"),
                 "official_status_source_name": field.get("official_status_source_name"),
+                "source_reliability": field.get("source_reliability", "medium"),
                 "status_url": f"https://rainout-agent-source.vercel.app/v1/status?field_id={aliases[0]}&game_time={{ISO-8601-game-time}}",
             }
         )
@@ -306,6 +307,7 @@ def build_status_result(
             "official_status_source_name": official_data.get("source_name"),
             "official_status_checked": bool(official_data.get("checked")),
             "official_status_last_checked": official_data.get("last_checked"),
+            "source_reliability": _calculate_source_reliability(official_data),
             "recommendation": probability["recommendation"],
             "risk_level": probability["risk_level"],
             "reason": probability["reason"],
@@ -335,3 +337,14 @@ def _hours_until_game(game_time: str) -> float:
         return 0.0
     now = datetime.now(parsed.tzinfo or timezone.utc)
     return max(0.0, (parsed - now).total_seconds() / 3600)
+
+def _calculate_source_reliability(official_data: dict[str, Any]) -> str:
+    if not official_data.get("source_url"):
+        return "low"
+    if official_data.get("polling_skipped"):
+        return "low"
+    if official_data.get("checked") and official_data.get("official_status") != "unknown":
+        return "high"
+    if official_data.get("checked"):
+        return "medium"
+    return "unknown"

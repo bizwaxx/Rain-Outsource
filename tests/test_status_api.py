@@ -58,6 +58,9 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "dripping-springs-tx-ctx-field-of-dreams",
         "dripping-springs-tx-dsysa-baseball-softball-sports-complex",
         "dripping-springs-tx-dsysa-sports-park-fields",
+        "san-antonio-tx-lady-bird-johnson-park-softball-fields",
+        "san-antonio-tx-mcallister-park-baseball-softball-fields",
+        "san-antonio-tx-normoyle-park-baseball-fields",
     }
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
@@ -70,6 +73,8 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["georgetown-tx-san-gabriel-park-gyba-field-8-ambl"]["city"] == "Georgetown"
     assert by_id["dripping-springs-tx-ctx-field-of-dreams"]["city"] == "Dripping Springs"
     assert by_id["dripping-springs-tx-dsysa-baseball-softball-sports-complex"]["official_status_source_name"] == "Dripping Springs Youth Sports Association field status page"
+    assert by_id["san-antonio-tx-lady-bird-johnson-park-softball-fields"]["city"] == "San Antonio"
+    assert by_id["san-antonio-tx-mcallister-park-baseball-softball-fields"]["rainout_phone"] == "210-207-6000"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -100,6 +105,12 @@ def test_resolve_field_id_accepts_dripping_springs_aliases():
     assert resolve_field_id("Dripping Springs Field of Dreams") == "dripping-springs-tx-ctx-field-of-dreams"
     assert resolve_field_id("DSYSA Baseball") == "dripping-springs-tx-dsysa-baseball-softball-sports-complex"
     assert resolve_field_id("Sports Park Fields") == "dripping-springs-tx-dsysa-sports-park-fields"
+
+
+def test_resolve_field_id_accepts_san_antonio_aliases():
+    assert resolve_field_id("Lady Bird Johnson Park") == "san-antonio-tx-lady-bird-johnson-park-softball-fields"
+    assert resolve_field_id("McAllister Park") == "san-antonio-tx-mcallister-park-baseball-softball-fields"
+    assert resolve_field_id("Normoyle Baseball") == "san-antonio-tx-normoyle-park-baseball-fields"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():

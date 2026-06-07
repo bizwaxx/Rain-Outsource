@@ -2,6 +2,13 @@
 
 **Goal:** Make Rainout Source the clearest, most reliable rainout protocol that any AI agent can discover and use safely.
 
+## Recent Optimizations (for agents)
+
+- `source_reliability` field added to every status response (`high` / `medium` / `low` / `unknown`)
+- Stricter, copy-paste-ready agent prompts with explicit "do not guess" rules
+- Rich provenance: `official_status_last_checked`, `official_status_source_name`, and `answer_requirements` always returned
+- `/v1/fields` now includes `rainout_phone` and `official_status_source_name` for faster discovery
+
 ## Core rules every agent must follow
 
 - Official rainout status always wins.

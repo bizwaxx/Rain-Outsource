@@ -1,0 +1,28 @@
+{
+  "id": "san-antonio-tx-normoyle-park-baseball-fields",
+  "field_name": "Normoyle Park Baseball Fields",
+  "city": "San Antonio",
+  "state": "TX",
+  "address": "Normoyle Park, San Antonio, TX 78211",
+  "coordinates": {
+    "lat": 29.379573,
+    "lon": -98.5399387
+  },
+  "sport": "baseball",
+  "ownership_type": "public",
+  "status_source_type": "official_city_park_page",
+  "poll_official_status": false,
+  "rainout_phone": "210-207-6000",
+  "official_status_source_url": "https://www.sa.gov/Directory/Departments/Parks",
+  "official_status_source_name": "City of San Antonio Parks & Recreation",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Normoyle Park",
+    "Normoyle Baseball",
+    "San Antonio Normoyle Park",
+    "san-antonio-tx-normoyle-park-baseball-fields"
+  ],
+  "future_status_protocol": "If San Antonio publishes a per-field rainout/status page or hotline extension for Normoyle Park, update this official source and enable polling only after parser tests.",
+  "agent_rule": "Official source wins. This city parks page confirms the public parks authority but is not a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to call 210-207-6000 or check the official source before leaving."
+}

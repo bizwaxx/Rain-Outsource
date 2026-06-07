@@ -40,6 +40,7 @@ def application(environ, start_response):
             "200 OK",
             {
                 "service": "rainout-source",
+                "protocol_version": "v0.7.0",
                 "creator": "JEEZ Labs",
                 "count": len(fields),
                 "fields": fields,
