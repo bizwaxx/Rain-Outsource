@@ -1,0 +1,30 @@
+{
+  "id": "helotes-tx-greater-helotes-little-league",
+  "field_name": "Greater Helotes Little League",
+  "city": "Helotes",
+  "state": "TX",
+  "address": "10185 Braun Road, Helotes, TX 78023",
+  "coordinates": {
+    "lat": 29.5405203,
+    "lon": -98.692811
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://clubs.bluesombrero.com/Default.aspx?tabid=891503",
+  "official_status_source_name": "Greater Helotes Little League official Sports Connect site",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Greater Helotes",
+    "Greater Helotes LL",
+    "GHLL",
+    "Helotes Little League",
+    "Greater Helotes Little League",
+    "helotes-tx-greater-helotes-little-league"
+  ],
+  "future_status_protocol": "If the Greater Helotes calendar or locations page exposes live field availability or weather closure text, enable polling only after conservative parser tests.",
+  "agent_rule": "Official source wins. This organization page confirms the league but is not a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving."
+}

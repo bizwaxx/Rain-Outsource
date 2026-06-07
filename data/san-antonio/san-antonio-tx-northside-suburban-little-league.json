@@ -1,0 +1,30 @@
+{
+  "id": "san-antonio-tx-northside-suburban-little-league",
+  "field_name": "Northside Suburban Little League",
+  "city": "San Antonio",
+  "state": "TX",
+  "address": "9630 Bandera Road, San Antonio, TX 78250",
+  "coordinates": {
+    "lat": 29.5338077,
+    "lon": -98.6461856
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_social_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.facebook.com/sanorthside/",
+  "official_status_source_name": "Northside Suburban Little League official Facebook page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Northside Suburban",
+    "Northside Suburban LL",
+    "Northside Little League",
+    "NSLL San Antonio",
+    "Northside Suburban Little League",
+    "san-antonio-tx-northside-suburban-little-league"
+  ],
+  "future_status_protocol": "If Northside Suburban publishes a live field-status page, RainOutline line, or explicit cancellation feed, enable polling only after parser tests prove open/closed/cancelled wording is visible.",
+  "agent_rule": "Official source wins. The official social page is useful for announcements but is not a stable live field-status feed, so keep official status unknown unless a clear official cancellation/closure post is found. Tell the user to check the official source before leaving."
+}

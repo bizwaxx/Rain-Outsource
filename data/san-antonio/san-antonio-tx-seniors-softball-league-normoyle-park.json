@@ -1,0 +1,30 @@
+{
+  "id": "san-antonio-tx-seniors-softball-league-normoyle-park",
+  "field_name": "San Antonio Seniors Softball League at Normoyle Park",
+  "city": "San Antonio",
+  "state": "TX",
+  "address": "700 Culberson Avenue, San Antonio, TX 78225",
+  "coordinates": {
+    "lat": 29.3820925,
+    "lon": -98.5399397
+  },
+  "sport": "softball",
+  "ownership_type": "private_adult_league",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.sassl.org/facilities",
+  "official_status_source_name": "San Antonio Seniors Softball League official facilities page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "SASSL",
+    "San Antonio Seniors Softball",
+    "Seniors Softball League",
+    "SASSL Normoyle",
+    "San Antonio Seniors Softball League at Normoyle Park",
+    "san-antonio-tx-seniors-softball-league-normoyle-park"
+  ],
+  "future_status_protocol": "If SASSL publishes a live rainout notice or per-division field closure feed, enable polling only after parser tests. The facilities page is not itself a live rainout feed.",
+  "agent_rule": "Official source wins. The facilities page confirms SASSL league play at Normoyle Park but does not provide a live rainout status, so keep official status unknown unless a clear official cancellation/closure source is found. Tell the user to check the official source before leaving."
+}

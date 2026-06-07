@@ -61,7 +61,12 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "san-antonio-tx-lady-bird-johnson-park-softball-fields",
         "san-antonio-tx-mcallister-park-baseball-softball-fields",
         "san-antonio-tx-normoyle-park-baseball-fields",
+        "san-antonio-tx-northside-suburban-little-league",
+        "helotes-tx-greater-helotes-little-league",
+        "san-antonio-tx-seniors-softball-league-normoyle-park",
+        "san-antonio-tx-sports-social-club-softball-fields",
     }
+
     assert expected.issubset(by_id)
     assert by_id["austin-metro-northeast-metropolitan-park"]["ownership_type"] == "public"
     assert by_id["austin-tx-oak-hill-youth-sports-association"]["ownership_type"] == "private_nonprofit"
@@ -75,6 +80,9 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["dripping-springs-tx-dsysa-baseball-softball-sports-complex"]["official_status_source_name"] == "Dripping Springs Youth Sports Association field status page"
     assert by_id["san-antonio-tx-lady-bird-johnson-park-softball-fields"]["city"] == "San Antonio"
     assert by_id["san-antonio-tx-mcallister-park-baseball-softball-fields"]["rainout_phone"] == "210-207-6000"
+    assert by_id["san-antonio-tx-northside-suburban-little-league"]["ownership_type"] == "private_nonprofit"
+    assert by_id["helotes-tx-greater-helotes-little-league"]["city"] == "Helotes"
+    assert by_id["san-antonio-tx-sports-social-club-softball-fields"]["rainout_phone"] == "210-774-4630"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -111,6 +119,10 @@ def test_resolve_field_id_accepts_san_antonio_aliases():
     assert resolve_field_id("Lady Bird Johnson Park") == "san-antonio-tx-lady-bird-johnson-park-softball-fields"
     assert resolve_field_id("McAllister Park") == "san-antonio-tx-mcallister-park-baseball-softball-fields"
     assert resolve_field_id("Normoyle Baseball") == "san-antonio-tx-normoyle-park-baseball-fields"
+    assert resolve_field_id("Northside Suburban") == "san-antonio-tx-northside-suburban-little-league"
+    assert resolve_field_id("Greater Helotes") == "helotes-tx-greater-helotes-little-league"
+    assert resolve_field_id("SASSL") == "san-antonio-tx-seniors-softball-league-normoyle-park"
+    assert resolve_field_id("San Antonio SSC") == "san-antonio-tx-sports-social-club-softball-fields"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():
@@ -311,3 +323,23 @@ def test_build_status_result_uses_fetched_official_status_when_not_provided(monk
     assert result["official_status_checked"] is True
     assert result["official_status_last_checked"] == "2026-06-06T19:10:00+00:00"
     assert result["recommendation"] == "do not drive"
+
+
+def test_san_antonio_private_league_answers_stay_conservative():
+    result = build_status_result(
+        field_query="San Antonio SSC",
+        game_time="2026-06-07T19:00:00-05:00",
+        weather={
+            "rain_chance_percent": 35,
+            "thunderstorm_likely": False,
+            "source": "National Weather Service API test data",
+            "last_checked": "2026-06-07T16:00:00-05:00",
+        },
+        official_status="unknown",
+    )
+
+    assert result["field_id"] == "san-antonio-tx-sports-social-club-softball-fields"
+    assert result["official_status_source_url"] == "https://sanantoniossc.com/alerts"
+    assert "official rainout status is unknown for san antonio sports and social club softball fields" in result["spoken_answer"].lower()
+    assert "210-774-4630" in result["spoken_answer"]
+    assert "rainfall" not in result["spoken_answer"].lower()
