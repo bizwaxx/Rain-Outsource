@@ -82,7 +82,9 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["austin-tx-balcones-youth-sports"]["ownership_type"] == "private_nonprofit"
     assert by_id["round-rock-tx-old-settlers-baseball-complex"]["rainout_phone"] == "512-218-5540"
     assert by_id["cedar-park-tx-brushy-creek-sports-park-softball-fields"]["status_source_type"] == "official_field_status_page"
-    assert by_id["austin-tx-downs-field-ambl"]["official_status_source_name"] == "Austin Metro Baseball League fields page"
+    assert by_id["austin-tx-downs-field-ambl"]["official_status_source_name"] == "Austin Metro Baseball League rainout and game weather outlook page"
+    assert by_id["austin-tx-downs-field-ambl"]["official_status_source_url"] == "https://www.austinmetrobaseball.com/rainout.php"
+    assert by_id["austin-tx-downs-field-ambl"]["status_source_type"] == "official_league_weather_outlook_page"
     assert by_id["georgetown-tx-san-gabriel-park-gyba-field-8-ambl"]["city"] == "Georgetown"
     assert by_id["dripping-springs-tx-ctx-field-of-dreams"]["city"] == "Dripping Springs"
     assert by_id["dripping-springs-tx-dsysa-baseball-softball-sports-complex"]["official_status_source_name"] == "Dripping Springs Youth Sports Association field status page"
@@ -118,6 +120,27 @@ def test_resolve_field_id_accepts_austin_metro_baseball_league_aliases():
     assert resolve_field_id("Anderson High School") == "austin-tx-anderson-high-school-baseball-field-ambl"
     assert resolve_field_id("Georgetown Fields") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
     assert resolve_field_id("GYBA Field 8") == "georgetown-tx-san-gabriel-park-gyba-field-8-ambl"
+
+
+def test_austin_metro_baseball_league_protocol_stays_conservative():
+    result = build_status_result(
+        field_query="Downs",
+        game_time="2026-06-07T19:00:00-05:00",
+        weather={
+            "rain_chance_percent": 14,
+            "thunderstorm_likely": False,
+            "source": "National Weather Service API test data",
+            "last_checked": "2026-06-07T16:00:00-05:00",
+        },
+        official_status="unknown",
+    )
+
+    assert result["field_id"] == "austin-tx-downs-field-ambl"
+    assert result["official_status_source_url"] == "https://www.austinmetrobaseball.com/rainout.php"
+    assert result["official_status_source_name"] == "Austin Metro Baseball League rainout and game weather outlook page"
+    assert "official rainout status is unknown" in result["spoken_answer"].lower()
+    assert "check the official source" in result["spoken_answer"].lower()
+    assert "rainfall" not in result["spoken_answer"].lower()
 
 
 def test_resolve_field_id_accepts_dripping_springs_aliases():
