@@ -1,0 +1,29 @@
+{
+  "id": "dallas-tx-dfw-adult-baseball-association",
+  "field_name": "DFW Adult Baseball Association",
+  "city": "Dallas",
+  "state": "TX",
+  "address": "Dallas-Fort Worth, TX",
+  "coordinates": {
+    "lat": 32.7766642,
+    "lon": -96.7969879
+  },
+  "sport": "baseball",
+  "ownership_type": "private_adult_league",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.dfw-aba.com/",
+  "official_status_source_name": "DFW Adult Baseball Association official site",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "DFW ABA",
+    "DFW Adult Baseball",
+    "DFW Adult Baseball Association",
+    "Dallas Adult Baseball",
+    "dallas-tx-dfw-adult-baseball-association"
+  ],
+  "future_status_protocol": "If DFW ABA publishes a field status, rainout notice, or schedule cancellation feed with clear labels, enable polling only after parser tests.",
+  "agent_rule": "Official source wins. This organization site is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving."
+}

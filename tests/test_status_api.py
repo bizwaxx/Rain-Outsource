@@ -65,6 +65,14 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
         "helotes-tx-greater-helotes-little-league",
         "san-antonio-tx-seniors-softball-league-normoyle-park",
         "san-antonio-tx-sports-social-club-softball-fields",
+        "san-antonio-tx-northwest-little-league",
+        "san-antonio-tx-sportskind-softball",
+        "houston-tx-houston-sports-social-club-softball",
+        "houston-tx-houston-sportsplex",
+        "dallas-tx-dallas-sport-social-club-softball",
+        "dallas-tx-dfw-adult-baseball-association",
+        "fort-worth-tx-fort-worth-university-little-league",
+        "fort-worth-tx-senior-softball-dfw",
     }
 
     assert expected.issubset(by_id)
@@ -83,6 +91,10 @@ def test_list_supported_fields_includes_austin_public_and_private_expansion_batc
     assert by_id["san-antonio-tx-northside-suburban-little-league"]["ownership_type"] == "private_nonprofit"
     assert by_id["helotes-tx-greater-helotes-little-league"]["city"] == "Helotes"
     assert by_id["san-antonio-tx-sports-social-club-softball-fields"]["rainout_phone"] == "210-774-4630"
+    assert by_id["san-antonio-tx-northwest-little-league"]["official_status_source_name"] == "Northwest Little League official locations page"
+    assert by_id["houston-tx-houston-sports-social-club-softball"]["city"] == "Houston"
+    assert by_id["dallas-tx-dallas-sport-social-club-softball"]["city"] == "Dallas"
+    assert by_id["fort-worth-tx-fort-worth-university-little-league"]["city"] == "Fort Worth"
     assert "official_status_source_url" in by_id["manchaca-tx-manchaca-optimist-youth-sports-complex"]
 
 
@@ -123,6 +135,17 @@ def test_resolve_field_id_accepts_san_antonio_aliases():
     assert resolve_field_id("Greater Helotes") == "helotes-tx-greater-helotes-little-league"
     assert resolve_field_id("SASSL") == "san-antonio-tx-seniors-softball-league-normoyle-park"
     assert resolve_field_id("San Antonio SSC") == "san-antonio-tx-sports-social-club-softball-fields"
+    assert resolve_field_id("NWLL San Antonio") == "san-antonio-tx-northwest-little-league"
+    assert resolve_field_id("Sportskind SA Softball") == "san-antonio-tx-sportskind-softball"
+
+
+def test_resolve_field_id_accepts_houston_dallas_fort_worth_aliases():
+    assert resolve_field_id("Houston SSC") == "houston-tx-houston-sports-social-club-softball"
+    assert resolve_field_id("Houston Sportsplex") == "houston-tx-houston-sportsplex"
+    assert resolve_field_id("Dallas SSC") == "dallas-tx-dallas-sport-social-club-softball"
+    assert resolve_field_id("DFW ABA") == "dallas-tx-dfw-adult-baseball-association"
+    assert resolve_field_id("FWULL") == "fort-worth-tx-fort-worth-university-little-league"
+    assert resolve_field_id("Senior Softball DFW") == "fort-worth-tx-senior-softball-dfw"
 
 
 def test_build_status_result_uses_live_weather_inputs_and_voice_safe_answer():
@@ -343,3 +366,27 @@ def test_san_antonio_private_league_answers_stay_conservative():
     assert "official rainout status is unknown for san antonio sports and social club softball fields" in result["spoken_answer"].lower()
     assert "210-774-4630" in result["spoken_answer"]
     assert "rainfall" not in result["spoken_answer"].lower()
+
+
+def test_houston_dallas_fort_worth_answers_stay_conservative():
+    for query, field_id in [
+        ("Houston SSC", "houston-tx-houston-sports-social-club-softball"),
+        ("Dallas SSC", "dallas-tx-dallas-sport-social-club-softball"),
+        ("FWULL", "fort-worth-tx-fort-worth-university-little-league"),
+    ]:
+        result = build_status_result(
+            field_query=query,
+            game_time="2026-06-07T19:00:00-05:00",
+            weather={
+                "rain_chance_percent": 40,
+                "thunderstorm_likely": False,
+                "source": "National Weather Service API test data",
+                "last_checked": "2026-06-07T16:00:00-05:00",
+            },
+            official_status="unknown",
+        )
+
+        assert result["field_id"] == field_id
+        assert "official rainout status is unknown" in result["spoken_answer"].lower()
+        assert "check the official source" in result["spoken_answer"].lower()
+        assert "rainfall" not in result["spoken_answer"].lower()

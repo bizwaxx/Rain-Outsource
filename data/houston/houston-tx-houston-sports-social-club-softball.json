@@ -1,0 +1,29 @@
+{
+  "id": "houston-tx-houston-sports-social-club-softball",
+  "field_name": "Houston Sports and Social Club Softball",
+  "city": "Houston",
+  "state": "TX",
+  "address": "Houston, TX",
+  "coordinates": {
+    "lat": 29.7604267,
+    "lon": -95.3698028
+  },
+  "sport": "softball",
+  "ownership_type": "private_adult_league",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.houstonssc.com/sport/Softball",
+  "official_status_source_name": "Houston Sports and Social Club official softball page",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Houston SSC",
+    "Houston Sports and Social Club",
+    "Houston Sports and Social Club Softball",
+    "HSSC Softball",
+    "houston-tx-houston-sports-social-club-softball"
+  ],
+  "future_status_protocol": "If Houston SSC publishes a weather alert, rainout line, or venue-specific cancellation feed, enable polling only after parser tests confirm explicit status labels.",
+  "agent_rule": "Official source wins. This softball page is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving."
+}

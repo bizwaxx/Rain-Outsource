@@ -1,0 +1,29 @@
+{
+  "id": "fort-worth-tx-senior-softball-dfw",
+  "field_name": "Senior Softball DFW",
+  "city": "Fort Worth",
+  "state": "TX",
+  "address": "Dallas-Fort Worth, TX",
+  "coordinates": {
+    "lat": 32.7554883,
+    "lon": -97.3307658
+  },
+  "sport": "softball",
+  "ownership_type": "private_adult_league",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://seniorsoftballdfw.com/",
+  "official_status_source_name": "Senior Softball DFW official site",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Senior Softball DFW",
+    "DFW Senior Softball",
+    "Fort Worth Senior Softball",
+    "senior softball d f w",
+    "fort-worth-tx-senior-softball-dfw"
+  ],
+  "future_status_protocol": "If Senior Softball DFW publishes a live field closure, weather update, or cancellation feed, enable polling only after parser tests.",
+  "agent_rule": "Official source wins. This organization site is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving."
+}

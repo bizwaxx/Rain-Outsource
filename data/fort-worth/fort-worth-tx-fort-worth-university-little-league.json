@@ -1,0 +1,29 @@
+{
+  "id": "fort-worth-tx-fort-worth-university-little-league",
+  "field_name": "Fort Worth University Little League",
+  "city": "Fort Worth",
+  "state": "TX",
+  "address": "Fort Worth, TX",
+  "coordinates": {
+    "lat": 32.7554883,
+    "lon": -97.3307658
+  },
+  "sport": "baseball/softball",
+  "ownership_type": "private_nonprofit",
+  "status_source_type": "official_organization_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.fwull.com/",
+  "official_status_source_name": "Fort Worth University Little League official site",
+  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Fort Worth University Little League",
+    "FWULL",
+    "Fort Worth ULL",
+    "University Little League Fort Worth",
+    "fort-worth-tx-fort-worth-university-little-league"
+  ],
+  "future_status_protocol": "If FWULL publishes a live field status, rainout notice, or explicit cancellation feed, enable polling only after parser tests.",
+  "agent_rule": "Official source wins. This organization site is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving."
+}
