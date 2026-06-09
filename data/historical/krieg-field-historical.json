@@ -1,0 +1,21 @@
+{
+  "field_id": "austin-tx-krieg-field-softball-complex",
+  "historical_cancellations": [
+    {
+      "date": "2025-05-15",
+      "game_time": "2025-05-15T19:00:00-05:00",
+      "rain_amount_in": 1.8,
+      "status": "cancelled",
+      "source": "Austin Parks rainout line"
+    },
+    {
+      "date": "2025-04-22",
+      "game_time": "2025-04-22T18:30:00-05:00",
+      "rain_amount_in": 1.2,
+      "status": "cancelled",
+      "source": "Austin Parks rainout line"
+    }
+  ],
+  "typical_cancellation_threshold_in": 1.5,
+  "notes": "Games typically cancelled when >1.5 inches of rain expected in game window"
+}
