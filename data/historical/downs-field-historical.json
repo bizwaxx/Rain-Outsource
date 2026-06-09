@@ -1,0 +1,14 @@
+{
+  "field_id": "austin-tx-downs-field-ambl",
+  "historical_cancellations": [
+    {
+      "date": "2025-05-20",
+      "game_time": "2025-05-20T18:00:00-05:00",
+      "rain_amount_in": 1.6,
+      "status": "cancelled",
+      "source": "AMBL rainout page"
+    }
+  ],
+  "typical_cancellation_threshold_in": 1.5,
+  "notes": "AMBL games typically cancelled when >1.5 inches of rain expected"
+}
