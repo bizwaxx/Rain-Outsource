@@ -165,6 +165,8 @@ You are checking an outdoor game status. Use the public Rainout Source API.
 Open https://rainout-agent-source.vercel.app, read https://rainout-agent-source.vercel.app/openapi.yaml, discover supported fields at https://rainout-agent-source.vercel.app/v1/fields, then query Havins Field for 2026-06-06T20:20:00-05:00. Follow the `answer_requirements` returned by the API. Answer in plain English. If official status is unknown, do not guess; clearly say official status is unknown and tell the user to call 512-978-2680 before leaving. Use the word rain, not rainfall.
 ```
 
+For Tesla, voice, or always-on agents, use the stronger mandatory version in `docs/agent-examples.md` (Tesla / voice-first section).
+
 More examples: `docs/agent-examples.md`.
 
 ## Local test
