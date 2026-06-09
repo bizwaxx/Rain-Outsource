@@ -11,7 +11,7 @@
   "sport": "baseball",
   "ownership_type": "public_league_used",
   "status_source_type": "official_league_weather_outlook_page",
-  "poll_official_status": false,
+  "poll_official_status": true,
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.austinmetrobaseball.com/rainout.php",
   "official_status_source_name": "Austin Metro Baseball League rainout and game weather outlook page",

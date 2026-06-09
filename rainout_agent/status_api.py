@@ -119,6 +119,8 @@ def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
         result["polling_skipped"] = "not_a_status_feed"
         return result
 
+    is_ambl = "austinmetrobaseball.com/rainout.php" in (source_url or "")
+
     headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
     request = urllib.request.Request(source_url, headers=headers)
     try:
@@ -128,9 +130,20 @@ def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
         result["error"] = "official_source_unavailable"
         return result
 
-    result["official_status"] = parse_official_rainout_status(raw_text)
+    if is_ambl:
+        result["official_status"] = _parse_ambl_rainout_status(raw_text)
+    else:
+        result["official_status"] = parse_official_rainout_status(raw_text)
     result["checked"] = True
     return result
+
+
+def _parse_ambl_rainout_status(raw_text: str) -> str:
+    """Conservative parser for AMBL rainout.php - only explicit signals."""
+    text = (raw_text or "").lower()
+    if re.search(r"\b(rainout|postponed)\b", text) or re.search(r"\b(777|999)\b", raw_text or ""):
+        return "cancelled"
+    return "unknown"
 
 
 def parse_official_rainout_status(source_text: str) -> str:
@@ -348,3 +361,42 @@ def _calculate_source_reliability(official_data: dict[str, Any]) -> str:
     if official_data.get("checked"):
         return "medium"
     return "unknown"
+
+def search_fields(query: str, limit: int = 10) -> list[dict[str, Any]]:
+    """Search fields by name, city, or alias. Returns lightweight results for agents."""
+    if not query or not query.strip():
+        return []
+
+    q = _normalize(query)
+    results = []
+    seen = set()
+
+    for field in _load_all_fields():
+        field_id = field["id"]
+        if field_id in seen:
+            continue
+
+        name = field.get("field_name", "")
+        city = field.get("city", "")
+        aliases = field.get("aliases", [])
+
+        haystack = " ".join([name, city] + aliases + [field_id]).lower()
+
+        if q in haystack or any(q in _normalize(a) for a in aliases):
+            results.append(
+                {
+                    "field_id": field_id,
+                    "name": name,
+                    "city": city,
+                    "state": field.get("state"),
+                    "sport": field.get("sport"),
+                    "official_status_source_url": field.get("official_status_source_url"),
+                    "status_url": f"https://rainout-agent-source.vercel.app/v1/status?field_id={field_id}&game_time={{ISO-8601-game-time}}",
+                }
+            )
+            seen.add(field_id)
+
+        if len(results) >= limit:
+            break
+
+    return results
