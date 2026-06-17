@@ -3,64 +3,269 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Rainout Source — JEEZ Labs</title>
+  <title>Rainout Source — Will the game get rained out?</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; line-height: 1.55; }
-    code, pre { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
-    pre { overflow-x: auto; padding: 14px; }
-    .card { border: 1px solid #ddd; border-radius: 12px; padding: 18px; margin: 18px 0; }
-    a { color: #0b63ce; }
+    :root{
+      --bg:#0d1b2a; --card:#fff; --ink:#1a2433; --muted:#5b6776;
+      --line:#e4e8ee; --brand:#0b63ce; --brand-d:#084a9c;
+      --go:#1a8a4a; --gomut:#e3f5ea; --warn:#c47d00; --warnmut:#fdf3e0;
+      --stop:#c4322f; --stopmut:#fbe9e8; --unknown:#6b7280; --unkmut:#eef0f3;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      background:linear-gradient(180deg,#0d1b2a 0%,#13335a 100%);
+      color:var(--ink); min-height:100vh; line-height:1.5;
+    }
+    .wrap{max-width:560px; margin:0 auto; padding:20px 16px 60px}
+    header{text-align:center; color:#fff; padding:22px 0 10px}
+    header .logo{font-size:40px; line-height:1}
+    header h1{margin:8px 0 2px; font-size:24px; font-weight:700}
+    header p{margin:0; color:#aebfd4; font-size:14px}
+    .panel{background:var(--card); border-radius:18px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    label{display:block; font-weight:600; font-size:14px; margin:14px 0 6px; color:var(--ink)}
+    label:first-child{margin-top:0}
+    select,input{
+      width:100%; padding:14px; font-size:17px; border:1.5px solid var(--line);
+      border-radius:12px; background:#fbfcfe; color:var(--ink); -webkit-appearance:none;
+    }
+    select:focus,input:focus{outline:none; border-color:var(--brand)}
+    button{
+      width:100%; margin-top:18px; padding:16px; font-size:18px; font-weight:700;
+      color:#fff; background:var(--brand); border:0; border-radius:12px; cursor:pointer;
+      transition:background .15s;
+    }
+    button:hover{background:var(--brand-d)}
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .hint{font-size:12.5px; color:var(--muted); margin-top:6px}
+
+    /* Result */
+    #result{margin-top:18px; display:none}
+    .verdict{border-radius:18px; padding:22px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .verdict .prob{font-size:54px; font-weight:800; line-height:1; letter-spacing:-1px}
+    .verdict .problabel{font-size:13px; text-transform:uppercase; letter-spacing:.5px; opacity:.8; margin-bottom:8px}
+    .verdict .field{font-size:18px; font-weight:700; margin-top:10px}
+    .verdict .when{font-size:14px; opacity:.85}
+    .badge{display:inline-block; margin-top:12px; padding:6px 14px; border-radius:999px; font-weight:700; font-size:14px}
+    .go{background:var(--gomut); color:var(--go)} .go .prob{color:var(--go)}
+    .warn{background:var(--warnmut); color:var(--warn)} .warn .prob{color:var(--warn)}
+    .stop{background:var(--stopmut); color:var(--stop)} .stop .prob{color:var(--stop)}
+    .unknown{background:var(--unkmut); color:var(--unknown)} .unknown .prob{color:var(--unknown)}
+
+    .spoken{background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; margin-top:14px; font-size:16px}
+    .spoken .q{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:6px}
+    .rows{background:#fff; border:1px solid var(--line); border-radius:14px; margin-top:14px; overflow:hidden}
+    .row{display:flex; justify-content:space-between; gap:12px; padding:13px 16px; border-bottom:1px solid var(--line); font-size:15px}
+    .row:last-child{border-bottom:0}
+    .row .k{color:var(--muted)}
+    .row .v{font-weight:600; text-align:right}
+    .callbtn{display:block; text-align:center; margin-top:14px; padding:15px; background:var(--go); color:#fff; border-radius:12px; text-decoration:none; font-weight:700; font-size:17px}
+    .src{font-size:12.5px; color:var(--muted); margin-top:14px; text-align:center}
+    .src a{color:var(--brand)}
+    .err{display:none; background:var(--stopmut); color:var(--stop); border-radius:12px; padding:14px; margin-top:16px; font-weight:600}
+    .loading{display:none; text-align:center; color:#fff; padding:20px; font-size:15px}
+    footer{text-align:center; color:#8fa3bd; font-size:12px; margin-top:26px}
+    footer a{color:#bcd0ea}
   </style>
 </head>
 <body>
-  <h1>Rainout Source</h1>
-  <p><strong>Creator:</strong> JEEZ Labs</p>
-  <p>Open agent-readable source for rainout status and game-time play probability for outdoor events. The Austin pilot now supports Krieg/Craig, Havins, and a public/private Austin metro expansion batch.</p>
+  <div class="wrap">
+    <header>
+      <div class="logo">🌧️⚾</div>
+      <h1>Rainout Source</h1>
+      <p>Will the game get rained out? Pick a field and time.</p>
+    </header>
 
-  <div class="card">
-    <h2>Live agent endpoints</h2>
-    <p><strong>Service discovery:</strong> <a href="https://rainout-agent-source.vercel.app">https://rainout-agent-source.vercel.app</a></p>
-    <p><strong>OpenAPI contract:</strong> <a href="https://rainout-agent-source.vercel.app/openapi.yaml">https://rainout-agent-source.vercel.app/openapi.yaml</a></p>
-    <p><strong>Supported fields:</strong> <a href="https://rainout-agent-source.vercel.app/v1/fields">https://rainout-agent-source.vercel.app/v1/fields</a></p>
-    <p><strong>Krieg status example:</strong> <a href="https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&amp;game_time=2026-06-06T20:20:00-05:00">live status query</a></p>
+    <div class="panel">
+      <label for="field">Field</label>
+      <select id="field"><option>Loading fields…</option></select>
+      <div class="hint" id="fieldcount"></div>
+
+      <label for="when">Game date &amp; time</label>
+      <input type="datetime-local" id="when">
+      <div class="hint">Defaults to the next likely game slot. Change it to your game time.</div>
+
+      <button id="go" disabled>Check rainout status</button>
+    </div>
+
+    <div class="loading" id="loading">Checking weather &amp; official sources…</div>
+    <div class="err" id="err"></div>
+
+    <div id="result">
+      <div class="verdict" id="verdict">
+        <div class="problabel">Play probability</div>
+        <div class="prob" id="prob">—</div>
+        <div class="badge" id="rec">—</div>
+        <div class="field" id="rfield">—</div>
+        <div class="when" id="rwhen">—</div>
+      </div>
+
+      <div class="spoken">
+        <div class="q">The answer</div>
+        <div id="spoken">—</div>
+      </div>
+
+      <div class="rows" id="rows"></div>
+
+      <a class="callbtn" id="callbtn" style="display:none">📞 Call the rainout line</a>
+
+      <div class="src" id="src"></div>
+    </div>
+
+    <footer>
+      Built by JEEZ Labs · <a href="https://rainout-agent-source.vercel.app/v1/fields" target="_blank">API</a> ·
+      <a href="https://rainout-agent-source.vercel.app/openapi.yaml" target="_blank">OpenAPI</a>
+    </footer>
   </div>
 
-  <div class="card">
-    <h2>Pilot fields</h2>
-    <p><strong>Krieg Field Softball Complex:</strong> 515 S Pleasant Valley Rd.</p>
-    <p><strong>Havins Softball Complex:</strong> 12138 N Lamar Blvd.</p>
-    <p><strong>Northeast Metropolitan Park:</strong> public field source in Pflugerville.</p>
-    <p><strong>Southeast Metropolitan Park:</strong> public field source in Del Valle.</p>
-    <p><strong>Oak Hill Youth Sports Association:</strong> private nonprofit field source in Austin.</p>
-    <p><strong>Manchaca Optimist Youth Sports Complex:</strong> private nonprofit field source in Manchaca.</p>
-    <p><strong>Rainout phone:</strong> 512-978-2680</p>
-    <p><strong>Official source page:</strong> <a href="https://www.austintexas.gov/department/athletics">Austin Parks and Recreation Athletics</a></p>
-    <p><strong>Weather source:</strong> National Weather Service API</p>
-    <p><strong>Agent rule:</strong> Official rainout status wins. Rainout Source checks the Austin Athletics source page, but stays conservative: if no clear cancelled, delayed, or closed signal appears, official status remains unknown and agents should tell the user to call the rainout line before leaving.</p>
-  </div>
+<script>
+const API = "https://rainout-agent-source.vercel.app";
+const $ = id => document.getElementById(id);
 
-  <div class="card">
-    <h2>Outside-agent test prompt</h2>
-    <pre>You are checking an outdoor game status. Use the public Rainout Source API.
+// Convert a "YYYY-MM-DDTHH:MM" wall-clock value to an ISO string with the
+// correct US Central offset (-05:00 during CDT, -06:00 during CST). All
+// Rainout Source fields are in Texas, so the entered time is Central time.
+function centralOffsetMinutes(y, m, d){
+  // Determine if the date is in US daylight saving (2nd Sun Mar – 1st Sun Nov).
+  const secondSundayMarch = nthSunday(y, 2, 1); // March, 2nd Sunday
+  const firstSundayNov = nthSunday(y, 10, 0);   // November, 1st Sunday
+  const date = new Date(Date.UTC(y, m, d));
+  const dst = date >= new Date(Date.UTC(y, 2, secondSundayMarch)) &&
+              date <  new Date(Date.UTC(y, 10, firstSundayNov));
+  return dst ? 300 : 360; // CDT = UTC-5 (300min), CST = UTC-6 (360min)
+}
+function nthSunday(year, monthIdx, n){
+  // returns day-of-month of the (n+1)-th Sunday; n=0 -> first Sunday
+  const first = new Date(Date.UTC(year, monthIdx, 1)).getUTCDay();
+  return 1 + ((7 - first) % 7) + n*7;
+}
+function toCentralISO(localStr){
+  const [date, time] = localStr.split("T");
+  const [y, mo, d] = date.split("-").map(Number);
+  const [h, mi] = time.split(":").map(Number);
+  const offMin = centralOffsetMinutes(y, mo-1, d);
+  const sign = offMin > 0 ? "-" : "+";
+  const oh = String(Math.floor(Math.abs(offMin)/60)).padStart(2,"0");
+  const om = String(Math.abs(offMin)%60).padStart(2,"0");
+  const pad = n => String(n).padStart(2,"0");
+  return `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00${sign}${oh}:${om}`;
+}
 
-1. Open: https://rainout-agent-source.vercel.app
-2. Read: https://rainout-agent-source.vercel.app/openapi.yaml
-3. Discover supported fields: https://rainout-agent-source.vercel.app/v1/fields
-4. Query Krieg Field for: 2026-06-06T20:20:00-05:00
-5. Follow the API answer_requirements.
-6. Answer in plain English. If official status is unknown after the official source check, do not guess. Say official status is unknown and tell the user to call 512-978-2680 before leaving when that phone is published.
-7. Use the word "rain," not "rainfall."</pre>
-  </div>
+// Default the time to the next 8 PM (typical game slot)
+(function setDefaultTime(){
+  const d = new Date();
+  d.setDate(d.getDate() + (d.getHours() >= 20 ? 1 : 0));
+  d.setHours(20,0,0,0);
+  const pad = n => String(n).padStart(2,"0");
+  $("when").value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+})();
 
-  <div class="card">
-    <h2>Example safe answer</h2>
-    <p>Official rainout status is unknown for Krieg Field Softball Complex. At game time, rain chance is 16% with storms possible. Estimated play probability is 50%. Call the rainout line, 512-978-2680, before leaving.</p>
-  </div>
+// Load fields into the dropdown
+fetch(API + "/v1/fields")
+  .then(r => r.json())
+  .then(data => {
+    const fields = (data.fields || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
+    const sel = $("field");
+    sel.innerHTML = "";
+    fields.forEach(f => {
+      const o = document.createElement("option");
+      o.value = f.field_id;
+      o.textContent = `${f.name} — ${f.city}, ${f.state}`;
+      sel.appendChild(o);
+    });
+    // Default to Krieg if present
+    const krieg = fields.find(f => /krieg/i.test(f.field_id));
+    if (krieg) sel.value = krieg.field_id;
+    $("fieldcount").textContent = `${fields.length} fields supported`;
+    $("go").disabled = false;
+  })
+  .catch(() => {
+    $("field").innerHTML = "<option>Could not load fields</option>";
+    showErr("Couldn't load the field list. Check your connection and refresh.");
+  });
 
-  <h2>Developer files</h2>
-  <ul>
-    <li><a href="openapi.yaml">GitHub Pages copy of openapi.yaml</a></li>
-    <li><a href="agent-examples.md">Agent examples and curl smoke tests</a></li>
-  </ul>
+function showErr(msg){ const e=$("err"); e.textContent=msg; e.style.display="block"; }
+function clearErr(){ $("err").style.display="none"; }
+
+function addRow(k, v){
+  if (v === undefined || v === null || v === "") return;
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<span class="k"></span><span class="v"></span>`;
+  row.children[0].textContent = k;
+  row.children[1].textContent = v;
+  $("rows").appendChild(row);
+}
+
+$("go").addEventListener("click", () => {
+  const fieldId = $("field").value;
+  const whenLocal = $("when").value;
+  if (!fieldId || !whenLocal){ showErr("Pick a field and a game time first."); return; }
+  clearErr();
+  $("result").style.display = "none";
+  $("loading").style.display = "block";
+  $("go").disabled = true;
+
+  // All fields are in Texas (Central Time). Treat the entered wall-clock time
+  // as Central and attach the correct offset, instead of converting through the
+  // browser's local timezone (which would shift the game time incorrectly).
+  const iso = toCentralISO(whenLocal);
+
+  fetch(`${API}/v1/status?field_id=${encodeURIComponent(fieldId)}&game_time=${encodeURIComponent(iso)}`)
+    .then(r => r.json())
+    .then(d => {
+      $("loading").style.display = "none";
+      $("go").disabled = false;
+      if (d.error){ showErr(d.error); return; }
+
+      const prob = d.game_time_play_probability_percent;
+      $("prob").textContent = (prob ?? "—") + (prob!=null ? "%" : "");
+      $("rfield").textContent = d.field || "";
+      $("rwhen").textContent = d.game_time ? `Game time: ${d.game_time}` : "";
+      $("spoken").textContent = d.spoken_answer || "No summary available.";
+
+      // Color the verdict by play probability + official status
+      const v = $("verdict");
+      let cls = "unknown", rec = d.recommendation || "unknown";
+      if (d.official_status === "unknown" || prob == null){ cls = "unknown"; }
+      else if (prob >= 70){ cls = "go"; }
+      else if (prob >= 40){ cls = "warn"; }
+      else { cls = "stop"; }
+      v.className = "verdict " + cls;
+      $("rec").className = "badge " + cls;
+      $("rec").textContent = rec.replace(/_/g," ").toUpperCase();
+
+      // Detail rows
+      $("rows").innerHTML = "";
+      addRow("Official status", (d.official_status||"unknown").replace(/_/g," "));
+      addRow("Rain chance", d.rain_chance_percent!=null ? d.rain_chance_percent + "%" : null);
+      addRow("Thunderstorms", d.thunderstorm_likely ? "Possible ⚡" : "Not expected");
+      addRow("Forecast", d.forecast);
+      addRow("Risk level", d.risk_level ? d.risk_level.replace(/_/g," ") : null);
+      addRow("Address", d.address);
+
+      // Phone button if a number appears in the source string
+      const phone = (d.source||"").match(/(\d{3}[-.\s]?\d{3}[-.\s]?\d{4})/);
+      const cb = $("callbtn");
+      if (phone){ cb.style.display="block"; cb.href = "tel:" + phone[1].replace(/[-.\s]/g,""); cb.textContent = "📞 Call rainout line: " + phone[1]; }
+      else { cb.style.display="none"; }
+
+      // Source attribution
+      const srcName = d.official_status_source_name || "official source";
+      const srcUrl = d.official_status_source_url;
+      $("src").innerHTML = `Weather: ${d.weather_source||"NWS"} · Official: ` +
+        (srcUrl ? `<a href="${srcUrl}" target="_blank">${srcName}</a>` : srcName) +
+        (d.source_reliability ? ` · reliability: ${d.source_reliability}` : "");
+
+      $("result").style.display = "block";
+      $("result").scrollIntoView({behavior:"smooth", block:"start"});
+    })
+    .catch(() => {
+      $("loading").style.display = "none";
+      $("go").disabled = false;
+      showErr("Something went wrong checking that field. Try again in a moment.");
+    });
+});
+</script>
 </body>
 </html>
