@@ -21,7 +21,15 @@ def _normalize(value: str) -> str:
 def _load_all_fields() -> list[dict[str, Any]]:
     fields = []
     for path in sorted(DATA_DIR.glob("**/*.json")):
-        fields.append(json.loads(path.read_text(encoding="utf-8")))
+        # Historical cancellation records use a different schema (field_id +
+        # historical_cancellations) and are not field definitions. Skip them so
+        # the field loader only sees genuine field-definition documents.
+        if "historical" in path.relative_to(DATA_DIR).parts:
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        # Defensive: only include objects that are actual field definitions.
+        if isinstance(data, dict) and "id" in data:
+            fields.append(data)
     return fields
 
 
