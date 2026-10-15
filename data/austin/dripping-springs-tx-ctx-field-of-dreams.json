@@ -8,14 +8,28 @@
     "lat": 30.1899808,
     "lon": -98.2068498
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "baseball",
+  "sports": [
+    "baseball"
+  ],
+  "venue_type": "ball_field",
   "ownership_type": "private_league_used",
   "status_source_type": "official_directory_page",
   "poll_official_status": false,
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.atxyouthbaseball.com/directory-resources/ctx-field-of-dreams",
   "official_status_source_name": "ATX Youth Baseball CTX Field of Dreams directory page",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "weather_source": "National Weather Service API",
   "aliases": [
     "Field of Dreams",
@@ -26,5 +40,8 @@
     "dripping-springs-tx-ctx-field-of-dreams"
   ],
   "future_status_protocol": "If the field or league publishes a live rainout/status protocol, update official_status_source_url, set poll_official_status to true only after parser tests, and keep official status unknown when the feed is ambiguous.",
-  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. This directory page confirms the field identity but is not a live rainout feed, so do not guess. Tell the user to check the official source before leaving when official status is unknown."
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. This directory page confirms the field identity but is not a live rainout feed, so do not guess. Tell the user to check the official source before leaving when official status is unknown.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }
