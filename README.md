@@ -34,7 +34,8 @@ Current backend status:
 6. Pulls live game-time weather from the National Weather Service API.
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
 8. Calibrates play probability with 10 years of NOAA daily rain history for each field and returns the station used in `historical_calibration`.
-9. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
+9. Checks whole schedules (ICS URL/upload, JSON or CSV) at `/v1/schedule/check` and flags at-risk games.
+10. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
 
 ## Pilot fields
 
@@ -150,6 +151,20 @@ Use the word **rain**, not **rainfall**, in Dad-facing answers.
 ## Example answer
 
 Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving.
+
+## Schedule check (ICS / league schedules)
+
+Check a whole schedule at once and flag games likely to be rained out:
+
+```text
+GET  https://rainout-agent-source.vercel.app/v1/schedule/check?ics_url=https://example.org/team.ics
+POST https://rainout-agent-source.vercel.app/v1/schedule/check   (JSON games, raw .ics, or CSV)
+```
+
+Each game is matched to a venue, scored with the NWS forecast plus NOAA history (or a
+history-only outlook beyond ~7 days) and flagged when at risk. Add `format=ics` to get
+the calendar back with risk notes in each event. Stateless, SSRF-protected URL fetching,
+size/time limits for Vercel. Details: `docs/schedule.md`.
 
 ## Venues and schema
 

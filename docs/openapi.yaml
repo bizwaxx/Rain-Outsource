@@ -301,3 +301,151 @@ paths:
                 answer_requirements:
                   must_include: [field name, official status, rain chance, play probability, rainout phone or official source]
                   if_official_status_unknown: "Say official status is unknown and tell the user to call 512-978-2680 before leaving."
+  /v1/schedule/check:
+    get:
+      summary: Check an ICS calendar (by URL) for games likely to be rained out.
+      description: >-
+        Fetches the calendar (http/https/webcal only, public hosts only, 1 MB, 8 s), matches each
+        event to a venue, scores play probability with the NWS forecast plus NOAA history and flags
+        at-risk games. Stateless. See docs/schedule.md.
+      parameters:
+        - {in: query, name: ics_url, required: true, schema: {type: string, format: uri}, example: "https://example.org/team.ics"}
+        - {in: query, name: format, required: false, schema: {type: string, enum: [json, ics], default: json}}
+        - {in: query, name: risk_threshold, required: false, schema: {type: integer, minimum: 0, maximum: 100, default: 60}}
+        - {in: query, name: days, required: false, schema: {type: integer, minimum: 1, maximum: 31, default: 14}}
+        - {in: query, name: venue, required: false, schema: {type: string}, description: Venue id/alias for events whose location cannot be matched.}
+        - {in: query, name: timezone, required: false, schema: {type: string}, description: IANA zone for floating times when no venue matches.}
+      responses:
+        "200":
+          description: Schedule report (JSON) or annotated calendar (format=ics)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ScheduleReport"}
+            text/calendar:
+              schema: {type: string}
+        "400": {description: "missing_schedule, invalid_schedule, invalid_format or unsafe_url", content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+        "502": {description: ics_fetch_failed, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+    post:
+      summary: Check an uploaded schedule (JSON games, raw ICS or CSV).
+      description: Same options as GET, as query parameters or JSON keys. Body limit 1 MB.
+      parameters:
+        - {in: query, name: format, required: false, schema: {type: string, enum: [json, ics], default: json}}
+        - {in: query, name: risk_threshold, required: false, schema: {type: integer, default: 60}}
+        - {in: query, name: days, required: false, schema: {type: integer, default: 14}}
+        - {in: query, name: venue, required: false, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    games: {type: array, items: {$ref: "#/components/schemas/ScheduleGameInput"}}
+                    ics: {type: string, description: Raw iCalendar text}
+                    csv: {type: string, description: CSV with a header row}
+                    ics_url: {type: string, format: uri}
+                    format: {type: string, enum: [json, ics]}
+                    risk_threshold: {type: integer}
+                    days: {type: integer}
+                    venue: {type: string}
+                    timezone: {type: string}
+                - type: array
+                  items: {$ref: "#/components/schemas/ScheduleGameInput"}
+            example:
+              games:
+                - {venue: Krieg, start: "2026-05-09T19:00:00-05:00", home: Hawks, away: Bats}
+                - {venue: Onion Creek Soccer Complex, date: "2026-05-10", time: "9:00 AM", teams: Red vs Blue}
+          text/calendar:
+            schema: {type: string}
+          text/csv:
+            schema: {type: string}
+            example: "venue,date,time,home,away\nKrieg,2026-05-09,19:00,Hawks,Bats\n"
+      responses:
+        "200":
+          description: Schedule report (JSON) or annotated calendar (format=ics)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/ScheduleReport"}
+            text/calendar:
+              schema: {type: string}
+        "400": {description: "invalid_json, invalid_schedule, invalid_format, missing_schedule or unsafe_url", content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+        "413": {description: payload_too_large, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+        "502": {description: ics_fetch_failed, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+components:
+  schemas:
+    ScheduleGameInput:
+      type: object
+      properties:
+        venue: {type: string, description: "Venue id, name or alias (also venue_id, field_id, field, location)"}
+        start: {type: string, description: "ISO-8601; times without offset use the venue's local time (also game_time, datetime, or date + time)"}
+        date: {type: string}
+        time: {type: string}
+        home: {type: string}
+        away: {type: string}
+        teams: {type: string, example: Hawks vs Bats}
+        title: {type: string}
+        id: {type: string}
+        end: {type: string}
+        timezone: {type: string}
+    ScheduleGame:
+      type: object
+      properties:
+        index: {type: integer}
+        uid: {type: string}
+        title: {type: string, nullable: true}
+        home: {type: string, nullable: true}
+        away: {type: string, nullable: true}
+        start: {type: string}
+        status: {type: string, enum: [evaluated, no_forecast, unmatched_venue, invalid]}
+        venue:
+          type: object
+          nullable: true
+          properties:
+            field_id: {type: string}
+            name: {type: string}
+            city: {type: string}
+            state: {type: string}
+            match_method: {type: string, enum: [exact, alias_in_text, default_venue]}
+        basis: {type: string, enum: ["nws_forecast", "nws_forecast+history", history_only, calendar, none]}
+        official_status: {type: string}
+        assumes_game_scheduled: {type: boolean}
+        rain_chance_percent: {type: integer, nullable: true}
+        thunderstorm_likely: {type: boolean, nullable: true}
+        play_probability_percent: {type: integer, nullable: true}
+        risk_level: {type: string}
+        at_risk: {type: boolean}
+        risk_reasons: {type: array, items: {type: string}}
+        recommendation: {type: string}
+        reason: {type: string}
+        rainout_phone: {type: string}
+        official_status_source_url: {type: string, nullable: true}
+        status_url: {type: string}
+        historical_calibration: {type: object}
+    ScheduleReport:
+      type: object
+      properties:
+        generated_at: {type: string}
+        risk_threshold_percent: {type: integer}
+        window: {type: object, properties: {start: {type: string}, end: {type: string}, days: {type: integer}}}
+        summary:
+          type: object
+          properties:
+            games_in_input: {type: integer}
+            games_in_window: {type: integer}
+            evaluated: {type: integer}
+            at_risk: {type: integer}
+            unmatched_venue: {type: integer}
+            with_nws_forecast: {type: integer}
+            history_only: {type: integer}
+            skipped_past: {type: integer}
+            skipped_beyond_window: {type: integer}
+        games: {type: array, items: {$ref: "#/components/schemas/ScheduleGame"}}
+        warnings: {type: array, items: {type: string}}
+        assumptions: {type: array, items: {type: string}}
+    ScheduleError:
+      type: object
+      properties:
+        error: {type: string}
+        message: {type: string}
+        docs: {type: string}
