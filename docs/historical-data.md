@@ -66,7 +66,8 @@ play_probability = 100 - round(rain_chance * severity)  (then the existing storm
 - The 50% floor keeps history from discounting rain too much: wet grounds,
   lightning rules and crew calls cancel games below the daily threshold too.
 - Thunderstorms count fully, because lightning rules stop play regardless of totals.
-- Official `cancelled` / `field_closed` (0%) and `unknown` (50%) are unchanged.
+- Official `cancelled` / `field_closed` stay at 0%. `unknown` status uses a 96%
+  baseline lowered by rain, with this history at half weight (see `play-probability.md`).
 - `risk_level` and `recommendation` still come from the raw rain chance, so a
   60%+ rain chance is still flagged high risk.
 - Without NOAA history the original model runs unchanged.
