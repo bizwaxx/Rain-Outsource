@@ -172,6 +172,23 @@ history-only outlook beyond ~7 days) and flagged when at risk. Add `format=ics` 
 the calendar back with risk notes in each event. Stateless, SSRF-protected URL fetching,
 size/time limits for Vercel. Details: `docs/schedule.md`.
 
+## Teams (for AI agents)
+
+Agents can find a user's team and their games:
+
+```text
+GET /v1/teams/search?q=ATX+Boys&venue=Craig+Fields&day=friday
+GET /v1/teams/tsl-340-744621-4306365/games?date=today
+GET /v1/teams/tsl-340-744621-4306365/calendar.ics
+```
+
+Each game includes play odds, a one-sentence spoken `reason`, a Google Calendar API
+`calendar_event` with a stable `iCalUID`, and ICS text. Rainout Source never writes to
+calendars, so agents must ask the user first. League sources: City of Austin adult softball
+(TeamSideline), Austin Metro Baseball League, or any schedule link the user provides (ICS, linked
+ICS, JSON-LD or HTML table, with an optional LLM extractor). Details: `docs/teams.md`.
+Example conversation: `docs/agent-conversation.md`.
+
 ## Weather caching and fallback
 
 NWS lookups are cached: the points-to-gridpoint lookup for 7 days, hourly

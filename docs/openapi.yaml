@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.7.1
+  version: 0.8.0
   description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements.
   x-creator: JEEZ Labs
 servers:
@@ -12,6 +12,7 @@ servers:
 paths:
   /health:
     get:
+      operationId: getHealth
       summary: Health check for the Rainout Source backend.
       responses:
         "200":
@@ -36,6 +37,7 @@ paths:
                         example: memory+upstash
   /v1/fields:
     get:
+      operationId: listFields
       summary: List fields currently supported by Rainout Source.
       description: Agents should call this endpoint to discover supported field IDs, aliases, status URLs, and official rainout sources before asking for status. Filter by sport and/or state.
       parameters:
@@ -176,6 +178,7 @@ paths:
                           example: https://rainout-agent-source.vercel.app/v1/status?field_id=Havins&game_time={ISO-8601-game-time}
   /v1/status:
     get:
+      operationId: getGameStatus
       summary: Get official status, rain chance, and game-time play probability for a field/game.
       description: >-
         Weather comes from the National Weather Service (cached for about 10 minutes; a cached copy
@@ -342,6 +345,7 @@ paths:
                   if_official_status_unknown: "Say official status is unknown and tell the user to call 512-978-2680 before leaving."
   /v1/schedule/check:
     get:
+      operationId: checkScheduleByUrl
       summary: Check an ICS calendar (by URL) for games likely to be rained out.
       description: >-
         Fetches the calendar (http/https/webcal only, public hosts only, 1 MB, 8 s), matches each
@@ -365,6 +369,7 @@ paths:
         "400": {description: "missing_schedule, invalid_schedule, invalid_format or unsafe_url", content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
         "502": {description: ics_fetch_failed, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
     post:
+      operationId: checkSchedule
       summary: Check an uploaded schedule (JSON games, raw ICS or CSV).
       description: Same options as GET, as query parameters or JSON keys. Body limit 1 MB.
       parameters:
@@ -411,8 +416,145 @@ paths:
         "400": {description: "invalid_json, invalid_schedule, invalid_format, missing_schedule or unsafe_url", content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
         "413": {description: payload_too_large, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
         "502": {description: ics_fetch_failed, content: {application/json: {schema: {$ref: "#/components/schemas/ScheduleError"}}}}
+  /v1/teams/search:
+    get:
+      operationId: searchTeams
+      summary: Find a user's team in public league schedules.
+      description: >-
+        Find the user's team (e.g. "ATX Boys, Friday nights at Craig Fields"). Confirm the match with the user.
+        If next_step is ask_user_for_schedule_url, ask for their league schedule link and retry with schedule_url.
+      parameters:
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: Team name as the user said it., example: ATX Boys}
+        - {in: query, name: venue, required: false, schema: {type: string}, description: Venue name or alias (e.g. Craig Fields)., example: Craig Fields}
+        - {in: query, name: sport, required: false, schema: {type: string}, example: softball}
+        - {in: query, name: day, required: false, schema: {type: string}, description: Weekday they usually play., example: friday}
+        - {in: query, name: schedule_url, required: false, schema: {type: string, format: uri}, description: "League schedule link from the user (ICS/webcal feed or schedule web page). Public http(s) only."}
+      responses:
+        "200":
+          description: Candidate teams (may be empty)
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TeamSearchResult"}
+        "400":
+          description: Missing query or unsafe schedule_url
+          content: {application/json: {schema: {$ref: "#/components/schemas/TeamsError"}}}
+  /v1/teams/{team_id}/games:
+    get:
+      operationId: getTeamGames
+      summary: A team's games with play odds, a spoken reason, and a ready-to-add calendar event.
+      description: >-
+        Use date=today for "do I have a game today?". Read reason aloud. Never add to a calendar without asking
+        the user first; then insert calendar_event. If no game is in range, next_game has the next one.
+      parameters:
+        - {in: path, name: team_id, required: true, schema: {type: string}, description: team_id from searchTeams., example: tsl-340-744621-4306365}
+        - {in: query, name: date, required: false, schema: {type: string}, description: "today, tomorrow or YYYY-MM-DD.", example: today}
+        - {in: query, name: from, required: false, schema: {type: string, format: date}}
+        - {in: query, name: to, required: false, schema: {type: string, format: date}, description: Range is limited to 62 days; defaults to 14 days from `from`.}
+      responses:
+        "200":
+          description: Games
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TeamGamesResult"}
+        "400": {description: Bad date range, content: {application/json: {schema: {$ref: "#/components/schemas/TeamsError"}}}}
+        "404": {description: Unknown team_id, content: {application/json: {schema: {$ref: "#/components/schemas/TeamsError"}}}}
+        "502": {description: League schedule unavailable (ask the user for a schedule link), content: {application/json: {schema: {$ref: "#/components/schemas/TeamsError"}}}}
+  /v1/teams/{team_id}/calendar.ics:
+    get:
+      operationId: getTeamCalendar
+      summary: Subscribable iCalendar feed of the team's games with play odds in each description.
+      parameters:
+        - {in: path, name: team_id, required: true, schema: {type: string}}
+      responses:
+        "200":
+          description: iCalendar feed (last 7 days through the next 120 days)
+          content:
+            text/calendar:
+              schema: {type: string}
 components:
   schemas:
+    TeamCandidate:
+      type: object
+      properties:
+        team_id: {type: string, example: tsl-340-744621-4306365}
+        name: {type: string, example: ATX Boys}
+        league: {type: string, example: Capital City Softball (Austin Parks & Recreation adult softball)}
+        league_id: {type: string, nullable: true}
+        division: {type: string, nullable: true, example: Friday Softball 503 Men 0HR South}
+        season: {type: string, nullable: true}
+        sport: {type: string, nullable: true}
+        day: {type: string, nullable: true}
+        venue: {type: object, nullable: true, properties: {field_id: {type: string}, name: {type: string}, city: {type: string}, state: {type: string}}}
+        schedule_source_url: {type: string}
+        platform: {type: string, enum: [teamsideline, ambl, generic]}
+        confidence: {type: number, minimum: 0, maximum: 1}
+        games_url: {type: string}
+    TeamSearchResult:
+      type: object
+      properties:
+        query: {type: object}
+        count: {type: integer}
+        candidates: {type: array, items: {$ref: "#/components/schemas/TeamCandidate"}}
+        next_step: {type: string, enum: [confirm_with_user, ask_user_for_schedule_url]}
+        message: {type: string}
+        searched_sources: {type: array, items: {type: object}}
+        as_of: {type: string}
+    CalendarEvent:
+      type: object
+      description: Google Calendar API event resource (events.insert / events.import body). Only add it after the user agrees.
+      properties:
+        summary: {type: string}
+        location: {type: string, nullable: true}
+        description: {type: string}
+        start: {type: object, properties: {dateTime: {type: string}, timeZone: {type: string}}}
+        end: {type: object, properties: {dateTime: {type: string}, timeZone: {type: string}}}
+        iCalUID: {type: string, description: Stable per game, so re-adding updates instead of duplicating.}
+        status: {type: string, nullable: true}
+        source: {type: object, properties: {title: {type: string}, url: {type: string}}}
+        reminders: {type: object}
+    TeamGame:
+      type: object
+      properties:
+        game_id: {type: string}
+        team: {type: string}
+        opponent: {type: string, nullable: true}
+        home_away: {type: string, nullable: true, enum: [home, away]}
+        start: {type: string, description: ISO-8601 with UTC offset}
+        end: {type: string, nullable: true}
+        end_estimated: {type: boolean}
+        timezone: {type: string, example: America/Chicago}
+        when_spoken: {type: string, example: tomorrow at 8:20 PM}
+        venue: {type: object, nullable: true, properties: {field_id: {type: string, nullable: true}, name: {type: string}, field: {type: string, nullable: true}, address: {type: string, nullable: true}, rainout_phone: {type: string, nullable: true}}}
+        league_status: {type: string, enum: [scheduled, final, cancelled, postponed, forfeit]}
+        play_probability: {type: integer, nullable: true, minimum: 0, maximum: 100, description: "Chance the game is played. 100 = already played, 0 = cancelled/postponed/forfeit, null = too far out."}
+        risk_level: {type: string, nullable: true}
+        at_risk: {type: boolean, nullable: true}
+        reason: {type: string, description: One sentence an agent can say aloud.}
+        reason_detail: {type: string, nullable: true}
+        weather: {type: object, nullable: true}
+        status_source: {type: object, description: "league_schedule (name, url, status), official (rainout source), weather source."}
+        as_of: {type: string}
+        calendar_event: {$ref: "#/components/schemas/CalendarEvent"}
+        ics: {type: string, description: Single-event iCalendar text.}
+    TeamGamesResult:
+      type: object
+      properties:
+        team: {$ref: "#/components/schemas/TeamCandidate"}
+        range: {type: object, properties: {from: {type: string}, to: {type: string}, timezone: {type: string}}}
+        count: {type: integer}
+        games: {type: array, items: {$ref: "#/components/schemas/TeamGame"}}
+        next_game: {allOf: [{$ref: "#/components/schemas/TeamGame"}], nullable: true}
+        message: {type: string, example: "ATX Boys has no games today. Next game: tomorrow at 8:20 PM vs The Vatos."}
+        calendar_ics_url: {type: string}
+        calendar_policy: {type: string}
+        as_of: {type: string}
+    TeamsError:
+      type: object
+      properties:
+        error: {type: string}
+        message: {type: string}
+        next_step: {type: string, nullable: true}
+        spoken_answer: {type: string, nullable: true}
     ScheduleGameInput:
       type: object
       properties:
