@@ -9,8 +9,14 @@
     "lon": -97.7141897
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "official_venue_source",
+    "sources": [
+      "https://www.capitalcityathletics.com/schedules",
+      "https://www.softballaustin.org/info/krieg-fields/",
+      "https://playncs.com/FASTPITCH/Sites/Details/1035/kreig-fields"
+    ],
+    "verified_on": "2026-10-15",
+    "note": "The City of Austin league site (Capital City Athletics) embeds a map pin at 30.24643, -97.71422 for 515 South Pleasant Valley Road, within about 5 m of these coordinates. Softball Austin and NCS list the same complex (11 lighted softball fields)."
   },
   "sport": "softball",
   "sports": [
@@ -33,6 +39,10 @@
     "Craig",
     "Craig Field",
     "Craig Softball Fields",
+    "Kreig Fields",
+    "Krieg Softball Complex",
+    "Krieg Athletic Complex",
+    "Craig Fields",
     "Krieg Field",
     "Krieg Fields",
     "Krieg Field Softball Complex",
@@ -41,7 +51,17 @@
     "austin-tx-krieg-field-softball-complex"
   ],
   "agent_rule": "Official rainout status wins. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers.",
-  "operator": null,
+  "operator": "City of Austin Parks and Recreation (Athletics)",
   "surface": "unknown",
-  "drainage": "unknown"
+  "drainage": "unknown",
+  "leagues": [
+    {
+      "name": "Capital City Softball (Austin PARD adult softball, Mon-Fri)",
+      "schedule_url": "https://www.capitalcityathletics.com/schedules"
+    },
+    {
+      "name": "Softball Austin",
+      "url": "https://www.softballaustin.org/"
+    }
+  ]
 }
