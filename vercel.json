@@ -20,6 +20,10 @@
     {
       "src": "api/stats.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/schedule.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -42,6 +46,10 @@
     {
       "src": "/v1/status",
       "dest": "/api/status.py"
+    },
+    {
+      "src": "/v1/schedule/check",
+      "dest": "/api/schedule.py"
     },
     {
       "src": "/v1/stats",

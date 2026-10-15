@@ -5,6 +5,7 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 from rainout_agent.status_api import build_status_result, list_supported_fields
+from rainout_agent.schedule_api import MAX_BODY_BYTES, handle_schedule_request
 from rainout_agent.venue_schema import SPORTS
 
 
@@ -27,6 +28,24 @@ def application(environ, start_response):
 
     if method == "OPTIONS":
         return _json_response(start_response, "200 OK", {"status": "ok"})
+
+    if path == "/v1/schedule/check":
+        body = b""
+        if method == "POST":
+            try:
+                length = int(environ.get("CONTENT_LENGTH") or 0)
+            except ValueError:
+                length = 0
+            body = environ["wsgi.input"].read(min(length, MAX_BODY_BYTES + 1)) if length > 0 else b""
+        status, content_type, payload = handle_schedule_request(
+            method, environ.get("QUERY_STRING", ""), body, environ.get("CONTENT_TYPE", "")
+        )
+        reason = {200: "OK", 400: "Bad Request", 405: "Method Not Allowed", 413: "Payload Too Large", 502: "Bad Gateway"}
+        start_response(
+            f"{status} {reason.get(status, 'Error')}",
+            [("Content-Type", content_type), ("Content-Length", str(len(payload))), ("Access-Control-Allow-Origin", "*")],
+        )
+        return [payload]
 
     if method != "GET":
         return _json_response(start_response, "405 Method Not Allowed", {"error": "method_not_allowed"})
