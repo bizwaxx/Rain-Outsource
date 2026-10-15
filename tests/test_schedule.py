@@ -148,7 +148,8 @@ def test_rainy_forecast_flags_game_at_risk_with_history_calibration():
     assert g["rain_chance_percent"] == 80
     assert g["at_risk"] and any("rain chance 80%" in r for r in g["risk_reasons"])
     assert g["assumes_game_scheduled"] is True
-    assert g["reason"].startswith("Assuming the game is still on")
+    assert g["reason"].startswith("Official status has not been posted. Rain chance is 80%")
+    assert g["official_status"] == "unknown" and g["play_probability_percent"] <= 60
     assert g["historical_calibration"]["station_id"] == "USW00013904"
     assert report["summary"]["at_risk"] == 1 and report["summary"]["with_nws_forecast"] == 1
 
@@ -360,3 +361,28 @@ def test_local_http_app_schedule_routes():
     assert captured["status"] == "200 OK" and json.loads(out)["summary"]["games_in_input"] == 0
     out = b"".join(application({"REQUEST_METHOD": "GET", "PATH_INFO": "/v1/schedule/check", "QUERY_STRING": "ics_url=http://127.0.0.1/x.ics"}, start_response))
     assert captured["status"] == "400 Bad Request" and json.loads(out)["error"] == "unsafe_url"
+
+
+def test_unknown_status_scoring_matches_status_endpoint_model():
+    from rainout_agent.play_probability import calculate_play_probability
+
+    g = [game("Krieg", NOW + timedelta(hours=5))]
+    for rain in (5, 30, 50, 70):
+        out = run(g, Providers(rain=rain))["games"][0]
+        expected = calculate_play_probability("unknown", rain, False, 5, historical_calibration=None)
+        assert out["official_status"] == "unknown"
+        assert out["play_probability_percent"] >= expected["play_probability_percent"]  # NOAA calibration only softens plain rain
+    dry = run(g, Providers(rain=5))["games"][0]
+    assert dry["play_probability_percent"] == 96 and not dry["at_risk"]
+    wet = run(g, Providers(rain=100))["games"][0]
+    assert wet["at_risk"]
+
+
+def test_delayed_official_status_is_flagged_at_risk():
+    out = run([game("Krieg", NOW + timedelta(hours=5))], Providers(rain=5, official="delayed"))["games"][0]
+    assert out["play_probability_percent"] == 50 and out["at_risk"]
+
+
+def test_history_outlook_uses_same_baseline():
+    out = run([game("Krieg", NOW + timedelta(days=10))])["games"][0]
+    assert out["basis"] == "history_only" and out["play_probability_percent"] <= 96

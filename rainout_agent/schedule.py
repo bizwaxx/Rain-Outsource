@@ -18,7 +18,7 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from rainout_agent.historical import calibration_for
-from rainout_agent.play_probability import calculate_play_probability
+from rainout_agent.play_probability import UNKNOWN_BASELINE_PERCENT, calculate_play_probability
 from rainout_agent.status_api import (
     _load_all_fields,
     _normalize,
@@ -527,11 +527,10 @@ def check_schedule(
         if in_range:
             weather = weather_from_periods(periods, start, source=forecast_info["source"])
             fallback = forecast_info["source_id"] == "open_meteo"
-            assumed = official_status if official_status in CANCELLED_STATUSES | {"on", "playing", "open", "delayed"} else "on"
-            if assumed == "delayed":
-                assumed = "on"
+            # Same model as /v1/status: unknown status starts from the 96% baseline
+            # and rain/storms bring it down; delayed/conflicting is capped at 50%.
             probability = calculate_play_probability(
-                official_status=assumed,
+                official_status=official_status,
                 precipitation_chance_percent=weather["rain_chance_percent"],
                 thunderstorm_likely=weather["thunderstorm_likely"],
                 hours_until_game=hours_until,
@@ -552,21 +551,17 @@ def check_schedule(
                 "play_probability_percent": probability["play_probability_percent"],
                 "risk_level": probability["risk_level"],
                 "recommendation": probability["recommendation"],
-                "reason": (
-                    probability["reason"].replace("Official status is on", "Assuming the game is still on", 1)
-                    if official_status not in {"on", "playing", "open"}
-                    else probability["reason"]
-                ),
+                "reason": probability["reason"],
             })
             if official_status in CANCELLED_STATUSES:
                 reasons.append(f"official status is {official_status}")
             if weather["thunderstorm_likely"]:
                 reasons.append("thunderstorms likely")
-            if probability["risk_level"] == "high":
+            if weather["rain_chance_percent"] >= 60:
                 reasons.append(f"rain chance {weather['rain_chance_percent']}%")
         else:
             frac = (calibration or {}).get("rainout_day_frac")
-            play = None if frac is None else int(round(100 * (1 - float(frac))))
+            play = None if frac is None else int(round(UNKNOWN_BASELINE_PERCENT * (1 - float(frac))))
             entry.update({
                 "status": "evaluated" if play is not None else "no_forecast",
                 "basis": "history_only" if play is not None else "none",
@@ -621,7 +616,7 @@ def check_schedule(
         "games": results,
         "warnings": warnings,
         "assumptions": [
-            "Play probability assumes the game is still scheduled unless the official source (polled only for games in the next 12 hours) or the calendar says otherwise.",
+            "Play probability uses the same model as /v1/status. When no official status is posted, it starts from a 96% baseline (normal no-shows and venue issues) and rain and storms lower it. Cancelled is 0%; delayed or conflicting signals are capped at 50%. Official status is polled only for games in the next 12 hours.",
             "Games beyond the NWS forecast range (about 7 days) get a history-only outlook from NOAA records.",
             "Official sources win. Check the rainout line or official page before leaving.",
         ],
