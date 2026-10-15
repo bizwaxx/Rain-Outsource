@@ -2,6 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
+from rainout_agent import http_cache
 from rainout_agent.status_api import list_supported_fields
 from rainout_agent.venue_schema import SPORTS
 
@@ -38,13 +39,14 @@ class handler(BaseHTTPRequestHandler):
             payload = build_fields_payload(sport=sport, state=state)
         except ValueError as exc:
             return self._send_json(400, invalid_filter_payload(str(exc)))
-        self._send_json(200, payload)
+        self._send_json(200, payload, http_cache.fields_cache_control(200))
 
-    def _send_json(self, status_code, payload):
+    def _send_json(self, status_code, payload, cache_control=http_cache.NO_STORE):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", cache_control)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)

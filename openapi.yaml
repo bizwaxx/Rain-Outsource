@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.6.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather, conservative official source polling, and stricter outside-agent answer requirements.
+  version: 0.7.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -27,6 +27,13 @@ paths:
                   service:
                     type: string
                     example: rainout-source
+                  weather_cache:
+                    type: object
+                    description: Active weather cache backend (local server and /health only). Never includes URLs or tokens.
+                    properties:
+                      backend:
+                        type: string
+                        example: memory+upstash
   /v1/fields:
     get:
       summary: List fields currently supported by Rainout Source.
@@ -170,6 +177,10 @@ paths:
   /v1/status:
     get:
       summary: Get official status, rain chance, and game-time play probability for a field/game.
+      description: >-
+        Weather comes from the National Weather Service (cached for about 10 minutes; a cached copy
+        up to 2 hours old is used if NWS is down) or, as a last resort, Open-Meteo. `weather_source_id`
+        says which one was used. Responses carry Cache-Control (max-age 60 s; 30 s when degraded).
       parameters:
         - in: query
           name: field_id
@@ -237,6 +248,23 @@ paths:
                     enum: [likely_safe_to_drive, check_again_before_leaving, do_not_drive, check_official_source]
                   source:
                     type: string
+                  weather_source:
+                    type: string
+                    description: Human-readable weather source.
+                    example: National Weather Service API
+                  weather_source_id:
+                    type: string
+                    enum: [nws, nws_stale, open_meteo]
+                    description: nws = NWS (live or fresh cache); nws_stale = cached NWS served because NWS failed; open_meteo = Open-Meteo fallback.
+                  weather_cache:
+                    type: string
+                    nullable: true
+                    enum: [hit, miss, stale]
+                    description: Whether the forecast came from the Rainout Source cache.
+                  last_checked:
+                    type: string
+                    nullable: true
+                    description: When the forecast used was fetched from its source (ISO-8601, UTC).
                   spoken_answer:
                     type: string
                   answer_requirements:
@@ -407,7 +435,9 @@ components:
             city: {type: string}
             state: {type: string}
             match_method: {type: string, enum: [exact, alias_in_text, default_venue]}
-        basis: {type: string, enum: ["nws_forecast", "nws_forecast+history", history_only, calendar, none]}
+        basis: {type: string, enum: ["nws_forecast", "nws_forecast+history", "open_meteo_forecast", "open_meteo_forecast+history", history_only, calendar, none]}
+        weather_source: {type: string, description: "Human-readable weather source for forecast-scored games."}
+        weather_source_id: {type: string, enum: [nws, nws_stale, open_meteo]}
         official_status: {type: string}
         assumes_game_scheduled: {type: boolean}
         rain_chance_percent: {type: integer, nullable: true}
@@ -437,6 +467,7 @@ components:
             at_risk: {type: integer}
             unmatched_venue: {type: integer}
             with_nws_forecast: {type: integer}
+            with_fallback_forecast: {type: integer, description: Games scored with the Open-Meteo fallback.}
             history_only: {type: integer}
             skipped_past: {type: integer}
             skipped_beyond_window: {type: integer}

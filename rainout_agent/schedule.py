@@ -1,9 +1,9 @@
 """Schedule checking: parse ICS / JSON / CSV schedules, match games to venues,
 estimate game-time play probability and flag at-risk games.
 
-Stateless: everything is computed per request. NWS forecasts are fetched once
-per venue per request (in parallel, with a time budget) and reused for every
-game at that venue.
+Stateless apart from the shared weather cache: forecasts are fetched once per
+venue per request (in parallel, with a time budget, through the cached
+NWS -> Open-Meteo weather layer) and reused for every game at that venue.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from rainout_agent.play_probability import calculate_play_probability
 from rainout_agent.status_api import (
     _load_all_fields,
     _normalize,
-    fetch_nws_hourly_periods,
+    fetch_hourly_forecast,
     fetch_official_rainout_status,
     resolve_field_id,
     weather_from_periods,
@@ -349,6 +349,17 @@ def _game_uid(game: dict[str, Any], index: int) -> str:
     return hashlib.sha1(seed.encode()).hexdigest()[:16] + "@rainout-source"
 
 
+def _normalise_forecast(result: Any) -> dict[str, Any]:
+    """Accept a bare NWS period list or the weather layer's dict."""
+    if isinstance(result, dict):
+        return {
+            "periods": result.get("periods") or [],
+            "source": result.get("source") or "National Weather Service API",
+            "source_id": result.get("source_id") or "nws",
+        }
+    return {"periods": list(result or []), "source": "National Weather Service API", "source_id": "nws"}
+
+
 def check_schedule(
     games: list[dict[str, Any]],
     *,
@@ -357,7 +368,7 @@ def check_schedule(
     window_days: int = DEFAULT_WINDOW_DAYS,
     default_venue: str | None = None,
     default_timezone: str | None = None,
-    forecast_provider: Callable[[dict[str, Any], float], list[dict[str, Any]]] | None = None,
+    forecast_provider: Callable[[dict[str, Any], float], list[dict[str, Any]] | dict[str, Any]] | None = None,
     official_provider: Callable[[dict[str, Any], float], dict[str, Any]] | None = None,
     budget_s: float = DEFAULT_BUDGET_S,
 ) -> dict[str, Any]:
@@ -367,7 +378,7 @@ def check_schedule(
     risk_threshold = max(0, min(100, int(risk_threshold)))
     window_days = max(1, min(MAX_WINDOW_DAYS, int(window_days)))
     window_end = now + timedelta(days=window_days)
-    forecast_provider = forecast_provider or (lambda field, timeout: fetch_nws_hourly_periods(field, timeout=timeout))
+    forecast_provider = forecast_provider or (lambda field, timeout: fetch_hourly_forecast(field, timeout=timeout))
     official_provider = official_provider or (lambda field, timeout: fetch_official_rainout_status(field, timeout=timeout))
 
     default_field_id = resolve_field_id(default_venue) if default_venue else None
@@ -428,7 +439,7 @@ def check_schedule(
         warnings.append(f"Forecasts were fetched for the first {MAX_FORECAST_VENUES} venues only; other games use history only.")
         need_forecast = need_forecast[:MAX_FORECAST_VENUES]
 
-    forecasts: dict[str, list[dict[str, Any]]] = {}
+    forecasts: dict[str, dict[str, Any]] = {}
     officials: dict[str, dict[str, Any]] = {}
     remaining = budget_s - (time.monotonic() - started)
     if (need_forecast or need_official) and remaining > 0.5:
@@ -444,12 +455,15 @@ def check_schedule(
             try:
                 result = future.result()
             except Exception:
-                warnings.append(f"Could not fetch the {'NWS forecast' if kind == 'forecast' else 'official status'} for {fid}.")
+                warnings.append(f"Could not fetch the {'forecast' if kind == 'forecast' else 'official status'} for {fid}.")
                 continue
-            (forecasts if kind == "forecast" else officials)[fid] = result
+            if kind == "forecast":
+                forecasts[fid] = _normalise_forecast(result)
+            else:
+                officials[fid] = result
         for future in not_done:
             kind, fid = jobs[future]
-            warnings.append(f"Timed out fetching the {'NWS forecast' if kind == 'forecast' else 'official status'} for {fid}.")
+            warnings.append(f"Timed out fetching the {'forecast' if kind == 'forecast' else 'official status'} for {fid}.")
         pool.shutdown(wait=False, cancel_futures=True)
 
     # 3) evaluate each game
@@ -501,7 +515,8 @@ def check_schedule(
         calibration = calibration_for(field["id"], start)
         official = officials.get(field["id"])
         official_status = (official or {}).get("official_status") or "unknown"
-        periods = forecasts.get(field["id"])
+        forecast_info = forecasts.get(field["id"]) or {}
+        periods = forecast_info.get("periods")
         in_range = False
         if periods:
             first, last = _period_bounds(periods)
@@ -510,7 +525,8 @@ def check_schedule(
         reasons: list[str] = []
 
         if in_range:
-            weather = weather_from_periods(periods, start)
+            weather = weather_from_periods(periods, start, source=forecast_info["source"])
+            fallback = forecast_info["source_id"] == "open_meteo"
             assumed = official_status if official_status in CANCELLED_STATUSES | {"on", "playing", "open", "delayed"} else "on"
             if assumed == "delayed":
                 assumed = "on"
@@ -523,7 +539,9 @@ def check_schedule(
             )
             entry.update({
                 "status": "evaluated",
-                "basis": "nws_forecast" + ("+history" if calibration else ""),
+                "basis": ("open_meteo_forecast" if fallback else "nws_forecast") + ("+history" if calibration else ""),
+                "weather_source": forecast_info["source"],
+                "weather_source_id": forecast_info["source_id"],
                 "official_status": official_status,
                 "official_status_checked": bool(official and official.get("checked")),
                 "assumes_game_scheduled": official_status not in CANCELLED_STATUSES | {"on", "playing", "open"},
@@ -595,6 +613,7 @@ def check_schedule(
             "at_risk": sum(1 for r in results if r.get("at_risk")),
             "unmatched_venue": sum(1 for r in results if r.get("status") == "unmatched_venue"),
             "with_nws_forecast": sum(1 for r in evaluated if str(r.get("basis", "")).startswith("nws_forecast")),
+            "with_fallback_forecast": sum(1 for r in evaluated if str(r.get("basis", "")).startswith("open_meteo_forecast")),
             "history_only": sum(1 for r in evaluated if r.get("basis") == "history_only"),
             "skipped_past": skipped_past,
             "skipped_beyond_window": skipped_future,

@@ -2,6 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
+from rainout_agent import http_cache
 from rainout_agent.status_api import build_status_result
 
 
@@ -31,13 +32,14 @@ class handler(BaseHTTPRequestHandler):
             )
 
         status_code = 404 if payload.get("error") == "unknown_field" else 200
-        return self._send_json(status_code, payload)
+        return self._send_json(status_code, payload, http_cache.status_cache_control(status_code, payload))
 
-    def _send_json(self, status_code, payload):
+    def _send_json(self, status_code, payload, cache_control=http_cache.NO_STORE):
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", cache_control)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
