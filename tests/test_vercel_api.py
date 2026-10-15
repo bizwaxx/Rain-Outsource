@@ -69,7 +69,7 @@ def test_vercel_openapi_handler_serves_yaml_contract():
     assert "https://rainout-agent-source.vercel.app" in body
     assert "/v1/status:" in body
     assert "/v1/fields:" in body
-    assert "version: 0.6.0" in body
+    assert "version: 0.7.0" in body
     assert "answer_requirements" in body
 
 
