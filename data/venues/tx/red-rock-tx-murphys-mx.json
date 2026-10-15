@@ -1,0 +1,51 @@
+{
+  "id": "red-rock-tx-murphys-mx",
+  "field_name": "Murphy's MX",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Red Rock",
+  "state": "TX",
+  "address": "231 FM 86, Red Rock, TX 78662",
+  "coordinates": {
+    "lat": 29.940622,
+    "lon": -97.475
+  },
+  "coordinates_source": {
+    "method": "place_listing_cross_checked",
+    "sources": [
+      "https://www.murphysmx.com/",
+      "https://exa.ai/library/place/jlwlpj7nf2h"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates from a public place listing; the official address geocodes (US Census geocoder) within 0.3 km and reverse-geocodes to the same road."
+  },
+  "operator": "Murphys MX (William and Christie Murphy)",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "512-764-2154",
+  "official_status_source_url": "https://www.murphysmx.com/",
+  "official_status_source_name": "Murphys MX website",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Murphy's MX",
+    "Murphys MX",
+    "Murphys",
+    "Murphy's",
+    "red-rock-tx-murphys-mx"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers.",
+  "surface_note": "Track site describes sandy topsoil."
+}

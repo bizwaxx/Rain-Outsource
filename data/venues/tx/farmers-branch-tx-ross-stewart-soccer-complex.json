@@ -1,0 +1,49 @@
+{
+  "id": "farmers-branch-tx-ross-stewart-soccer-complex",
+  "field_name": "Ross Stewart Soccer Complex",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "Farmers Branch",
+  "state": "TX",
+  "address": "1641 Keenan Bridge Rd, Farmers Branch, TX 75234",
+  "coordinates": {
+    "lat": 32.92231,
+    "lon": -96.92298
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/839492552",
+      "https://www.dallassports.org/directory/ross-stewart-soccer-complex/",
+      "https://dallastexans.sportngin.com/page/show/908231-ross-stewart-soccer-complex"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": null,
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "none",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": null,
+  "official_status_source_name": null,
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Ross Stewart Soccer Complex",
+    "Ross Stewart",
+    "farmers-branch-tx-ross-stewart-soccer-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}
