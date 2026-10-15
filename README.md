@@ -31,7 +31,7 @@ Current backend status:
 3. Supports `/v1/status?field_id=Krieg&game_time=...`, `/v1/status?field_id=Craig&game_time=...`, `/v1/status?field_id=Havins&game_time=...`, plus the Austin metro public/private expansion fields locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
 5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, `Old Settlers Baseball`, `OSP Softball`, `Brushy Creek Softball`, `Milburn Park`, `Downs Field`, `Anderson High School`, `Georgetown Fields`, `Field of Dreams`, `DSYSA Baseball`, and full field IDs.
-6. Pulls live game-time weather from the National Weather Service API.
+6. Pulls live game-time weather from the National Weather Service API, cached (gridpoints 7 days, forecasts 10 minutes), with a free Open-Meteo fallback when NWS is down. Every answer names its weather source.
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
 8. Calibrates play probability with 10 years of NOAA daily rain history for each field and returns the station used in `historical_calibration`.
 9. Checks whole schedules (ICS URL/upload, JSON or CSV) at `/v1/schedule/check` and flags at-risk games.
@@ -165,6 +165,16 @@ Each game is matched to a venue, scored with the NWS forecast plus NOAA history 
 history-only outlook beyond ~7 days) and flagged when at risk. Add `format=ics` to get
 the calendar back with risk notes in each event. Stateless, SSRF-protected URL fetching,
 size/time limits for Vercel. Details: `docs/schedule.md`.
+
+## Weather caching and fallback
+
+NWS lookups are cached: the points-to-gridpoint lookup for 7 days, hourly
+forecasts for 10 minutes, and a stale copy for up to 2 hours if NWS goes down.
+If there is no NWS data, Rainout Source uses Open-Meteo (free, no key) and says
+so (`weather_source_id: open_meteo`). The cache is in-memory by default.
+Optional shared backends (Upstash / Vercel KV, Supabase) are enabled by env
+vars and skipped gracefully when absent. Responses carry `Cache-Control`
+headers. Details: `docs/weather-cache.md`.
 
 ## Venues and schema
 

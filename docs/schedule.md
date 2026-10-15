@@ -3,6 +3,9 @@
 `/v1/schedule/check` takes a whole schedule — an ICS calendar (URL or upload) or a
 simple JSON/CSV league schedule — matches every game to a supported venue, estimates
 the game-time play probability (NWS forecast + NOAA history) and flags at-risk games.
+Forecasts go through the shared weather cache; if NWS is down a game may be scored
+with Open-Meteo instead (`basis: open_meteo_forecast…`, `weather_source_id: open_meteo`,
+counted in `summary.with_fallback_forecast`). See `docs/weather-cache.md`.
 It is stateless: nothing is stored.
 
 ## Endpoints
@@ -77,7 +80,7 @@ For ICS, `DTSTART` (UTC, `TZID`, floating or all-day), `DTEND`, `SUMMARY`, `LOCA
 ```json
 {
   "summary": {"games_in_input": 12, "games_in_window": 5, "evaluated": 5, "at_risk": 2,
-              "unmatched_venue": 0, "with_nws_forecast": 3, "history_only": 2,
+              "unmatched_venue": 0, "with_nws_forecast": 3, "with_fallback_forecast": 0, "history_only": 2,
               "skipped_past": 7, "skipped_beyond_window": 0},
   "games": [{
     "uid": "g1@league", "title": "Hawks vs Bats", "start": "2026-05-09T19:00:00-05:00",
