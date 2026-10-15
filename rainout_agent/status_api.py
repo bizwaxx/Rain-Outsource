@@ -8,6 +8,7 @@ from html import unescape
 from pathlib import Path
 from typing import Any
 
+from rainout_agent import weather as _weather
 from rainout_agent.agent_response import build_agent_status_response
 from rainout_agent.historical import calibration_for
 from rainout_agent.play_probability import calculate_play_probability
@@ -278,27 +279,29 @@ def _answer_requirements(field: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-NWS_HEADERS = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
+NWS_HEADERS = _weather.NWS_HEADERS
 
 
 def fetch_nws_hourly_periods(field: dict[str, Any], timeout: float = 20) -> list[dict[str, Any]]:
-    """Fetch the NWS hourly forecast periods (about 7 days) for a field."""
-    lat = field["coordinates"]["lat"]
-    lon = field["coordinates"]["lon"]
+    """Hourly forecast periods (about 7 days) for a field.
 
-    points_url = f"https://api.weather.gov/points/{lat},{lon}"
-    points_req = urllib.request.Request(points_url, headers=NWS_HEADERS)
-    with urllib.request.urlopen(points_req, timeout=timeout) as response:
-        points = json.loads(response.read().decode("utf-8"))
-
-    hourly_url = points["properties"]["forecastHourly"]
-    hourly_req = urllib.request.Request(hourly_url, headers=NWS_HEADERS)
-    with urllib.request.urlopen(hourly_req, timeout=timeout) as response:
-        forecast = json.loads(response.read().decode("utf-8"))
-    return forecast["properties"]["periods"]
+    Goes through the cached weather layer, so this may return cached NWS data or
+    Open-Meteo periods when NWS is down. Use ``fetch_hourly_forecast`` to learn
+    which source answered.
+    """
+    return fetch_hourly_forecast(field, timeout=timeout)["periods"]
 
 
-def weather_from_periods(periods: list[dict[str, Any]], game_time: str | datetime | None) -> dict[str, Any]:
+def fetch_hourly_forecast(field: dict[str, Any], timeout: float = 10) -> dict[str, Any]:
+    """Cached forecast with source marking: {periods, source, source_id, cache, fetched_at}."""
+    return _weather.get_hourly_forecast(field, timeout=timeout)
+
+
+def weather_from_periods(
+    periods: list[dict[str, Any]],
+    game_time: str | datetime | None,
+    source: str = "National Weather Service API",
+) -> dict[str, Any]:
     """Pick the forecast period closest to the game time and summarise it."""
     target = game_time if isinstance(game_time, datetime) else _parse_time(game_time)
     selected = periods[0]
@@ -323,19 +326,24 @@ def weather_from_periods(periods: list[dict[str, Any]], game_time: str | datetim
         "rain_chance_percent": int(max(0, min(100, round(float(precip))))),
         "thunderstorm_likely": "thunder" in storm_text,
         "forecast": short_forecast,
-        "source": "National Weather Service API",
+        "source": source,
         "last_checked": datetime.now(timezone.utc).isoformat(),
         "forecast_period_start": selected.get("startTime"),
     }
 
 
 def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
-    """Fetch real forecast data from the National Weather Service API.
+    """Forecast for the game hour: NWS first (cached), Open-Meteo if NWS fails.
 
-    The NWS hourly forecast contains precipitation probability and short forecast
-    text. We choose the forecast period closest to the requested game time.
+    We choose the hourly period closest to the requested game time. The result
+    names the source that answered (``source`` / ``source_id``) and the cache state.
     """
-    return weather_from_periods(fetch_nws_hourly_periods(field), game_time)
+    forecast = fetch_hourly_forecast(field)
+    weather = weather_from_periods(forecast["periods"], game_time, source=forecast["source"])
+    weather["source_id"] = forecast["source_id"]
+    weather["cache"] = forecast["cache"]
+    weather["last_checked"] = forecast["fetched_at"]
+    return weather
 
 
 def build_status_result(
@@ -385,6 +393,7 @@ def build_status_result(
         thunderstorm_likely=bool(weather_data["thunderstorm_likely"]),
         play_probability_percent=probability["play_probability_percent"],
         rainout_phone=field["rainout_phone"],
+        weather_source=_weather_label(weather_data),
     )
     response.update(
         {
@@ -399,6 +408,8 @@ def build_status_result(
             "risk_level": probability["risk_level"],
             "reason": probability["reason"],
             "weather_source": weather_data["source"],
+            "weather_source_id": weather_data.get("source_id", "nws"),
+            "weather_cache": weather_data.get("cache"),
             "answer_requirements": _answer_requirements(field),
             "last_checked": weather_data.get("last_checked"),
             "forecast": weather_data.get("forecast"),
@@ -417,6 +428,12 @@ def build_status_result(
             f"Please {source_instruction}."
         )
     return response
+
+
+def _weather_label(weather_data: dict[str, Any]) -> str:
+    if weather_data.get("source_id") == "open_meteo":
+        return "Open-Meteo (National Weather Service unavailable)"
+    return "National Weather Service"
 
 
 def _public_calibration(calibration: dict[str, Any] | None, probability: dict[str, Any]) -> dict[str, Any] | None:

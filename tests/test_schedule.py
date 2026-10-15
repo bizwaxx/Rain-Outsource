@@ -212,7 +212,7 @@ def test_official_status_is_polled_only_for_near_games_at_polled_venues():
 def test_forecast_failure_and_timeouts_fall_back_to_history_with_warning():
     failed = run([game("Krieg", NOW + timedelta(hours=5))], Providers(fail=True))
     assert failed["games"][0]["basis"] == "history_only"
-    assert any("Could not fetch the NWS forecast" in w for w in failed["warnings"])
+    assert any("Could not fetch the forecast" in w for w in failed["warnings"])
     slow = run([game("Krieg", NOW + timedelta(hours=5))], Providers(sleep=1.0), budget_s=0.6)
     assert slow["games"][0]["basis"] == "history_only"
     assert any("Timed out" in w for w in slow["warnings"])

@@ -6,6 +6,7 @@ def build_agent_status_response(
     thunderstorm_likely: bool,
     play_probability_percent: int,
     rainout_phone: str,
+    weather_source: str = "National Weather Service",
 ) -> dict:
     """Build an agent-readable and voice-friendly game status response."""
     official = (official_status or "unknown").strip().lower()
@@ -13,7 +14,7 @@ def build_agent_status_response(
 
     has_rainout_phone = bool(rainout_phone and str(rainout_phone).strip().lower() not in {"not_published", "unknown", "none", "n/a"})
     final_check = "Check the rainout line again right before leaving." if has_rainout_phone else "Check the official source again right before leaving."
-    source_label = f"Rainout phone: {rainout_phone}; weather: National Weather Service" if has_rainout_phone else "Official source: published source page; weather: National Weather Service"
+    source_label = f"Rainout phone: {rainout_phone}; weather: {weather_source}" if has_rainout_phone else f"Official source: published source page; weather: {weather_source}"
 
     if official == "on":
         spoken = (
