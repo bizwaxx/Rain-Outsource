@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+from rainout_agent import http_cache
 from rainout_agent.schedule_api import MAX_BODY_BYTES, handle_schedule_request
 
 
@@ -21,6 +22,7 @@ class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
+        self.send_header("Cache-Control", http_cache.NO_STORE)
         self._cors()
         self.end_headers()
 
@@ -33,6 +35,7 @@ class handler(BaseHTTPRequestHandler):
         )
         self.send_response(status)
         self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", http_cache.schedule_cache_control(method, status))
         self._cors()
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()

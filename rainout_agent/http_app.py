@@ -4,12 +4,14 @@ import json
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
+from rainout_agent import http_cache
+from rainout_agent.cache import get_cache
 from rainout_agent.status_api import build_status_result, list_supported_fields
 from rainout_agent.schedule_api import MAX_BODY_BYTES, handle_schedule_request
 from rainout_agent.venue_schema import SPORTS
 
 
-def _json_response(start_response, status: str, payload: dict):
+def _json_response(start_response, status: str, payload: dict, cache_control: str = http_cache.NO_STORE):
     body = json.dumps(payload, indent=2).encode("utf-8")
     start_response(
         status,
@@ -17,6 +19,7 @@ def _json_response(start_response, status: str, payload: dict):
             ("Content-Type", "application/json"),
             ("Content-Length", str(len(body))),
             ("Access-Control-Allow-Origin", "*"),
+            ("Cache-Control", cache_control),
         ],
     )
     return [body]
@@ -43,7 +46,12 @@ def application(environ, start_response):
         reason = {200: "OK", 400: "Bad Request", 405: "Method Not Allowed", 413: "Payload Too Large", 502: "Bad Gateway"}
         start_response(
             f"{status} {reason.get(status, 'Error')}",
-            [("Content-Type", content_type), ("Content-Length", str(len(payload))), ("Access-Control-Allow-Origin", "*")],
+            [
+                ("Content-Type", content_type),
+                ("Content-Length", str(len(payload))),
+                ("Access-Control-Allow-Origin", "*"),
+                ("Cache-Control", http_cache.schedule_cache_control(method, status)),
+            ],
         )
         return [payload]
 
@@ -51,7 +59,7 @@ def application(environ, start_response):
         return _json_response(start_response, "405 Method Not Allowed", {"error": "method_not_allowed"})
 
     if path == "/health":
-        return _json_response(start_response, "200 OK", {"status": "ok", "service": "rainout-source"})
+        return _json_response(start_response, "200 OK", {"status": "ok", "service": "rainout-source", "weather_cache": get_cache().describe()})
 
     if path == "/v1/fields":
         params = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
@@ -67,7 +75,7 @@ def application(environ, start_response):
             )
         payload = {
             "service": "rainout-source",
-            "protocol_version": "v0.8.0",
+            "protocol_version": "v0.9.0",
             "creator": "JEEZ Labs",
             "count": len(fields),
             "fields": fields,
@@ -75,7 +83,22 @@ def application(environ, start_response):
         filters = {key: value for key, value in (("sport", sport), ("state", state)) if value}
         if filters:
             payload["filters"] = filters
-        return _json_response(start_response, "200 OK", payload)
+        return _json_response(start_response, "200 OK", payload, http_cache.FIELDS)
+
+    if path == "/openapi.yaml":
+        from pathlib import Path
+
+        body = (Path(__file__).resolve().parents[1] / "openapi.yaml").read_bytes()
+        start_response(
+            "200 OK",
+            [
+                ("Content-Type", "application/yaml; charset=utf-8"),
+                ("Content-Length", str(len(body))),
+                ("Access-Control-Allow-Origin", "*"),
+                ("Cache-Control", http_cache.OPENAPI),
+            ],
+        )
+        return [body]
 
     if path != "/v1/status":
         return _json_response(start_response, "404 Not Found", {"error": "not_found"})
@@ -103,8 +126,9 @@ def application(environ, start_response):
             },
         )
 
-    status = "404 Not Found" if payload.get("error") == "unknown_field" else "200 OK"
-    return _json_response(start_response, status, payload)
+    code = 404 if payload.get("error") == "unknown_field" else 200
+    status = "404 Not Found" if code == 404 else "200 OK"
+    return _json_response(start_response, status, payload, http_cache.status_cache_control(code, payload))
 
 
 def main():
