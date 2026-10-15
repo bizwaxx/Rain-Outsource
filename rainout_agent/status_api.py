@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from rainout_agent.agent_response import build_agent_status_response
+from rainout_agent.historical import calibration_for
 from rainout_agent.play_probability import calculate_play_probability
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
@@ -304,11 +305,13 @@ def build_status_result(
     official_status_value = official_data.get("official_status") or "unknown"
 
     weather_data = weather or fetch_nws_weather(field, game_time)
+    calibration = calibration_for(field_id, _parse_time(game_time))
     probability = calculate_play_probability(
         official_status=official_status_value,
         precipitation_chance_percent=weather_data["rain_chance_percent"],
         thunderstorm_likely=bool(weather_data["thunderstorm_likely"]),
         hours_until_game=_hours_until_game(game_time),
+        historical_calibration=calibration,
     )
 
     response = build_agent_status_response(
@@ -337,6 +340,7 @@ def build_status_result(
             "last_checked": weather_data.get("last_checked"),
             "forecast": weather_data.get("forecast"),
             "forecast_period_start": weather_data.get("forecast_period_start"),
+            "historical_calibration": _public_calibration(calibration, probability),
         }
     )
 
@@ -350,6 +354,24 @@ def build_status_result(
             f"Please {source_instruction}."
         )
     return response
+
+
+def _public_calibration(calibration: dict[str, Any] | None, probability: dict[str, Any]) -> dict[str, Any] | None:
+    """Additive response block describing the NOAA history behind the estimate."""
+    if not calibration:
+        return None
+    return {
+        "source": calibration.get("source"),
+        "station_id": calibration.get("station_id"),
+        "station_name": calibration.get("station_name"),
+        "station_distance_km": calibration.get("station_distance_km"),
+        "period": calibration.get("period"),
+        "month": calibration.get("month"),
+        "rain_to_cancel_threshold_in": calibration.get("rain_to_cancel_threshold_in"),
+        "rainy_day_share_reaching_threshold": calibration.get("cancel_given_wet"),
+        "rainout_level_day_frequency": calibration.get("rainout_day_frac"),
+        "rain_severity_applied": probability.get("rain_severity"),
+    }
 
 
 def _hours_until_game(game_time: str) -> float:
