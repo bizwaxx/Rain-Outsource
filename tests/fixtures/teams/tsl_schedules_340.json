@@ -1,0 +1,134 @@
+{
+ "items": [
+  {
+   "leagueDescription": "Tuesday Softball",
+   "seasonDescription": "Fall '26",
+   "divisionMenuItems": [
+    {
+     "type": "DIVISION",
+     "recordId": 744574,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "201 Men 1HR North",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744575,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "202 Men 1HR North",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744576,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "203 CoRec 0HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744577,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "204 CoRec 0HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744578,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "205 Men 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744580,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "206 Men 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744581,
+     "parentId": 193466,
+     "parentItem": null,
+     "displayValue": "207 Men 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    }
+   ],
+   "sortOrder": "00006"
+  },
+  {
+   "leagueDescription": "Friday Softball",
+   "seasonDescription": "Fall '26",
+   "divisionMenuItems": [
+    {
+     "type": "DIVISION",
+     "recordId": 744619,
+     "parentId": 193469,
+     "parentItem": null,
+     "displayValue": "501 CoRec 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744620,
+     "parentId": 193469,
+     "parentItem": null,
+     "displayValue": "502 Men 0HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744621,
+     "parentId": 193469,
+     "parentItem": null,
+     "displayValue": "503 Men 0HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744622,
+     "parentId": 193469,
+     "parentItem": null,
+     "displayValue": "504 Men 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    },
+    {
+     "type": "DIVISION",
+     "recordId": 744623,
+     "parentId": 193469,
+     "parentItem": null,
+     "displayValue": "505 Men 1HR South",
+     "sortOrder": "00000",
+     "isAssociatedOrganization": false
+    }
+   ],
+   "sortOrder": "00009"
+  }
+ ],
+ "page": 1,
+ "pageSize": 50,
+ "totalCount": 10,
+ "totalPages": 1,
+ "hasPreviousPage": false,
+ "hasNextPage": false,
+ "resultsLimited": false,
+ "message": null
+}
