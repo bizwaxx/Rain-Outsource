@@ -28,6 +28,14 @@
     {
       "src": "api/teams.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/mcp.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "api/llms.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -66,6 +74,14 @@
     {
       "src": "/v1/teams/([^/]+)/calendar\\.ics",
       "dest": "/api/teams.py"
+    },
+    {
+      "src": "/mcp/?",
+      "dest": "/api/mcp.py"
+    },
+    {
+      "src": "/llms\\.txt",
+      "dest": "/api/llms.py"
     },
     {
       "src": "/v1/stats",

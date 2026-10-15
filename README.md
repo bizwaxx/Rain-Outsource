@@ -189,6 +189,11 @@ calendars, so agents must ask the user first. League sources: City of Austin adu
 ICS, JSON-LD or HTML table, with an optional LLM extractor). Details: `docs/teams.md`.
 Example conversation: `docs/agent-conversation.md`.
 
+### MCP server and llms.txt
+
+- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`. See [docs/mcp.md](docs/mcp.md).
+- Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
+
 ## Weather caching and fallback
 
 NWS lookups are cached: the points-to-gridpoint lookup for 7 days, hourly
