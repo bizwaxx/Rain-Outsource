@@ -5,6 +5,7 @@ from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
 from rainout_agent.status_api import build_status_result, list_supported_fields
+from rainout_agent.venue_schema import SPORTS
 
 
 def _json_response(start_response, status: str, payload: dict):
@@ -34,18 +35,28 @@ def application(environ, start_response):
         return _json_response(start_response, "200 OK", {"status": "ok", "service": "rainout-source"})
 
     if path == "/v1/fields":
-        fields = list_supported_fields()
-        return _json_response(
-            start_response,
-            "200 OK",
-            {
-                "service": "rainout-source",
-                "protocol_version": "v0.7.0",
-                "creator": "JEEZ Labs",
-                "count": len(fields),
-                "fields": fields,
-            },
-        )
+        params = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        sport = (params.get("sport") or [None])[0]
+        state = (params.get("state") or [None])[0]
+        try:
+            fields = list_supported_fields(sport=sport, state=state)
+        except ValueError as exc:
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "invalid_filter", "message": str(exc), "allowed_sports": list(SPORTS)},
+            )
+        payload = {
+            "service": "rainout-source",
+            "protocol_version": "v0.8.0",
+            "creator": "JEEZ Labs",
+            "count": len(fields),
+            "fields": fields,
+        }
+        filters = {key: value for key, value in (("sport", sport), ("state", state)) if value}
+        if filters:
+            payload["filters"] = filters
+        return _json_response(start_response, "200 OK", payload)
 
     if path != "/v1/status":
         return _json_response(start_response, "404 Not Found", {"error": "not_found"})
