@@ -123,7 +123,7 @@ def test_every_field_has_one_historical_doc_with_real_noaa_history():
         assert noaa["coverage_percent"] >= 75
         assert noaa["period"] == {"start": "2016-01-01", "end": "2025-12-31"}
         assert set(noaa["monthly"]) == {f"{m:02d}" for m in range(1, 13)}
-        assert 15 < noaa["annual"]["mean_precip_in"] < 70  # Texas range sanity check
+        assert 15 < noaa["annual"]["mean_precip_in"] < 90  # plausible for TX, OK, LA and FL
 
 
 def test_historical_docs_keep_legacy_schema_keys():
