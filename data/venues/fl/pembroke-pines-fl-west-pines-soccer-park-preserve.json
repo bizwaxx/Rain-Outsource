@@ -1,0 +1,49 @@
+{
+  "id": "pembroke-pines-fl-west-pines-soccer-park-preserve",
+  "field_name": "West Pines Soccer Park & Preserve",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "Pembroke Pines",
+  "state": "FL",
+  "address": "350 SW 196th Ave, Pembroke Pines, FL 33029",
+  "coordinates": {
+    "lat": 26.00461,
+    "lon": -80.41055
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/985851040",
+      "https://www.ppines.com/Facilities/Facility/Details/West-Pines-Soccer-Park-amp-Preserve-29"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "City of Pembroke Pines",
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.ppines.com/Facilities/Facility/Details/West-Pines-Soccer-Park-amp-Preserve-29",
+  "official_status_source_name": "City of Pembroke Pines facility page",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "West Pines Soccer Park & Preserve",
+    "West Pines Soccer Park",
+    "West Pines Soccer",
+    "pembroke-pines-fl-west-pines-soccer-park-preserve"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

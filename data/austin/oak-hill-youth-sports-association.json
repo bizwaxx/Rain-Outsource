@@ -8,14 +8,29 @@
     "lat": 30.2338776,
     "lon": -97.855502
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "baseball/softball",
+  "sports": [
+    "baseball",
+    "softball"
+  ],
+  "venue_type": "ball_field",
   "ownership_type": "private_nonprofit",
   "status_source_type": "official_organization_page",
   "poll_official_status": false,
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.ohysa.com/",
   "official_status_source_name": "Oak Hill Youth Sports Association official site",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "weather_source": "National Weather Service API",
   "aliases": [
     "Oak Hill Youth Sports",
@@ -25,5 +40,8 @@
     "Oak Hill Softball",
     "austin-tx-oak-hill-youth-sports-association"
   ],
-  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving."
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. If no rainout phone is published, tell the user to check the official source before leaving.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }

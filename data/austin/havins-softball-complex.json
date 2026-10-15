@@ -8,11 +8,25 @@
     "lat": 30.4030894,
     "lon": -97.6845619
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "softball",
+  "sports": [
+    "softball"
+  ],
+  "venue_type": "ball_field",
   "rainout_phone": "512-978-2680",
   "official_status_source_url": "https://rainoutline.com/search/dnis/5124000060/",
   "official_status_source_name": "Austin Sports and Social Club Rainout Line (512-400-0060)",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "poll_official_status": true,
   "weather_source": "National Weather Service API",
   "aliases": [
@@ -23,5 +37,8 @@
     "Austin Havins",
     "austin-tx-havins-softball-complex"
   ],
-  "agent_rule": "Official rainout status wins. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers."
+  "agent_rule": "Official rainout status wins. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }

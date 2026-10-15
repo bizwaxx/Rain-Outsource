@@ -1,0 +1,49 @@
+{
+  "id": "mansfield-tx-philip-thompson-soccer-complex",
+  "field_name": "Philip Thompson Soccer Complex",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "Mansfield",
+  "state": "TX",
+  "address": "1701 N Holland Rd, Mansfield, TX 76063",
+  "coordinates": {
+    "lat": 32.58596,
+    "lon": -97.08482
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/352860612",
+      "https://www.mansfieldtexas.gov/Facilities/Facility/Details/Philip-Thompson-Soccer-Complex-31"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "City of Mansfield / Mansfield Soccer Association",
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.mansfieldtexas.gov/Facilities/Facility/Details/Philip-Thompson-Soccer-Complex-31",
+  "official_status_source_name": "City of Mansfield facility page",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Philip Thompson Soccer Complex",
+    "Phillip Thompson Soccer Complex",
+    "Philip Thompson Park",
+    "mansfield-tx-philip-thompson-soccer-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

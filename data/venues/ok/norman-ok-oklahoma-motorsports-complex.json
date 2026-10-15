@@ -1,0 +1,49 @@
+{
+  "id": "norman-ok-oklahoma-motorsports-complex",
+  "field_name": "Oklahoma Motorsports Complex",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Norman",
+  "state": "OK",
+  "address": "3501 S Interstate Dr, Norman, OK 73072",
+  "coordinates": {
+    "lat": 35.18619,
+    "lon": -97.48829
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/1259498051",
+      "https://www.oklahomamotorsportscomplex.com/track.html"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "Oklahoma Motorsports Complex",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.oklahomamotorsportscomplex.com/",
+  "official_status_source_name": "Oklahoma Motorsports Complex website",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Oklahoma Motorsports Complex",
+    "OMC",
+    "Oklahoma Motorsports",
+    "norman-ok-oklahoma-motorsports-complex"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

@@ -8,14 +8,28 @@
     "lat": 29.4241225,
     "lon": -98.4936282
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "softball",
+  "sports": [
+    "softball"
+  ],
+  "venue_type": "ball_field",
   "ownership_type": "private_adult_league",
   "status_source_type": "official_organization_page",
   "poll_official_status": false,
   "rainout_phone": "not_published",
   "official_status_source_url": "https://sportskind.com/san-antonio/sports/softball/",
   "official_status_source_name": "SPORTSKIND San Antonio official softball page",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "weather_source": "National Weather Service API",
   "aliases": [
     "SPORTSKIND San Antonio",
@@ -25,5 +39,8 @@
     "san-antonio-tx-sportskind-softball"
   ],
   "future_status_protocol": "If SPORTSKIND publishes a San Antonio live weather alert or venue-specific cancellation feed, enable polling only after conservative parser tests.",
-  "agent_rule": "Official source wins. This league page is not treated as a live rainout feed, so keep official status unknown unless a clear official cancellation/closure source is found. Tell the user to check the official source before leaving."
+  "agent_rule": "Official source wins. This league page is not treated as a live rainout feed, so keep official status unknown unless a clear official cancellation/closure source is found. Tell the user to check the official source before leaving.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }

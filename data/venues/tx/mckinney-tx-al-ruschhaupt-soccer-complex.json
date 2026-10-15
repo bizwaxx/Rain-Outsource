@@ -1,0 +1,49 @@
+{
+  "id": "mckinney-tx-al-ruschhaupt-soccer-complex",
+  "field_name": "Al Ruschhaupt Soccer Complex",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "McKinney",
+  "state": "TX",
+  "address": "1986 Park View Ave, McKinney, TX 75070",
+  "coordinates": {
+    "lat": 33.18985,
+    "lon": -96.64898
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/487447235",
+      "https://parks.mckinneytexas.org/park/al-ruschhaupt-soccer-complex/"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "City of McKinney",
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://parks.mckinneytexas.org/park/al-ruschhaupt-soccer-complex/",
+  "official_status_source_name": "McKinney Parks facility page",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Al Ruschhaupt Soccer Complex",
+    "Ruschhaupt",
+    "Al Ruschhaupt",
+    "mckinney-tx-al-ruschhaupt-soccer-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

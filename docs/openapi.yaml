@@ -30,8 +30,39 @@ paths:
   /v1/fields:
     get:
       summary: List fields currently supported by Rainout Source.
-      description: Agents should call this endpoint to discover supported field IDs, aliases, status URLs, and official rainout sources before asking for status.
+      description: Agents should call this endpoint to discover supported field IDs, aliases, status URLs, and official rainout sources before asking for status. Filter by sport and/or state.
+      parameters:
+        - in: query
+          name: sport
+          required: false
+          schema:
+            type: string
+          description: "Comma-separated sports: baseball, softball, soccer, motocross, multipurpose (aliases: baseball_softball, mx)."
+          example: soccer
+        - in: query
+          name: state
+          required: false
+          schema:
+            type: string
+          description: Comma-separated two-letter US state codes.
+          example: TX,OK
       responses:
+        "400":
+          description: Invalid sport or state filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid_filter
+                  message:
+                    type: string
+                  allowed_sports:
+                    type: array
+                    items:
+                      type: string
         "200":
           description: Supported field directory
           content:
@@ -53,6 +84,9 @@ paths:
                   count:
                     type: integer
                     example: 6
+                  filters:
+                    type: object
+                    description: Echo of the sport/state filters applied (omitted when unfiltered).
                   fields:
                     type: array
                     items:
@@ -81,6 +115,32 @@ paths:
                         sport:
                           type: string
                           example: softball
+                        sports:
+                          type: array
+                          items:
+                            type: string
+                            enum: [baseball, softball, soccer, motocross, multipurpose]
+                          example: [softball]
+                        venue_type:
+                          type: string
+                          enum: [ball_field, soccer_complex, motocross_track, multipurpose_field]
+                        coordinates:
+                          type: object
+                          properties:
+                            lat:
+                              type: number
+                            lon:
+                              type: number
+                        operator:
+                          type: string
+                          nullable: true
+                          description: Operator, owner or league; null when not verified.
+                        surface:
+                          type: string
+                          enum: [grass, artificial_turf, dirt, grass_with_dirt_infield, mixed, unknown]
+                        drainage:
+                          type: string
+                          enum: [poor, average, good, unknown]
                         rainout_phone:
                           type: string
                           example: 512-978-2680

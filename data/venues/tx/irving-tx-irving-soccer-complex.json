@@ -1,0 +1,48 @@
+{
+  "id": "irving-tx-irving-soccer-complex",
+  "field_name": "Irving Soccer Complex",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "Irving",
+  "state": "TX",
+  "address": "3585 World Cup Way, Irving, TX 75038",
+  "coordinates": {
+    "lat": 32.88244,
+    "lon": -96.99613
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/646994549",
+      "https://irvingtx.gov/index.php?project=37&projectsection=13&section=park-facilities"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "City of Irving",
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://irvingtx.gov/index.php?project=37&projectsection=13&section=park-facilities",
+  "official_status_source_name": "City of Irving park facility page",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Irving Soccer Complex",
+    "Irving Soccer",
+    "irving-tx-irving-soccer-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

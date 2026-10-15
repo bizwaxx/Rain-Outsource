@@ -1,0 +1,49 @@
+{
+  "id": "new-braunfels-tx-heb-soccer-complex",
+  "field_name": "HEB Soccer Complex",
+  "venue_type": "soccer_complex",
+  "sport": "soccer",
+  "sports": [
+    "soccer"
+  ],
+  "city": "New Braunfels",
+  "state": "TX",
+  "address": "515 N Live Oak Ave, New Braunfels, TX 78130",
+  "coordinates": {
+    "lat": 29.69128,
+    "lon": -98.14429
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/541510107",
+      "https://newbraunfels.gov/facilities/facility/details/HEB-Soccer-Complex-17"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "City of New Braunfels",
+  "ownership_type": "unknown",
+  "surface": "unknown",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://newbraunfels.gov/facilities/facility/details/HEB-Soccer-Complex-17",
+  "official_status_source_name": "City of New Braunfels facility page",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "HEB Soccer Complex",
+    "H-E-B Soccer Complex",
+    "New Braunfels Soccer",
+    "new-braunfels-tx-heb-soccer-complex"
+  ],
+  "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Official status is not polled for this venue yet, so tell the user to check the official source before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

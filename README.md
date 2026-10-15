@@ -27,7 +27,7 @@ https://rainout-agent-source.vercel.app/openapi.yaml
 Current backend status:
 
 1. Supports `/health` locally and on Vercel-style hosting.
-2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields, ownership type, aliases, status URLs, and official sources.
+2. Supports `/v1/fields` on live Vercel hosting so agents can discover supported fields, ownership type, aliases, status URLs, and official sources, filterable with `?sport=` and `?state=`.
 3. Supports `/v1/status?field_id=Krieg&game_time=...`, `/v1/status?field_id=Craig&game_time=...`, `/v1/status?field_id=Havins&game_time=...`, plus the Austin metro public/private expansion fields locally and on live Vercel hosting.
 4. Supports `/api/status?field_id=Krieg&game_time=...` on Vercel-style hosting.
 5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, `Old Settlers Baseball`, `OSP Softball`, `Brushy Creek Softball`, `Milburn Park`, `Downs Field`, `Anderson High School`, `Georgetown Fields`, `Field of Dreams`, `DSYSA Baseball`, and full field IDs.
@@ -151,11 +151,26 @@ Use the word **rain**, not **rainfall**, in Dad-facing answers.
 
 Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving.
 
+## Venues and schema
+
+Rainout Source now covers 68 verified venues in TX, OK, LA and FL: 35 baseball/softball
+and multipurpose fields, 23 soccer complexes and 10 motocross tracks. Every venue follows
+`schema/venue.schema.json` (sport types, coordinates with their public source, address,
+operator, official status source, surface and drainage). Details, the verification
+standard and the full list: `docs/venues.md`.
+
+Filter the directory by sport and state:
+
+```text
+https://rainout-agent-source.vercel.app/v1/fields?sport=soccer&state=TX
+https://rainout-agent-source.vercel.app/v1/fields?sport=motocross&state=TX,OK,FL
+```
+
 ## Historical rain data (NOAA)
 
-Every supported field now has 10 years (2016–2025) of real daily rain history
+Every supported venue has 10 years (2016–2025) of real daily rain history
 from NOAA GHCN-Daily, taken from the nearest station with at least 90% coverage
-(all 35 fields matched within 10 km). It lives in
+(all 68 venues matched, within 25 km). It lives in
 `data/historical/*-historical.json` under `noaa_history` and is regenerated with:
 
 ```bash

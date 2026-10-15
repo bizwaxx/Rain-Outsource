@@ -1,0 +1,50 @@
+{
+  "id": "orlando-fl-orlando-mx-park",
+  "field_name": "Orlando MX Park",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Orlando",
+  "state": "FL",
+  "address": "19400 E Colonial Dr, Orlando, FL 32820",
+  "coordinates": {
+    "lat": 28.53845,
+    "lon": -81.09009
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/1480883180",
+      "https://orlandomxpark.com/",
+      "https://mxsports.com/event/orlando-mx-park"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "Orlando MX Park",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://orlandomxpark.com/",
+  "official_status_source_name": "Orlando MX Park website",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Orlando MX Park",
+    "Orlando MX",
+    "OMXP",
+    "orlando-fl-orlando-mx-park"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

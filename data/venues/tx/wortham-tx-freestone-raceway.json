@@ -1,0 +1,49 @@
+{
+  "id": "wortham-tx-freestone-raceway",
+  "field_name": "Freestone Raceway",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Wortham",
+  "state": "TX",
+  "address": "470 County Road 995, Wortham, TX 76693",
+  "coordinates": {
+    "lat": 31.805522,
+    "lon": -96.400399
+  },
+  "coordinates_source": {
+    "method": "official_venue_source",
+    "sources": [
+      "https://freestonemx.com/directions/"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates published by the venue (amateur/night track at 470 CR 995). The national track is at 31.811133, -96.395636."
+  },
+  "operator": "Freestone Raceway",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://freestonemx.com/",
+  "official_status_source_name": "Freestone Raceway website",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Freestone Raceway",
+    "Freestone",
+    "Freestone MX",
+    "Freestone County Raceway",
+    "wortham-tx-freestone-raceway"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

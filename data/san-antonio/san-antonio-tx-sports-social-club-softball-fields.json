@@ -8,14 +8,28 @@
     "lat": 29.4241225,
     "lon": -98.4936282
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "softball",
+  "sports": [
+    "softball"
+  ],
+  "venue_type": "ball_field",
   "ownership_type": "private_adult_league",
   "status_source_type": "official_rainout_line_page",
   "poll_official_status": false,
   "rainout_phone": "210-774-4630",
   "official_status_source_url": "https://sanantoniossc.com/alerts",
   "official_status_source_name": "San Antonio Sports and Social Club weather alerts and rainout line",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "weather_source": "National Weather Service API",
   "aliases": [
     "San Antonio SSC",
@@ -26,5 +40,8 @@
     "san-antonio-tx-sports-social-club-softball-fields"
   ],
   "future_status_protocol": "If San Antonio SSC publishes a machine-readable online rainout status for each venue, enable polling only after parser tests. The current official alerts page publishes the rainout line phone number and directs users to alerts/app options.",
-  "agent_rule": "Official source wins. The official alerts page publishes rainout line 210-774-4630, but this registry entry does not yet parse a live online status. Keep official status unknown and tell the user to call 210-774-4630 or check the official alerts source before leaving."
+  "agent_rule": "Official source wins. The official alerts page publishes rainout line 210-774-4630, but this registry entry does not yet parse a live online status. Keep official status unknown and tell the user to call 210-774-4630 or check the official alerts source before leaving.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }

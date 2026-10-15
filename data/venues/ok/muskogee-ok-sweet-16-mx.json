@@ -1,0 +1,49 @@
+{
+  "id": "muskogee-ok-sweet-16-mx",
+  "field_name": "Sweet 16 MX",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Muskogee",
+  "state": "OK",
+  "address": "3210 N York St, Muskogee, OK 74403",
+  "coordinates": {
+    "lat": 35.78987,
+    "lon": -95.33304
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/1434929836",
+      "https://mxparks.com/motocross-tracks/oklahoma/sweet-16-mx-muskogee"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": null,
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "none",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": null,
+  "official_status_source_name": null,
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Sweet 16 MX",
+    "Sweet 16",
+    "Sweet 16 Motocross Park",
+    "muskogee-ok-sweet-16-mx"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

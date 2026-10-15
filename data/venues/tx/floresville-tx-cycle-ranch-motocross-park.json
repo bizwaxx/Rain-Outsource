@@ -1,0 +1,49 @@
+{
+  "id": "floresville-tx-cycle-ranch-motocross-park",
+  "field_name": "Cycle Ranch Motocross Park",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Floresville",
+  "state": "TX",
+  "address": "2066 County Road 405, Floresville, TX 78114",
+  "coordinates": {
+    "lat": 29.142134,
+    "lon": -98.1114
+  },
+  "coordinates_source": {
+    "method": "place_listing_cross_checked",
+    "sources": [
+      "https://cycleranchmx.com/pages/contact-us",
+      "https://exa.ai/library/place/pbbpqr1kj9d"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates from a public place listing; the official address geocodes (US Census geocoder) within 0.3 km and reverse-geocodes to the same road."
+  },
+  "operator": "Cycle Ranch",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "830-529-1371",
+  "official_status_source_url": "https://cycleranchmx.com/",
+  "official_status_source_name": "Cycle Ranch website (closures posted on Instagram/Facebook)",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "Cycle Ranch Motocross Park",
+    "Cycle Ranch",
+    "Cycle Ranch MX",
+    "floresville-tx-cycle-ranch-motocross-park"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

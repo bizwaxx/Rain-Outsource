@@ -1,0 +1,50 @@
+{
+  "id": "conroe-tx-3-palms-action-sports-park",
+  "field_name": "3 Palms Action Sports Park",
+  "venue_type": "motocross_track",
+  "sport": "motocross",
+  "sports": [
+    "motocross"
+  ],
+  "city": "Conroe",
+  "state": "TX",
+  "address": "15100 Interstate 45 S, Conroe, TX 77384",
+  "coordinates": {
+    "lat": 30.24415,
+    "lon": -95.46281
+  },
+  "coordinates_source": {
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/node/9284606377",
+      "https://www.threepalmsesp.com/contact"
+    ],
+    "verified_on": "2026-10-14",
+    "note": "Coordinates are the OpenStreetMap feature centroid; the venue address from the listed public source was geocoded with the US Census geocoder and/or Nominatim and lands within 1 km (reverse geocode on the same road when the address did not geocode)."
+  },
+  "operator": "3 Palms Action Sports Park",
+  "ownership_type": "unknown",
+  "surface": "dirt",
+  "drainage": "unknown",
+  "status_source_type": "venue_info_page",
+  "poll_official_status": false,
+  "rainout_phone": "not_published",
+  "official_status_source_url": "https://www.threepalmsesp.com/",
+  "official_status_source_name": "3 Palms website",
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
+  "weather_source": "National Weather Service API",
+  "aliases": [
+    "3 Palms Action Sports Park",
+    "3 Palms",
+    "Three Palms",
+    "3 Palms MX",
+    "conroe-tx-3-palms-action-sports-park"
+  ],
+  "agent_rule": "Official source wins. Motocross tracks often ride in light rain but close for heavy rain or lightning; tell the user to check the track's official page or social posts before leaving. Use the word rain, not rainfall, for Dad-facing answers."
+}

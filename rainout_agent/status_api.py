@@ -11,6 +11,7 @@ from typing import Any
 from rainout_agent.agent_response import build_agent_status_response
 from rainout_agent.historical import calibration_for
 from rainout_agent.play_probability import calculate_play_probability
+from rainout_agent.venue_schema import SPORTS, STATES, sports_for
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
@@ -58,11 +59,57 @@ def load_field(field_id: str) -> dict[str, Any]:
     raise ValueError(f"Unsupported field_id: {field_id}")
 
 
-def list_supported_fields() -> list[dict[str, Any]]:
-    """Return agent-readable metadata for every supported field."""
+SPORT_FILTER_ALIASES = {"baseball_softball": ["baseball", "softball"], "mx": ["motocross"], "football": ["soccer"]}
+
+
+def normalize_sport_filter(value: str | None) -> list[str] | None:
+    """Turn a ?sport= value into canonical sports. Returns None when no filter, [] when invalid."""
+    if value is None or not str(value).strip():
+        return None
+    wanted: list[str] = []
+    for part in str(value).lower().replace("/", ",").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if part in SPORTS:
+            wanted.append(part)
+        elif part in SPORT_FILTER_ALIASES:
+            wanted.extend(SPORT_FILTER_ALIASES[part])
+        else:
+            return []
+    return wanted or None
+
+
+def normalize_state_filter(value: str | None) -> list[str] | None:
+    """Turn a ?state= value (e.g. "TX" or "tx,ok") into codes. None when no filter, [] when invalid."""
+    if value is None or not str(value).strip():
+        return None
+    states = [part.strip().upper() for part in str(value).split(",") if part.strip()]
+    if not states or any(state not in STATES for state in states):
+        return []
+    return states
+
+
+def list_supported_fields(sport: str | None = None, state: str | None = None) -> list[dict[str, Any]]:
+    """Return agent-readable metadata for every supported field.
+
+    ``sport`` and ``state`` optionally filter the list (comma-separated values
+    allowed). Invalid filter values raise ``ValueError``.
+    """
+    sport_filter = normalize_sport_filter(sport)
+    state_filter = normalize_state_filter(state)
+    if sport_filter == []:
+        raise ValueError(f"invalid sport filter: {sport!r}")
+    if state_filter == []:
+        raise ValueError(f"invalid state filter: {state!r}")
     supported = []
     for field in _load_all_fields():
         field_id = field["id"]
+        field_sports = sports_for(field)
+        if sport_filter and not set(sport_filter) & set(field_sports):
+            continue
+        if state_filter and field.get("state") not in state_filter:
+            continue
         aliases = field.get("aliases", [field["field_name"], field_id])
         supported.append(
             {
@@ -72,6 +119,12 @@ def list_supported_fields() -> list[dict[str, Any]]:
                 "state": field["state"],
                 "address": field["address"],
                 "sport": field["sport"],
+                "sports": field_sports,
+                "venue_type": field.get("venue_type"),
+                "coordinates": field.get("coordinates"),
+                "operator": field.get("operator"),
+                "surface": field.get("surface", "unknown"),
+                "drainage": field.get("drainage", "unknown"),
                 "rainout_phone": field["rainout_phone"],
                 "ownership_type": field.get("ownership_type", "unknown"),
                 "status_source_type": field.get("status_source_type", "official_source"),

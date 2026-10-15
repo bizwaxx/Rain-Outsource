@@ -8,14 +8,28 @@
     "lat": 30.3750415,
     "lon": -97.7523647
   },
+  "coordinates_source": {
+    "method": "legacy",
+    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+  },
   "sport": "baseball",
+  "sports": [
+    "baseball"
+  ],
+  "venue_type": "ball_field",
   "ownership_type": "school_league_used",
   "status_source_type": "official_league_weather_outlook_page",
   "poll_official_status": true,
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.austinmetrobaseball.com/rainout.php",
   "official_status_source_name": "Austin Metro Baseball League rainout and game weather outlook page",
-  "official_status_values": ["on", "cancelled", "delayed", "field closed", "unknown"],
+  "official_status_values": [
+    "on",
+    "cancelled",
+    "delayed",
+    "field closed",
+    "unknown"
+  ],
   "weather_source": "National Weather Service API",
   "aliases": [
     "Anderson",
@@ -27,5 +41,8 @@
     "austin-tx-anderson-high-school-baseball-field-ambl"
   ],
   "future_status_protocol": "AMBL rainout.php publishes field-specific weather impact, rain chance, expected rain, recent rain, scheduled games, and says only an AMBL-posted Rainout or Postponed status is official. It also states that when a game is recorded as 777 or 999, its rainout/rain-impact chance is shown as 100%. Keep polling disabled until Rainout Source has a conservative parser that can identify explicit AMBL Rainout/Postponed or 777/999 game records without confusing weather impact with cancellation.",
-  "agent_rule": "Official AMBL status wins for Anderson High School Baseball Field. Use AMBL rainout.php for the league weather-impact protocol and scheduled-game outlook, but do not treat weather impact, rain chance, or a listed scheduled game as an official cancellation or playable confirmation. If the page explicitly shows Rainout, Postponed, or game code 777/999, report that as official; otherwise official status remains unknown and agents should tell the user to check the AMBL rainout page before leaving."
+  "agent_rule": "Official AMBL status wins for Anderson High School Baseball Field. Use AMBL rainout.php for the league weather-impact protocol and scheduled-game outlook, but do not treat weather impact, rain chance, or a listed scheduled game as an official cancellation or playable confirmation. If the page explicitly shows Rainout, Postponed, or game code 777/999, report that as official; otherwise official status remains unknown and agents should tell the user to check the AMBL rainout page before leaving.",
+  "operator": null,
+  "surface": "unknown",
+  "drainage": "unknown"
 }
