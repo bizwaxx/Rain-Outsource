@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Generate placeholder historical JSON for all fields without one yet."""
+"""Generate placeholder historical JSON for fields without one yet.
+
+Prefer scripts/fetch_noaa_history.py, which writes real NOAA precipitation
+history (and creates the file when missing). Keep this only for offline use.
+"""
 import json
 from pathlib import Path
 

@@ -33,7 +33,8 @@ Current backend status:
 5. Resolves aliases like `Krieg`, `Craig`, `Havins`, `Northeast Metro`, `Southeast Metro`, `Oak Hill Youth Sports`, `Manchaca Optimist`, `T&C Sports`, `Balcones`, `NWLL`, `Western Hills`, `Old Settlers Baseball`, `OSP Softball`, `Brushy Creek Softball`, `Milburn Park`, `Downs Field`, `Anderson High School`, `Georgetown Fields`, `Field of Dreams`, `DSYSA Baseball`, and full field IDs.
 6. Pulls live game-time weather from the National Weather Service API.
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
-8. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
+8. Calibrates play probability with 10 years of NOAA daily rain history for each field and returns the station used in `historical_calibration`.
+9. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
 
 ## Pilot fields
 
@@ -149,6 +150,23 @@ Use the word **rain**, not **rainfall**, in Dad-facing answers.
 ## Example answer
 
 Official status is on. At game time, rain chance is 67% with storms likely. Estimated play probability is 25%. Check the rainout line again right before leaving.
+
+## Historical rain data (NOAA)
+
+Every supported field now has 10 years (2016–2025) of real daily rain history
+from NOAA GHCN-Daily, taken from the nearest station with at least 90% coverage
+(all 35 fields matched within 10 km). It lives in
+`data/historical/*-historical.json` under `noaa_history` and is regenerated with:
+
+```bash
+python scripts/fetch_noaa_history.py
+```
+
+The history calibrates play probability: when the official status is on, only
+the share of rain that historically reaches the field's rainout level for that
+month counts against play (with a 50% floor; thunderstorms always count fully).
+`/v1/status` returns an additive `historical_calibration` block naming the
+station and month used. Details, schema and caveats: `docs/historical-data.md`.
 
 ## API contract
 

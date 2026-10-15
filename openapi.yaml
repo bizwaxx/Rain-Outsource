@@ -182,6 +182,46 @@ paths:
                   answer_requirements:
                     type: object
                     description: Required wording outside agents must include in the final user-facing answer.
+                  historical_calibration:
+                    type: object
+                    nullable: true
+                    description: >-
+                      NOAA GHCN-Daily rain history used to calibrate play probability for the game month.
+                      Null when the field has no NOAA history yet. Additive; does not change other fields.
+                    properties:
+                      source:
+                        type: string
+                      station_id:
+                        type: string
+                        example: USW00013904
+                      station_name:
+                        type: string
+                        example: AUSTIN BERGSTROM INTL AP
+                      station_distance_km:
+                        type: number
+                      period:
+                        type: object
+                        properties:
+                          start:
+                            type: string
+                          end:
+                            type: string
+                      month:
+                        type: string
+                        example: "05"
+                      rain_to_cancel_threshold_in:
+                        type: number
+                        description: Daily rain total (inches) treated as rainout-level for this field.
+                      rainy_day_share_reaching_threshold:
+                        type: number
+                        description: Share of rainy days (>= 0.01 in) in this month that reached the threshold.
+                      rainout_level_day_frequency:
+                        type: number
+                        description: Share of all days in this month that reached the threshold.
+                      rain_severity_applied:
+                        type: number
+                        nullable: true
+                        description: Multiplier applied to the rain chance (1.0 = rain chance counts fully).
               example:
                 creator: JEEZ Labs
                 field: Havins Softball Complex
