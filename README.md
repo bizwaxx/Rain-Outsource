@@ -146,6 +146,12 @@ Current backend status:
 
 Official rainout status wins. Weather gives drive risk and game-time play probability. If the official source is checked but unclear, keep status as `unknown` instead of guessing.
 
+Play probability with an `unknown` status starts at 96% (most games are played; the
+rest covers normal no-shows and venue issues) and drops with rain chance and storms.
+A dry forecast is about 96%, 70% rain is about 40–55%, and storms are at most 50%.
+Cancelled is 0%, and delayed or conflicting signals are at most 50%. Each answer
+includes a plain-language `reason`. Details: `docs/play-probability.md`.
+
 Use the word **rain**, not **rainfall**, in Dad-facing answers.
 
 ## Example answer

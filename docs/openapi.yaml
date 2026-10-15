@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.7.0
+  version: 0.7.1
   description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements.
   x-creator: JEEZ Labs
 servers:
@@ -243,6 +243,17 @@ paths:
                     type: integer
                     minimum: 0
                     maximum: 100
+                    description: >-
+                      Estimated chance the game is played. Cancelled/closed = 0. Official "on" = 100 minus the
+                      (NOAA-calibrated) rain chance. Unknown (nothing posted) = 96% baseline lowered by rain and
+                      storms (dry ~96, 70% rain ~40-55, thunderstorms <= 50). Delayed or conflicting signals <= 50.
+                      See docs/play-probability.md.
+                  risk_level:
+                    type: string
+                    description: Weather risk when status is on (low, medium, high); "unknown" when the official status is unknown or uncertain; "officially cancelled" when cancelled.
+                  reason:
+                    type: string
+                    description: Plain-language explanation of the play probability.
                   recommendation:
                     type: string
                     enum: [likely_safe_to_drive, check_again_before_leaving, do_not_drive, check_official_source]

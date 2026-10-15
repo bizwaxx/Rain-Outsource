@@ -66,13 +66,17 @@ For ICS, `DTSTART` (UTC, `TZID`, floating or all-day), `DTEND`, `SUMMARY`, `LOCA
 2. **Forecast** (games within ~7 days): one NWS hourly forecast per venue per request,
    fetched in parallel; the period nearest the start time gives rain chance and storms.
 3. **Play probability**: the same model as `/v1/status`, calibrated with the venue's NOAA
-   history for that month. Because official pages only describe today, the estimate
-   **assumes the game is still on** unless the official source (polled only for games in
-   the next 12 hours at venues with a status feed) or the calendar says it is cancelled.
-4. **Beyond the forecast range**: a history-only outlook — the share of days in that
-   month that historically reached rainout-level rain (`basis: history_only`).
+   history for that month. Official pages only describe today, so most games have no
+   posted status (`official_status: unknown`). Those start from a **96% baseline**
+   (normal no-shows and venue issues), and rain and storms lower it (see
+   [play probability](play-probability.md)). The official source (polled only for games in
+   the next 12 hours at venues with a status feed) or the calendar can mark a game
+   cancelled (0%), and delayed or conflicting signals are capped at 50%.
+4. **Beyond the forecast range**: a history-only outlook: 96% × the share of days in that
+   month that did *not* reach rainout-level rain (`basis: history_only`).
 5. **At risk** when any of: official/calendar cancellation, thunderstorms likely, rain
-   chance 60%+ (risk level high), or play probability below `risk_threshold`.
+   chance 60%+, or play probability below `risk_threshold` (default 60). With unknown
+   status, that means roughly 55%+ rain (after NOAA calibration) or any likely thunderstorms.
    `risk_reasons` lists why.
 
 ## Response (JSON)

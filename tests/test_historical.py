@@ -101,7 +101,8 @@ def test_calibration_does_not_soften_thunderstorms():
 
 def test_calibration_never_overrides_official_status():
     assert calculate_play_probability("cancelled", 5, False, 1.0, historical_calibration=CAL)["play_probability_percent"] == 0
-    assert calculate_play_probability("unknown", 5, False, 1.0, historical_calibration=CAL)["play_probability_percent"] == 50
+    assert calculate_play_probability("unknown", 5, False, 1.0, historical_calibration=CAL)["play_probability_percent"] == 96
+    assert calculate_play_probability("delayed", 5, False, 1.0, historical_calibration=CAL)["play_probability_percent"] == 50
 
 
 def test_no_calibration_keeps_original_output_shape():
