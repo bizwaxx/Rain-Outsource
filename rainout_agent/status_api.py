@@ -158,7 +158,7 @@ def _display_game_time(value: str) -> str:
     return f"{hour}{minute} {am_pm}"
 
 
-def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
+def fetch_official_rainout_status(field: dict[str, Any], timeout: float = 20) -> dict[str, Any]:
     """Safely check the official status page without guessing.
 
     The first public Austin source is a general athletics page, not a structured
@@ -186,7 +186,7 @@ def fetch_official_rainout_status(field: dict[str, Any]) -> dict[str, Any]:
     headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
     request = urllib.request.Request(source_url, headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=20) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             raw_text = response.read().decode("utf-8", errors="replace")
     except Exception:
         result["error"] = "official_source_unavailable"
@@ -278,28 +278,29 @@ def _answer_requirements(field: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
-    """Fetch real forecast data from the National Weather Service API.
+NWS_HEADERS = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
 
-    The NWS hourly forecast contains precipitation probability and short forecast
-    text. We choose the forecast period closest to the requested game time.
-    """
+
+def fetch_nws_hourly_periods(field: dict[str, Any], timeout: float = 20) -> list[dict[str, Any]]:
+    """Fetch the NWS hourly forecast periods (about 7 days) for a field."""
     lat = field["coordinates"]["lat"]
     lon = field["coordinates"]["lon"]
-    headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
 
     points_url = f"https://api.weather.gov/points/{lat},{lon}"
-    points_req = urllib.request.Request(points_url, headers=headers)
-    with urllib.request.urlopen(points_req, timeout=20) as response:
+    points_req = urllib.request.Request(points_url, headers=NWS_HEADERS)
+    with urllib.request.urlopen(points_req, timeout=timeout) as response:
         points = json.loads(response.read().decode("utf-8"))
 
     hourly_url = points["properties"]["forecastHourly"]
-    hourly_req = urllib.request.Request(hourly_url, headers=headers)
-    with urllib.request.urlopen(hourly_req, timeout=20) as response:
+    hourly_req = urllib.request.Request(hourly_url, headers=NWS_HEADERS)
+    with urllib.request.urlopen(hourly_req, timeout=timeout) as response:
         forecast = json.loads(response.read().decode("utf-8"))
+    return forecast["properties"]["periods"]
 
-    periods = forecast["properties"]["periods"]
-    target = _parse_time(game_time)
+
+def weather_from_periods(periods: list[dict[str, Any]], game_time: str | datetime | None) -> dict[str, Any]:
+    """Pick the forecast period closest to the game time and summarise it."""
+    target = game_time if isinstance(game_time, datetime) else _parse_time(game_time)
     selected = periods[0]
     if target:
         if target.tzinfo is None:
@@ -311,7 +312,7 @@ def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
             ).total_seconds(),
         )
 
-    precip = selected.get("probabilityOfPrecipitation", {}).get("value")
+    precip = (selected.get("probabilityOfPrecipitation") or {}).get("value")
     if precip is None:
         precip = 0
     short_forecast = selected.get("shortForecast", "") or ""
@@ -326,6 +327,15 @@ def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
         "last_checked": datetime.now(timezone.utc).isoformat(),
         "forecast_period_start": selected.get("startTime"),
     }
+
+
+def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
+    """Fetch real forecast data from the National Weather Service API.
+
+    The NWS hourly forecast contains precipitation probability and short forecast
+    text. We choose the forecast period closest to the requested game time.
+    """
+    return weather_from_periods(fetch_nws_hourly_periods(field), game_time)
 
 
 def build_status_result(
