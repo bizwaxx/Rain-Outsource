@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.8.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements.
+  version: 0.9.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -471,6 +471,76 @@ paths:
           content:
             text/calendar:
               schema: {type: string}
+  /v1/tracks:
+    get:
+      operationId: listTracks
+      summary: Find a supported motocross track.
+      description: >-
+        Find a motocross track by name, alias or town (empty q lists all). Confirm the track with the user.
+        If next_step is ask_user_for_events_url the track is not covered; ask the user for an event link.
+      parameters:
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, example: Swan MX}
+        - {in: query, name: state, required: false, schema: {type: string}, example: TX}
+      responses:
+        "200": {description: Candidate tracks, content: {application/json: {schema: {$ref: "#/components/schemas/TrackList"}}}}
+        "400": {description: Bad query, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/tracks/{track_id}/events:
+    get:
+      operationId: getTrackEvents
+      summary: Upcoming races at a track with riding odds, official status, sources and a calendar event.
+      description: >-
+        Events come only from public track and series calendars (never invented). Read reason aloud. Ask before any
+        calendar add. If none are found, ask the user for an event link and pass events_url.
+      parameters:
+        - {in: path, name: track_id, required: true, schema: {type: string}, example: tyler-tx-swan-mx}
+        - {in: query, name: date, required: false, schema: {type: string}, description: "today, tomorrow, saturday, sunday, this weekend or YYYY-MM-DD."}
+        - {in: query, name: from, required: false, schema: {type: string, format: date}}
+        - {in: query, name: to, required: false, schema: {type: string, format: date}, description: Defaults to 90 days out; max 400 days.}
+        - {in: query, name: include_practice, required: false, schema: {type: boolean}}
+        - {in: query, name: events_url, required: false, schema: {type: string, format: uri}, description: User-supplied event page or ICS link (public http(s) only).}
+      responses:
+        "200": {description: Events, content: {application/json: {schema: {$ref: "#/components/schemas/TrackEventsResult"}}}}
+        "400": {description: Bad date, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Sources or forecast unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/tracks/{track_id}/check:
+    get:
+      operationId: checkRace
+      summary: Chance a race at the track on a date happens, with a one-sentence reason.
+      description: >-
+        Combines official notices, race-window forecast, prior 24-48h rain (soaked dirt) and NOAA rain history. Read
+        answer aloud; official status wins. Returns calendar_event and ics; ask before adding to a calendar.
+      parameters:
+        - {in: path, name: track_id, required: true, schema: {type: string}, example: swan}
+        - {in: query, name: date, required: false, schema: {type: string}, example: saturday}
+        - {in: query, name: event_id, required: false, schema: {type: string}, description: event_id from getTrackEvents.}
+        - {in: query, name: events_url, required: false, schema: {type: string, format: uri}}
+      responses:
+        "200": {description: Race check, content: {application/json: {schema: {$ref: "#/components/schemas/RaceCheckResult"}}}}
+        "400": {description: Missing date/event_id or bad date, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Sources or forecast unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/tracks/{track_id}/history:
+    get:
+      operationId: getTrackHistory
+      summary: Monthly NOAA rain stats and documented past rain cancellations or postponements.
+      description: >-
+        Monthly rain frequency and climatology race odds from NOAA, plus publicly documented cancelled or moved events
+        with source links. Coverage notes say what could not be read; an empty list is not proof of no rainouts.
+      parameters:
+        - {in: path, name: track_id, required: true, schema: {type: string}, example: freestone}
+      responses:
+        "200": {description: History, content: {application/json: {schema: {$ref: "#/components/schemas/TrackHistory"}}}}
+        "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/tracks/{track_id}/calendar.ics:
+    get:
+      operationId: getTrackCalendar
+      summary: Subscribable iCalendar feed of the track's races with riding odds in each description.
+      parameters:
+        - {in: path, name: track_id, required: true, schema: {type: string}}
+      responses:
+        "200": {description: iCalendar feed (last 7 days through the next 180 days), content: {text/calendar: {schema: {type: string}}}}
+        "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
     TeamCandidate:
@@ -632,4 +702,86 @@ components:
       properties:
         error: {type: string}
         message: {type: string}
+        docs: {type: string}
+    Track:
+      type: object
+      properties:
+        track_id: {type: string, example: tyler-tx-swan-mx}
+        short_id: {type: string, example: swan}
+        name: {type: string, example: Swan MX}
+        city: {type: string}
+        state: {type: string}
+        timezone: {type: string}
+        website: {type: string, nullable: true}
+        soil: {type: string}
+        confidence: {type: number, nullable: true}
+    TrackList:
+      type: object
+      properties:
+        count: {type: integer}
+        tracks: {type: array, items: {$ref: "#/components/schemas/Track"}}
+        next_step: {type: string, enum: [confirm_with_user, use_track, ask_user_for_events_url]}
+        message: {type: string}
+    TrackEvent:
+      type: object
+      properties:
+        event_id: {type: string, example: swan-20261016-r}
+        name: {type: string}
+        kind: {type: string, enum: [race, practice]}
+        series: {type: string, nullable: true}
+        start: {type: string, format: date-time}
+        end: {type: string, format: date-time}
+        timezone: {type: string}
+        time_estimated: {type: boolean, description: True when the source gave dates but no gate times.}
+        play_probability: {type: integer, nullable: true, description: Chance the event runs (0-100) on headline_date.}
+        headline_date: {type: string, nullable: true}
+        reason: {type: string, description: One plain sentence to read aloud.}
+        official_status: {type: string, enum: [unknown, on, uncertain, postponed, cancelled]}
+        status_evidence: {type: array, items: {type: object}}
+        days: {type: array, items: {type: object}, description: "Per-day role (race, arrival_practice), basis (forecast, climatology, past), odds, rain inputs."}
+        sources: {type: array, items: {type: object, properties: {name: {type: string}, url: {type: string}}}}
+        calendar_event: {type: object, description: Google Calendar API event body with a stable iCalUID.}
+        ics: {type: string}
+    TrackEventsResult:
+      type: object
+      properties:
+        track: {$ref: "#/components/schemas/Track"}
+        range: {type: object}
+        count: {type: integer}
+        events: {type: array, items: {$ref: "#/components/schemas/TrackEvent"}}
+        next_event: {allOf: [{$ref: "#/components/schemas/TrackEvent"}], nullable: true}
+        next_step: {type: string}
+        message: {type: string}
+        sources_checked: {type: array, items: {type: object}}
+        calendar_ics_url: {type: string}
+        calendar_policy: {type: string}
+        as_of: {type: string}
+    RaceCheckResult:
+      type: object
+      properties:
+        found: {type: boolean}
+        answer: {type: string}
+        event: {allOf: [{$ref: "#/components/schemas/TrackEvent"}], nullable: true}
+        next_event: {allOf: [{$ref: "#/components/schemas/TrackEvent"}], nullable: true}
+        next_step: {type: string, enum: [offer_calendar_add, tell_user_cancelled, ask_user_for_events_url]}
+        track: {$ref: "#/components/schemas/Track"}
+        sources_checked: {type: array, items: {type: object}}
+        calendar_policy: {type: string}
+        as_of: {type: string}
+    TrackHistory:
+      type: object
+      properties:
+        track: {$ref: "#/components/schemas/Track"}
+        noaa_rain_history: {type: object, description: "Station, period, monthly table (mean rain, rainy-day %, inch-day %, climatology_race_odds), wettest months, recent inch-plus days."}
+        documented_events: {type: array, items: {type: object}, description: "Each with date, event, kind, outcome, cause, source_url, and noaa_observed rain around the date."}
+        summary: {type: object}
+        coverage: {type: object}
+        as_of: {type: string}
+    TracksError:
+      type: object
+      properties:
+        error: {type: string}
+        message: {type: string}
+        next_step: {type: string}
+        spoken_answer: {type: string}
         docs: {type: string}
