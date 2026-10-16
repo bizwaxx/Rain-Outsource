@@ -29,6 +29,28 @@ def application(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
 
+    if path.rstrip("/") == "/mcp":
+        from rainout_agent.mcp_server import MAX_BODY, handle_http
+
+        try:
+            length = int(environ.get("CONTENT_LENGTH") or 0)
+        except ValueError:
+            length = 0
+        body = environ["wsgi.input"].read(min(length, MAX_BODY + 1)) if length > 0 else b""
+        headers = {k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")}
+        status, out_headers, payload = handle_http(method, headers, body)
+        reasons = {200: "OK", 202: "Accepted", 204: "No Content", 400: "Bad Request", 403: "Forbidden", 405: "Method Not Allowed", 413: "Payload Too Large"}
+        start_response(f"{status} {reasons.get(status, 'Error')}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
+        return [payload]
+
+    if path == "/llms.txt":
+        from pathlib import Path
+
+        body = (Path(__file__).resolve().parents[1] / "llms.txt").read_bytes()
+        start_response("200 OK", [("Content-Type", "text/plain; charset=utf-8"), ("Content-Length", str(len(body))),
+                                  ("Access-Control-Allow-Origin", "*"), ("Cache-Control", "public, max-age=3600, s-maxage=86400")])
+        return [body]
+
     if method == "OPTIONS":
         return _json_response(start_response, "200 OK", {"status": "ok"})
 

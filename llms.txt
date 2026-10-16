@@ -1,0 +1,29 @@
+# Rainout Source
+
+> Free public API and MCP server that tells people whether an outdoor game (softball, baseball, soccer, motocross) will be played. It covers 68 verified venues in TX, OK, LA and FL, and finds teams in public league schedules (City of Austin adult softball, Austin Metro Baseball League) or in a schedule link the user provides. Answers combine official league/venue status, the NWS forecast (with an Open-Meteo fallback) and 10 years of NOAA rain history.
+
+Base URL: https://rainout-agent-source.vercel.app
+
+## For agents
+
+- Rules: confirm the team match with the user; read the one-sentence `reason` aloud with the play odds; official status beats odds; **always ask the user before adding a game to their calendar**. Rainout Source never writes to calendars. It gives you a Google Calendar event body (`calendar_event`, with a stable `iCalUID`) and ICS text.
+- If team search returns `next_step: ask_user_for_schedule_url`, ask for the league's schedule link (ICS/webcal feed or schedule page) and search again with `schedule_url`.
+- MCP (Streamable HTTP, stateless, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: find_team, get_games, check_game, get_venue_status, check_schedule.
+- OpenAPI (GPT Actions friendly operationIds): https://rainout-agent-source.vercel.app/openapi.yaml
+
+## Endpoints
+
+- [Team search](https://rainout-agent-source.vercel.app/v1/teams/search?q=ATX%20Boys&venue=Craig%20Fields&day=friday): `GET /v1/teams/search?q=&venue=&sport=&day=&schedule_url=` returns candidates with team_id and confidence
+- [Team games](https://rainout-agent-source.vercel.app/v1/teams/tsl-340-744621-4306365/games?date=today): `GET /v1/teams/{team_id}/games?date=today|YYYY-MM-DD` or `from=&to=` returns games with play_probability, reason, calendar_event and ics; `next_game` when the range is empty
+- `GET /v1/teams/{team_id}/calendar.ics`: subscribable feed with odds in each event
+- [Game status](https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-10-16T20:20:00-05:00): `GET /v1/status?field_id=&game_time=` for one venue and time
+- [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=`
+- `GET|POST /v1/schedule/check`: score a whole schedule (ICS URL, JSON, CSV)
+
+## Docs
+
+- [Teams API](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/teams.md)
+- [MCP server](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/mcp.md)
+- [Example agent conversation](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/agent-conversation.md)
+- [Play probability model](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/play-probability.md)
+- [Weather cache and fallback](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/weather-cache.md)
