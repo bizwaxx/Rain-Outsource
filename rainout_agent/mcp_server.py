@@ -12,11 +12,11 @@ import os
 from typing import Any, Callable
 from urllib.parse import urlsplit
 
-from rainout_agent import team_sources, teams
+from rainout_agent import motocross, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.9.0"
+SERVER_VERSION = "0.10.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -27,7 +27,9 @@ INSTRUCTIONS = (
     "If find_team returns next_step=ask_user_for_schedule_url, ask the user for their league schedule link and "
     "call find_team again with schedule_url. Never add anything to a calendar without asking the user first; "
     "Rainout Source never writes to calendars. If they agree, create the game's `calendar_event` (Google Calendar "
-    "event body with a stable iCalUID) using your calendar tool. Official league or venue status always wins over odds."
+    "event body with a stable iCalUID) using your calendar tool. Official league or venue status always wins over odds. "
+    "Motocross: find_track (confirm the track with the user), then get_track_events or check_race for race-day odds, "
+    "and get_track_history for monthly rain stats and documented rain cancellations."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -127,6 +129,76 @@ TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "find_track",
+        "title": "Find a motocross track",
+        "description": (
+            "Find a supported motocross track by name, alias or town, e.g. 'Swan MX', 'Freestone', 'Dade City'. Returns "
+            "candidates with track_id and confidence, or every track when query is empty. Confirm the track with the user "
+            "before relying on it. If next_step is ask_user_for_events_url, the track is not covered: ask for an event link."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Track name or town as the user said it."},
+                "state": {"type": "string", "description": "Two-letter state filter, e.g. TX."},
+            },
+        },
+    },
+    {
+        "name": "get_track_events",
+        "title": "Upcoming motocross events with riding odds",
+        "description": (
+            "List races (optionally practice days) at a track from its own calendar and series calendars, each with "
+            "play_probability, a one-sentence reason, official_status and source URLs. Never invents events: if none are "
+            "found, ask the user for an event or series link and pass it as events_url." + ASK_CAL.replace("Each game", "Each event").replace("a game", "an event")
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "track_id": {"type": "string", "description": "track_id from find_track (short ids like 'swan' work too)."},
+                "date": {"type": "string", "description": "today, tomorrow, saturday, sunday, this weekend or YYYY-MM-DD."},
+                "from": {"type": "string", "description": "Range start YYYY-MM-DD (default today)."},
+                "to": {"type": "string", "description": "Range end YYYY-MM-DD (default 90 days out)."},
+                "include_practice": {"type": "boolean", "description": "Include open practice days."},
+                "events_url": {"type": "string", "description": "Optional user-supplied event page or ICS link."},
+            },
+            "required": ["track_id"],
+        },
+    },
+    {
+        "name": "check_race",
+        "title": "Will the race happen?",
+        "description": (
+            "Answer 'what are the chances the race at <track> on <date> happens'. Combines official cancel/postpone notices, "
+            "the race-window forecast, the prior 24-48h of rain (soaked dirt cancels races) and the track's NOAA rain history. "
+            "Read `answer` aloud. Official status always wins over odds." + ASK_CAL.replace("Each game", "The event").replace("a game", "the race")
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "track_id": {"type": "string", "description": "track_id from find_track."},
+                "date": {"type": "string", "description": "today, tomorrow, saturday, sunday, this weekend or YYYY-MM-DD."},
+                "event_id": {"type": "string", "description": "event_id from get_track_events (instead of date)."},
+                "events_url": {"type": "string", "description": "Optional user-supplied event page or ICS link."},
+            },
+            "required": ["track_id"],
+        },
+    },
+    {
+        "name": "get_track_history",
+        "title": "Track rain history and past rainouts",
+        "description": (
+            "Monthly NOAA rain stats for a track (rainy-day and inch-plus-day frequency, climatology race odds) plus publicly "
+            "documented past cancelled or postponed events with source links and coverage notes. An empty list means nothing "
+            "was publicly documented, not that rainouts never happened."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {"track_id": {"type": "string", "description": "track_id from find_track."}},
+            "required": ["track_id"],
+        },
+    },
 ]
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
@@ -196,6 +268,34 @@ def _check_schedule(args: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def _track_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
+    try:
+        return fn(*a, **kw)
+    except motocross.TracksError as exc:
+        raise ToolError(str(exc)) from exc
+    except motocross.UnknownTrack as exc:
+        raise ToolError("Unknown track_id. Call find_track first.") from exc
+
+
+def _find_track(args: dict[str, Any]) -> dict[str, Any]:
+    return _track_call(motocross.list_tracks, args.get("query") or None, args.get("state") or None)
+
+
+def _get_track_events(args: dict[str, Any]) -> dict[str, Any]:
+    return _track_call(motocross.track_events, _require(args, "track_id"), date_param=args.get("date"),
+                       from_param=args.get("from"), to_param=args.get("to"),
+                       include_practice=bool(args.get("include_practice")), events_url=args.get("events_url"))
+
+
+def _check_race(args: dict[str, Any]) -> dict[str, Any]:
+    return _track_call(motocross.check_race, _require(args, "track_id"), date_param=args.get("date"),
+                       event_id=args.get("event_id"), events_url=args.get("events_url"))
+
+
+def _get_track_history(args: dict[str, Any]) -> dict[str, Any]:
+    return _track_call(motocross.track_history, _require(args, "track_id"))
+
+
 def _require(args: dict[str, Any], key: str) -> str:
     value = args.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -209,6 +309,10 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "check_game": _check_game,
     "get_venue_status": _venue_status,
     "check_schedule": _check_schedule,
+    "find_track": _find_track,
+    "get_track_events": _get_track_events,
+    "check_race": _check_race,
+    "get_track_history": _get_track_history,
 }
 
 
