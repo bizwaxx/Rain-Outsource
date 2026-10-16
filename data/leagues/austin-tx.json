@@ -1,0 +1,53 @@
+{
+  "description": "Public league schedule sources Rainout Source can search for teams. Not venue definitions (no top-level id).",
+  "leagues": [
+    {
+      "league_id": "capital-city-softball",
+      "name": "Capital City Softball (Austin Parks & Recreation adult softball)",
+      "platform": "teamsideline",
+      "external_uid": "340",
+      "site_url": "https://www.capitalcityathletics.com",
+      "schedule_page": "https://www.capitalcityathletics.com/schedules",
+      "sport": "softball",
+      "city": "Austin",
+      "state": "TX",
+      "timezone": "America/Chicago",
+      "league_filter": "softball",
+      "location_venues": {
+        "krieg": "austin-tx-krieg-field-softball-complex",
+        "havins": "austin-tx-havins-softball-complex"
+      },
+      "area_venues": {
+        "south": "austin-tx-krieg-field-softball-complex",
+        "north": "austin-tx-havins-softball-complex"
+      },
+      "sources": [
+        "https://www.capitalcityathletics.com/schedules",
+        "https://cms-api.teamsideline.com/api/v1/Schedules?externalUID=340"
+      ],
+      "notes": "City of Austin PARD adult softball, Monday-Friday at Krieg (South) and Havins (North). Schedules are published on TeamSideline."
+    },
+    {
+      "league_id": "ambl",
+      "name": "Austin Metro Baseball League (AMBL)",
+      "platform": "ambl",
+      "site_url": "https://www.austinmetrobaseball.com",
+      "schedule_page": "https://www.austinmetrobaseball.com/schedule.php",
+      "sport": "baseball",
+      "city": "Austin",
+      "state": "TX",
+      "timezone": "America/Chicago",
+      "game_length_minutes": 180,
+      "location_venues": {
+        "downs": "austin-tx-downs-field-ambl",
+        "san gabriel": "georgetown-tx-san-gabriel-park-gyba-field-8-ambl",
+        "anderson": "austin-tx-anderson-high-school-baseball-field-ambl"
+      },
+      "sources": [
+        "https://www.austinmetrobaseball.com/schedule.php",
+        "https://www.austinmetrobaseball.com/rainout.php"
+      ],
+      "notes": "Adult (18+) hardball. schedule.php lists games per season, month and team; times are shown without AM/PM (10:00 is morning, 1:00/4:00/7:00 are afternoon/evening)."
+    }
+  ]
+}

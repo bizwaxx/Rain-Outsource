@@ -1,0 +1,738 @@
+[
+ {
+  "scheduleItem": {
+   "id": 217886400,
+   "homeTeamId": 4306380,
+   "awayTeamId": 4306379,
+   "homeTeamName": "COVID 44",
+   "awayTeamName": "Bat City Ballers",
+   "longHomeTeamName": "COVID 44",
+   "longAwayTeamName": "Bat City Ballers",
+   "itemDateTime": "2026-09-25T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886401,
+   "homeTeamId": 4306378,
+   "awayTeamId": 4306370,
+   "homeTeamName": "Vaqueros",
+   "awayTeamName": "The Vatos",
+   "longHomeTeamName": "Vaqueros",
+   "longAwayTeamName": "The Vatos",
+   "itemDateTime": "2026-09-25T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886402,
+   "homeTeamId": 4306365,
+   "awayTeamId": 4306373,
+   "homeTeamName": "ATX Boys",
+   "awayTeamName": "ATX Goonz",
+   "longHomeTeamName": "ATX Boys",
+   "longAwayTeamName": "ATX Goonz",
+   "itemDateTime": "2026-09-25T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886403,
+   "homeTeamId": 4306376,
+   "awayTeamId": 4306372,
+   "homeTeamName": "Bad Boyz",
+   "awayTeamName": "Rizk Takers",
+   "longHomeTeamName": "Bad Boyz",
+   "longAwayTeamName": "Rizk Takers",
+   "itemDateTime": "2026-09-25T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886404,
+   "homeTeamId": 4306365,
+   "awayTeamId": 4306378,
+   "homeTeamName": "ATX Boys",
+   "awayTeamName": "Vaqueros",
+   "longHomeTeamName": "ATX Boys",
+   "longAwayTeamName": "Vaqueros",
+   "itemDateTime": "2026-10-09T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 4,
+   "dispositionDescription": "Forfeit by away",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886405,
+   "homeTeamId": 4306372,
+   "awayTeamId": 4306370,
+   "homeTeamName": "Rizk Takers",
+   "awayTeamName": "The Vatos",
+   "longHomeTeamName": "Rizk Takers",
+   "longAwayTeamName": "The Vatos",
+   "itemDateTime": "2026-10-09T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886406,
+   "homeTeamId": 4306379,
+   "awayTeamId": 4306376,
+   "homeTeamName": "Bat City Ballers",
+   "awayTeamName": "Bad Boyz",
+   "longHomeTeamName": "Bat City Ballers",
+   "longAwayTeamName": "Bad Boyz",
+   "itemDateTime": "2026-10-09T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886407,
+   "homeTeamId": 4306373,
+   "awayTeamId": 4306380,
+   "homeTeamName": "ATX Goonz",
+   "awayTeamName": "COVID 44",
+   "longHomeTeamName": "ATX Goonz",
+   "longAwayTeamName": "COVID 44",
+   "itemDateTime": "2026-10-09T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 2,
+   "dispositionDescription": "Played",
+   "comments": "",
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886408,
+   "homeTeamId": 4306376,
+   "awayTeamId": 4306373,
+   "homeTeamName": "Bad Boyz",
+   "awayTeamName": "ATX Goonz",
+   "longHomeTeamName": "Bad Boyz",
+   "longAwayTeamName": "ATX Goonz",
+   "itemDateTime": "2026-10-16T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886409,
+   "homeTeamId": 4306380,
+   "awayTeamId": 4306372,
+   "homeTeamName": "COVID 44",
+   "awayTeamName": "Rizk Takers",
+   "longHomeTeamName": "COVID 44",
+   "longAwayTeamName": "Rizk Takers",
+   "itemDateTime": "2026-10-16T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 01",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886410,
+   "homeTeamId": 4306370,
+   "awayTeamId": 4306365,
+   "homeTeamName": "The Vatos",
+   "awayTeamName": "ATX Boys",
+   "longHomeTeamName": "The Vatos",
+   "longAwayTeamName": "ATX Boys",
+   "itemDateTime": "2026-10-16T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886411,
+   "homeTeamId": 4306378,
+   "awayTeamId": 4306379,
+   "homeTeamName": "Vaqueros",
+   "awayTeamName": "Bat City Ballers",
+   "longHomeTeamName": "Vaqueros",
+   "longAwayTeamName": "Bat City Ballers",
+   "itemDateTime": "2026-10-16T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 05",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886412,
+   "homeTeamId": 4306372,
+   "awayTeamId": 4306365,
+   "homeTeamName": "Rizk Takers",
+   "awayTeamName": "ATX Boys",
+   "longHomeTeamName": "Rizk Takers",
+   "longAwayTeamName": "ATX Boys",
+   "itemDateTime": "2026-10-23T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886413,
+   "homeTeamId": 4306380,
+   "awayTeamId": 4306376,
+   "homeTeamName": "COVID 44",
+   "awayTeamName": "Bad Boyz",
+   "longHomeTeamName": "COVID 44",
+   "longAwayTeamName": "Bad Boyz",
+   "itemDateTime": "2026-10-23T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886414,
+   "homeTeamId": 4306373,
+   "awayTeamId": 4306378,
+   "homeTeamName": "ATX Goonz",
+   "awayTeamName": "Vaqueros",
+   "longHomeTeamName": "ATX Goonz",
+   "longAwayTeamName": "Vaqueros",
+   "itemDateTime": "2026-10-23T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886415,
+   "homeTeamId": 4306370,
+   "awayTeamId": 4306379,
+   "homeTeamName": "The Vatos",
+   "awayTeamName": "Bat City Ballers",
+   "longHomeTeamName": "The Vatos",
+   "longAwayTeamName": "Bat City Ballers",
+   "itemDateTime": "2026-10-23T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886416,
+   "homeTeamId": 4306373,
+   "awayTeamId": 4306370,
+   "homeTeamName": "ATX Goonz",
+   "awayTeamName": "The Vatos",
+   "longHomeTeamName": "ATX Goonz",
+   "longAwayTeamName": "The Vatos",
+   "itemDateTime": "2026-10-30T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886417,
+   "homeTeamId": 4306378,
+   "awayTeamId": 4306376,
+   "homeTeamName": "Vaqueros",
+   "awayTeamName": "Bad Boyz",
+   "longHomeTeamName": "Vaqueros",
+   "longAwayTeamName": "Bad Boyz",
+   "itemDateTime": "2026-10-30T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886418,
+   "homeTeamId": 4306379,
+   "awayTeamId": 4306372,
+   "homeTeamName": "Bat City Ballers",
+   "awayTeamName": "Rizk Takers",
+   "longHomeTeamName": "Bat City Ballers",
+   "longAwayTeamName": "Rizk Takers",
+   "itemDateTime": "2026-10-30T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886419,
+   "homeTeamId": 4306365,
+   "awayTeamId": 4306380,
+   "homeTeamName": "ATX Boys",
+   "awayTeamName": "COVID 44",
+   "longHomeTeamName": "ATX Boys",
+   "longAwayTeamName": "COVID 44",
+   "itemDateTime": "2026-10-30T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886420,
+   "homeTeamId": 4306376,
+   "awayTeamId": 4306370,
+   "homeTeamName": "Bad Boyz",
+   "awayTeamName": "The Vatos",
+   "longHomeTeamName": "Bad Boyz",
+   "longAwayTeamName": "The Vatos",
+   "itemDateTime": "2026-11-06T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886421,
+   "homeTeamId": 4306365,
+   "awayTeamId": 4306379,
+   "homeTeamName": "ATX Boys",
+   "awayTeamName": "Bat City Ballers",
+   "longHomeTeamName": "ATX Boys",
+   "longAwayTeamName": "Bat City Ballers",
+   "itemDateTime": "2026-11-06T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886422,
+   "homeTeamId": 4306380,
+   "awayTeamId": 4306378,
+   "homeTeamName": "COVID 44",
+   "awayTeamName": "Vaqueros",
+   "longHomeTeamName": "COVID 44",
+   "longAwayTeamName": "Vaqueros",
+   "itemDateTime": "2026-11-06T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 10",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886423,
+   "homeTeamId": 4306372,
+   "awayTeamId": 4306373,
+   "homeTeamName": "Rizk Takers",
+   "awayTeamName": "ATX Goonz",
+   "longHomeTeamName": "Rizk Takers",
+   "longAwayTeamName": "ATX Goonz",
+   "itemDateTime": "2026-11-06T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886424,
+   "homeTeamId": 4306379,
+   "awayTeamId": 4306380,
+   "homeTeamName": "Bat City Ballers",
+   "awayTeamName": "COVID 44",
+   "longHomeTeamName": "Bat City Ballers",
+   "longAwayTeamName": "COVID 44",
+   "itemDateTime": "2026-11-13T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886425,
+   "homeTeamId": 4306373,
+   "awayTeamId": 4306365,
+   "homeTeamName": "ATX Goonz",
+   "awayTeamName": "ATX Boys",
+   "longHomeTeamName": "ATX Goonz",
+   "longAwayTeamName": "ATX Boys",
+   "itemDateTime": "2026-11-13T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 10",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886426,
+   "homeTeamId": 4306372,
+   "awayTeamId": 4306376,
+   "homeTeamName": "Rizk Takers",
+   "awayTeamName": "Bad Boyz",
+   "longHomeTeamName": "Rizk Takers",
+   "longAwayTeamName": "Bad Boyz",
+   "itemDateTime": "2026-11-13T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886427,
+   "homeTeamId": 4306370,
+   "awayTeamId": 4306378,
+   "homeTeamName": "The Vatos",
+   "awayTeamName": "Vaqueros",
+   "longHomeTeamName": "The Vatos",
+   "longAwayTeamName": "Vaqueros",
+   "itemDateTime": "2026-11-13T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 09",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886428,
+   "homeTeamId": 4306378,
+   "awayTeamId": 4306372,
+   "homeTeamName": "Vaqueros",
+   "awayTeamName": "Rizk Takers",
+   "longHomeTeamName": "Vaqueros",
+   "longAwayTeamName": "Rizk Takers",
+   "itemDateTime": "2026-11-20T18:30:00",
+   "itemDateTimeShortTime": "6:30 PM - 7:25 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886429,
+   "homeTeamId": 4306379,
+   "awayTeamId": 4306373,
+   "homeTeamName": "Bat City Ballers",
+   "awayTeamName": "ATX Goonz",
+   "longHomeTeamName": "Bat City Ballers",
+   "longAwayTeamName": "ATX Goonz",
+   "itemDateTime": "2026-11-20T19:25:00",
+   "itemDateTimeShortTime": "7:25 PM - 8:20 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886430,
+   "homeTeamId": 4306370,
+   "awayTeamId": 4306380,
+   "homeTeamName": "The Vatos",
+   "awayTeamName": "COVID 44",
+   "longHomeTeamName": "The Vatos",
+   "longAwayTeamName": "COVID 44",
+   "itemDateTime": "2026-11-20T20:20:00",
+   "itemDateTimeShortTime": "8:20 PM - 9:15 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ },
+ {
+  "scheduleItem": {
+   "id": 217886431,
+   "homeTeamId": 4306376,
+   "awayTeamId": 4306365,
+   "homeTeamName": "Bad Boyz",
+   "awayTeamName": "ATX Boys",
+   "longHomeTeamName": "Bad Boyz",
+   "longAwayTeamName": "ATX Boys",
+   "itemDateTime": "2026-11-20T21:15:00",
+   "itemDateTimeShortTime": "9:15 PM - 10:10 PM",
+   "dispositionTypes": 0,
+   "dispositionDescription": "",
+   "comments": null,
+   "location": {
+    "locationShortName": "Krieg 08",
+    "streetAddress": "515 S Pleasant Valley Rd",
+    "city": "Austin",
+    "state": "TX",
+    "zip": "78741"
+   }
+  }
+ }
+]
