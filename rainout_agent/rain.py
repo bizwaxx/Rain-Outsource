@@ -394,7 +394,7 @@ def summarize(r: dict[str, Any], *, hours: int | None, days: int | None) -> str:
         rows = r["hourly"]
         peak = max(rows, key=lambda x: x["probability_percent"])
         total = sum(x["precip_mm"] or 0 for x in rows) if any(x["precip_mm"] is not None for x in rows) else None
-        span = f"the next {len(rows)} hours"
+        span = "the next hour" if len(rows) == 1 else f"the next {len(rows)} hours"
         if peak["probability_percent"] < 15:
             return f"Rain is unlikely in {label} over {span} (max {peak['probability_percent']}% chance)."
         return (f"Up to {peak['probability_percent']}% chance of rain in {label} over {span}, highest around "
