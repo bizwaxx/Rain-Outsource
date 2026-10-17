@@ -16,7 +16,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.11.0"
+SERVER_VERSION = "0.12.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -30,6 +30,9 @@ INSTRUCTIONS = (
     "event body with a stable iCalUID) using your calendar tool. Official league or venue status always wins over odds. "
     "Motocross: find_track (confirm the track with the user), then get_track_events or check_race for race-day odds, "
     "and get_track_history for monthly rain stats and documented rain cancellations. "
+    "Venues not in the hand-verified list: find_venue searches tens of thousands of OpenStreetMap fields, soccer complexes "
+    "and motocross tracks nationwide (verification_level osm_only: community map data, no official status source); pass its "
+    "field_id as venue to get_venue_status, or as track_id to check_race. "
     "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts."
 )
 
@@ -101,7 +104,8 @@ TOOLS: list[dict[str, Any]] = [
         "title": "Venue status and play odds",
         "description": (
             "Official rainout status (when published), rain chance and play probability for a venue at a game time. Use "
-            "when the user names a field but not a team. venue accepts names/aliases like 'Craig Fields', 'Downs Field'."
+            "when the user names a field but not a team. venue accepts names/aliases like 'Craig Fields', 'Downs Field', "
+            "or a field_id from find_venue (OpenStreetMap venues are labeled verification_level=osm_only)."
         ),
         "inputSchema": {
             "type": "object",
@@ -110,6 +114,27 @@ TOOLS: list[dict[str, Any]] = [
                 "game_time": {"type": "string", "description": "ISO-8601 with offset"},
             },
             "required": ["venue", "game_time"],
+        },
+    },
+    {
+        "name": "find_venue",
+        "title": "Find a field or venue nationwide",
+        "description": (
+            "Search ball fields, soccer complexes and motocross tracks across the US by name and/or location, e.g. "
+            "query='Lamar Park', state='TX' or near='30.27,-97.74'. Returns field_id, address, sport and verification_level "
+            "('confirmed' = hand-verified with official sources; 'osm_only' = OpenStreetMap data, no official status). "
+            "Confirm the venue with the user, then call get_venue_status with venue=field_id."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Venue name, e.g. 'Lamar Park'."},
+                "state": {"type": "string", "description": "Two-letter state, e.g. TX."},
+                "sport": {"type": "string", "description": "softball, baseball, soccer or motocross."},
+                "near": {"type": "string", "description": "lat,lon to search around."},
+                "radius_km": {"type": "number", "minimum": 1, "maximum": 200},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+            },
         },
     },
     {
@@ -134,15 +159,19 @@ TOOLS: list[dict[str, Any]] = [
         "name": "find_track",
         "title": "Find a motocross track",
         "description": (
-            "Find a supported motocross track by name, alias or town, e.g. 'Swan MX', 'Freestone', 'Dade City'. Returns "
-            "candidates with track_id and confidence, or every track when query is empty. Confirm the track with the user "
-            "before relying on it. If next_step is ask_user_for_events_url, the track is not covered: ask for an event link."
+            "Find a motocross track by name, alias or town, e.g. 'Swan MX', 'Freestone', 'Dade City'. Returns "
+            "candidates with track_id, confidence and verification_level: 'confirmed' tracks have event calendars and "
+            "researched history; 'osm_only' tracks come from OpenStreetMap (nationwide) and only get weather-based odds. "
+            "Confirm the track with the user before relying on it. If next_step is ask_user_for_events_url, the track is "
+            "not covered: ask for an event link."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {"type": "string", "description": "Track name or town as the user said it."},
                 "state": {"type": "string", "description": "Two-letter state filter, e.g. TX."},
+                "verification": {"type": "string", "enum": ["confirmed", "osm_only", "all"],
+                                 "description": "Default: all when query or state is given, otherwise confirmed."},
             },
         },
     },
@@ -301,7 +330,20 @@ def _track_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[s
 
 
 def _find_track(args: dict[str, Any]) -> dict[str, Any]:
-    return _track_call(motocross.list_tracks, args.get("query") or None, args.get("state") or None)
+    return _track_call(motocross.list_tracks, args.get("query") or None, args.get("state") or None,
+                       verification=args.get("verification") or None)
+
+
+def _find_venue(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.status_api import fields_payload
+
+    if not (args.get("query") or args.get("state") or args.get("near")):
+        raise ToolError("Pass query, state or near.")
+    try:
+        return fields_payload(sport=args.get("sport"), state=args.get("state"), q=args.get("query"), near=args.get("near"),
+                              radius_km=args.get("radius_km"), verification="all", limit=min(int(args.get("limit") or 10), 50))
+    except ValueError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def _get_track_events(args: dict[str, Any]) -> dict[str, Any]:
@@ -346,6 +388,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "get_venue_status": _venue_status,
     "check_schedule": _check_schedule,
     "find_track": _find_track,
+    "find_venue": _find_venue,
     "get_track_events": _get_track_events,
     "check_race": _check_race,
     "get_track_history": _get_track_history,

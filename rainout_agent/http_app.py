@@ -132,27 +132,18 @@ def application(environ, start_response):
         return _json_response(start_response, "200 OK", {"status": "ok", "service": "rainout-source", "weather_cache": get_cache().describe()})
 
     if path == "/v1/fields":
-        params = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
-        sport = (params.get("sport") or [None])[0]
-        state = (params.get("state") or [None])[0]
+        from rainout_agent.status_api import fields_payload
+
+        params = {k: v[0] for k, v in parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True).items()}
         try:
-            fields = list_supported_fields(sport=sport, state=state)
+            payload = fields_payload(**{k: params.get(k) for k in ("sport", "state", "q", "near", "radius_km", "verification", "limit", "offset")})
         except ValueError as exc:
             return _json_response(
                 start_response,
                 "400 Bad Request",
                 {"error": "invalid_filter", "message": str(exc), "allowed_sports": list(SPORTS)},
             )
-        payload = {
-            "service": "rainout-source",
-            "protocol_version": "v0.9.0",
-            "creator": "JEEZ Labs",
-            "count": len(fields),
-            "fields": fields,
-        }
-        filters = {key: value for key, value in (("sport", sport), ("state", state)) if value}
-        if filters:
-            payload["filters"] = filters
+        payload["protocol_version"] = "v0.9.0"
         return _json_response(start_response, "200 OK", payload, http_cache.FIELDS)
 
     if path == "/openapi.yaml":

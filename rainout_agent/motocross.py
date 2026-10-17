@@ -122,14 +122,51 @@ def tracks() -> list[dict[str, Any]]:
     return mx.load_config()["tracks"]
 
 
+OSM_TRACK_NOTE = ("From OpenStreetMap only: the name and location are community data, no event calendar or official "
+                  "status source is configured, and no rain cancellations have been researched for this track.")
+
+
+def osm_track(v: dict[str, Any]) -> dict[str, Any]:
+    """A track record for an OpenStreetMap motocross venue (no event sources, soil unknown)."""
+    return {"field_id": v["id"], "short_id": v["id"], "name": v["name"], "aliases": [v["name"]], "soil": "unknown",
+            "event_sources": [], "series_sources": [], "unparsed_sources": [], "social": {}, "history": [],
+            "verification_level": "osm_only", "history_coverage": OSM_TRACK_NOTE}
+
+
+def _osm_track_matches(q: str, state: str | None = None) -> list[tuple[float, dict[str, Any]]]:
+    from rainout_agent import osm_venues
+
+    out = []
+    for v in osm_venues.motocross_tracks():
+        if state and v["state"] != state:
+            continue
+        s = osm_venues.name_score(v, q) if q else 0.0
+        if q and s < 0.6:
+            continue
+        out.append((s, v))
+    out.sort(key=lambda x: (-x[0], x[1]["name"]))
+    return out
+
+
 def resolve_track(track_id: str | None) -> dict[str, Any]:
+    from rainout_agent import osm_venues
+
     tid = (track_id or "").strip()
     for t in tracks():
         if tid in (t["field_id"], t["short_id"]):
             return t
+    if osm_venues.is_osm_id(tid):
+        v = osm_venues.get(tid)
+        if v and ("motocross" in v["sports"] or v["kind"] == "motocross_track"):
+            return osm_track(v)
+        raise UnknownTrack(tid)
     scored = sorted(((_match_score(t, _field(t), tid), t) for t in tracks()), key=lambda x: -x[0])
     if scored and scored[0][0] >= 0.8:
         return scored[0][1]
+    osm = _osm_track_matches(tid)
+    # Only take an OSM track by name when it is a clear, unique match.
+    if osm and osm[0][0] >= 0.9 and (len(osm) == 1 or osm[1][0] < osm[0][0]):
+        return osm_track(osm[0][1])
     raise UnknownTrack(tid)
 
 
@@ -150,6 +187,7 @@ def public_track(track: dict[str, Any], confidence: float | None = None) -> dict
                          + [{"name": mx.load_config()["series"][sid]["name"], "url": mx.load_config()["series"][sid]["url"]}
                             for sid in track.get("series_sources", [])],
         "unreadable_sources": track.get("unparsed_sources", []),
+        "verification_level": track.get("verification_level", "confirmed"),
         "links": {
             "events": f"{BASE_URL}/v1/tracks/{track['field_id']}/events",
             "check": f"{BASE_URL}/v1/tracks/{track['field_id']}/check?date=YYYY-MM-DD",
@@ -157,16 +195,35 @@ def public_track(track: dict[str, Any], confidence: float | None = None) -> dict
             "calendar_ics": f"{BASE_URL}/v1/tracks/{track['field_id']}/calendar.ics",
         },
     }
+    if track.get("verification_level") == "osm_only":
+        from rainout_agent import osm_venues
+
+        out["verification_note"] = OSM_TRACK_NOTE
+        out["osm_elements"] = field.get("osm", {}).get("elements", [])
+        out["attribution"] = osm_venues.ATTRIBUTION
     if confidence is not None:
         out["confidence"] = confidence
     return out
 
 
-def list_tracks(q: str | None = None, state: str | None = None) -> dict[str, Any]:
+def list_tracks(q: str | None = None, state: str | None = None, verification: str | None = None,
+                limit: int | str | None = None, offset: int | str | None = None) -> dict[str, Any]:
+    """Supported tracks. Confirmed tracks first; OpenStreetMap tracks (osm_only) are added when
+    searching (q), filtering by state, or asking for verification=all|osm_only."""
     q = (q or "").strip()
     if len(q) > 120:
         raise TracksError("q is too long.")
     st = (state or "").strip().upper() or None
+    level = (verification or ("all" if (q or st) else "confirmed")).strip().lower()
+    if level not in ("confirmed", "osm_only", "all"):
+        raise TracksError("verification must be confirmed, osm_only or all.")
+    try:
+        lim = int(limit) if limit not in (None, "") else 100
+        off = int(offset) if offset not in (None, "") else 0
+    except ValueError as exc:
+        raise TracksError("limit and offset must be numbers.") from exc
+    if not 1 <= lim <= 500 or off < 0:
+        raise TracksError("limit must be 1-500 and offset >= 0.")
     rows = []
     for t in tracks():
         field = _field(t)
@@ -175,16 +232,33 @@ def list_tracks(q: str | None = None, state: str | None = None) -> dict[str, Any
         score = _match_score(t, field, q) if q else None
         if q and score < 0.6:
             continue
-        rows.append((score if score is not None else 0, public_track(t, score)))
+        if level != "osm_only":
+            rows.append(((score if score is not None else 0) + 0.05, public_track(t, score)))
+    n_confirmed = len(rows)
+    osm_rows = _osm_track_matches(q, st) if level != "confirmed" else []
+    confirmed_names = {_norm(r[1]["name"]) for r in rows}
+    for s_, v in osm_rows:
+        if _norm(v["name"]) in confirmed_names:
+            continue
+        rows.append((s_, {"_osm": v, "name": v["name"], "confidence": s_ if q else None}))
     rows.sort(key=lambda r: (-r[0], r[1]["name"]))
-    result = {"query": q or None, "state": st, "count": len(rows), "tracks": [r[1] for r in rows],
-              "as_of": datetime.now(timezone.utc).isoformat()}
+    page = [public_track(osm_track(r[1]["_osm"]), r[1]["confidence"]) if "_osm" in r[1] else r[1] for r in rows[off:off + lim]]
+    result = {"query": q or None, "state": st, "count": len(page), "total": len(rows), "offset": off, "limit": lim,
+              "verification": level, "counts": {"confirmed": n_confirmed, "osm_only": len(rows) - n_confirmed},
+              "tracks": page, "as_of": datetime.now(timezone.utc).isoformat()}
+    if off + lim < len(rows):
+        result["next_offset"] = off + lim
+    if level != "confirmed":
+        from rainout_agent import osm_venues
+
+        result["attribution"] = osm_venues.ATTRIBUTION
     if q and not rows:
         result["next_step"] = "ask_user_for_events_url"
         result["message"] = ("That track isn't one of the supported motocross tracks. Supported tracks are listed at /v1/tracks; "
                              "for other venues, ask the user for the track's event calendar link.")
     elif q:
-        result["next_step"] = "confirm_with_user" if rows[0][1].get("confidence", 0) < 1 else "use_track"
+        top = page[0] if page else {}
+        result["next_step"] = "confirm_with_user" if (top.get("confidence") or 0) < 1 or top.get("verification_level") == "osm_only" else "use_track"
     return result
 
 
@@ -835,10 +909,16 @@ def check_race(track_id: str, *, date_param: str | None = None, event_id: str | 
         future = sorted((e for e in events if e["kind"] == "race" and e["end"] >= now), key=lambda e: e["start"])
         nxt = build_events(track, future[:1], now)[0] if future else None
         when = target.strftime("%a %b %d").replace(" 0", " ") if target else "that date"
-        answer = f"I don't see a race at {track['name']} on {when} in its public calendars."
+        if track.get("verification_level") == "osm_only":
+            answer = (f"{track['name']} comes from OpenStreetMap, so I have no event calendar for it and can't confirm a race on {when}.")
+        else:
+            answer = f"I don't see a race at {track['name']} on {when} in its public calendars."
         if nxt:
             answer += f" The next one I can find is {nxt['name']} starting {nxt['start'][:10]}."
-        return {**base, "found": False, "event": None, "next_event": nxt,
+        cond = conditions_if_racing(track, target, now) if target else None
+        if cond and cond.get("play_probability") is not None:
+            answer += f" If there is racing that day, the weather odds are about {cond['play_probability']}%: {cond['reason']}"
+        return {**base, "found": False, "event": None, "next_event": nxt, "conditions_if_racing": cond,
                 "answer": answer + " If you have a link to the event, send it and I'll check it.",
                 "next_step": "ask_user_for_events_url"}
     item = build_events(track, [chosen], now)[0]
@@ -850,6 +930,27 @@ def check_race(track_id: str, *, date_param: str | None = None, event_id: str | 
             item["reason"] = spoken_reason(track, chosen, day, {"status": item["official_status"], "evidence": item["status_evidence"]}, now)
     return {**base, "found": True, "event": item, "answer": item["reason"],
             "next_step": "offer_calendar_add" if item["official_status"] != "cancelled" else "tell_user_cancelled"}
+
+
+def conditions_if_racing(track: dict[str, Any], day: date, now: datetime) -> dict[str, Any] | None:
+    """Weather-only race odds for a day with no listed event (assumes racing 8am-5pm local)."""
+    tz = _tz(track)
+    if datetime.combine(day, dtime(17), tz) < now:
+        return None
+    ev = {"name": "Racing", "kind": "race", "series": None, "start": datetime.combine(day, dtime(8), tz),
+          "end": datetime.combine(day, dtime(17), tz), "time_estimated": True,
+          "time_note": "No listed event; assumes racing 8am-5pm local.", "sources": [], "day_labels": {},
+          "listing_cancelled": False, "rescheduled_to_this_date": False,
+          "event_id": f"{track['short_id']}-{day.strftime('%Y%m%d')}-assumed"}
+    try:
+        item = build_events(track, [ev], now, with_status=False)[0]
+    except Exception:  # weather outages never sink the answer
+        return None
+    head = item["days"][0] if item["days"] else {}
+    return {"assumed": True, "date": day.isoformat(), "window": "08:00-17:00 local (assumed)",
+            "play_probability": item["play_probability"], "basis": head.get("basis"),
+            "reason": item["reason"], "day": head,
+            "note": "Weather-only estimate: no event is listed, so nothing official was checked."}
 
 
 def track_calendar(track_id: str, *, now: datetime | None = None) -> str:

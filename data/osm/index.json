@@ -1,0 +1,52 @@
+{
+ "version": 1,
+ "generated_at": "2026-10-17T22:15:09+00:00",
+ "osm_data_as_of": "2026-10-16T20:21:21Z",
+ "source": "OpenStreetMap via Geofabrik US extract",
+ "license": "Open Database License (ODbL) 1.0; (c) OpenStreetMap contributors",
+ "attribution_url": "https://www.openstreetmap.org/copyright",
+ "row_fields": [
+  "id",
+  "name",
+  "sports",
+  "kind",
+  "lat",
+  "lon",
+  "city",
+  "address",
+  "pitches",
+  "osm",
+  "station"
+ ],
+ "kind_codes": {
+  "ball_field": "b",
+  "soccer_complex": "s",
+  "multipurpose_field": "m",
+  "motocross_track": "x"
+ },
+ "states": {
+  "OK": {
+   "venues": 601,
+   "by_kind": {
+    "ball_field": 434,
+    "soccer_complex": 86,
+    "multipurpose_field": 80,
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "baseball": 493,
+    "motocross": 1,
+    "soccer": 166,
+    "softball": 80
+   },
+   "with_station": 593,
+   "unnamed_pitch_clusters_dropped": 440,
+   "unnamed_motocross_dropped": 4,
+   "duplicates_of_confirmed": 6
+  }
+ },
+ "totals": {
+  "venues": 601,
+  "motocross_tracks": 1
+ }
+}

@@ -27,7 +27,8 @@ def _load_all_fields() -> list[dict[str, Any]]:
         # Historical cancellation records use a different schema (field_id +
         # historical_cancellations) and are not field definitions. Skip them so
         # the field loader only sees genuine field-definition documents.
-        if "historical" in path.relative_to(DATA_DIR).parts:
+        parts = path.relative_to(DATA_DIR).parts
+        if "historical" in parts or parts[0] in ("osm", "noaa", "motocross", "leagues"):
             continue
         data = json.loads(path.read_text(encoding="utf-8"))
         # Defensive: only include objects that are actual field definitions.
@@ -49,11 +50,23 @@ def _alias_map() -> dict[str, str]:
 
 
 def resolve_field_id(field_query: str) -> str | None:
-    """Resolve a field name or alias to a canonical Rainout Source field ID."""
+    """Resolve a field name or alias (or an OSM venue id) to a canonical Rainout Source field ID."""
+    from rainout_agent import osm_venues
+
+    if osm_venues.is_osm_id(field_query):
+        v = osm_venues.get(field_query)
+        return v["id"] if v else None
     return _alias_map().get(field_query) or _alias_map().get(_normalize(field_query))
 
 
 def load_field(field_id: str) -> dict[str, Any]:
+    from rainout_agent import osm_venues
+
+    if osm_venues.is_osm_id(field_id):
+        v = osm_venues.get(field_id)
+        if v:
+            return osm_venues.to_field(v)
+        raise ValueError(f"Unsupported field_id: {field_id}")
     for field in _load_all_fields():
         if field["id"] == field_id:
             return field
@@ -134,10 +147,108 @@ def list_supported_fields(sport: str | None = None, state: str | None = None) ->
                 "official_status_source_url": field.get("official_status_source_url"),
                 "official_status_source_name": field.get("official_status_source_name"),
                 "source_reliability": field.get("source_reliability", "medium"),
+                "verification_level": "confirmed",
                 "status_url": f"https://rainout-agent-source.vercel.app/v1/status?field_id={aliases[0]}&game_time={{ISO-8601-game-time}}",
             }
         )
     return supported
+
+
+MAX_FIELDS_LIMIT = 500
+VERIFICATION_LEVELS = ("confirmed", "osm_only", "all")
+
+
+def _parse_near(value: str | None) -> tuple[float, float] | None:
+    if not value:
+        return None
+    try:
+        lat, lon = (float(x) for x in str(value).split(","))
+    except ValueError as exc:
+        raise ValueError("near must be lat,lon (e.g. 30.27,-97.74)") from exc
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise ValueError("near is out of range")
+    return lat, lon
+
+
+def fields_payload(sport: str | None = None, state: str | None = None, q: str | None = None, near: str | None = None,
+                   radius_km: str | float | None = None, verification: str | None = None,
+                   limit: str | int | None = None, offset: str | int | None = None) -> dict[str, Any]:
+    """/v1/fields: hand-verified venues ("confirmed") plus OpenStreetMap venues ("osm_only").
+
+    Without q/near the default is confirmed only (the original list). OSM venues need a state,
+    q or near so responses stay small; results are paginated with limit/offset.
+    """
+    from rainout_agent import osm_venues
+
+    sport_filter = normalize_sport_filter(sport)
+    state_filter = normalize_state_filter(state)
+    if sport_filter == []:
+        raise ValueError(f"invalid sport filter: {sport!r}")
+    if state_filter == []:
+        raise ValueError(f"invalid state filter: {state!r}")
+    q = (q or "").strip() or None
+    if q and len(q) > 120:
+        raise ValueError("q is too long")
+    point = _parse_near(near)
+    try:
+        radius = float(radius_km) if radius_km not in (None, "") else 25.0
+        lim = int(limit) if limit not in (None, "") else (100 if not (q or point) else 25)
+        off = int(offset) if offset not in (None, "") else 0
+    except ValueError as exc:
+        raise ValueError("radius_km, limit and offset must be numbers") from exc
+    if not 0 < radius <= 200:
+        raise ValueError("radius_km must be 1-200")
+    if not 1 <= lim <= MAX_FIELDS_LIMIT or off < 0:
+        raise ValueError(f"limit must be 1-{MAX_FIELDS_LIMIT} and offset >= 0")
+    level = (verification or ("all" if (q or point) else "confirmed")).strip().lower()
+    if level not in VERIFICATION_LEVELS:
+        raise ValueError("verification must be confirmed, osm_only or all")
+    if level != "confirmed" and not (q or point or state_filter):
+        raise ValueError("OSM venues need state, q or near (there are tens of thousands)")
+
+    items: list[tuple[float, float, dict[str, Any]]] = []
+    if level in ("confirmed", "all"):
+        for f in list_supported_fields(sport=sport, state=state):
+            score, dist = 1.0, None
+            if q:
+                score = max(osm_venues.name_score({"name": n, "city": f["city"]}, q) for n in [f["name"], *f.get("aliases", [])])
+                if score < 0.6:
+                    continue
+            if point and f.get("coordinates"):
+                dist = osm_venues._dist_km(point[0], point[1], float(f["coordinates"]["lat"]), float(f["coordinates"]["lon"]))
+                if dist > radius:
+                    continue
+                f = {**f, "distance_km": round(dist, 1)}
+            elif point:
+                continue
+            items.append((score + 0.05, dist or 0, f))  # confirmed wins ties
+    osm_total = 0
+    if level in ("osm_only", "all"):
+        for score, v in osm_venues.search(q, states=state_filter, sports=sport_filter, near=point, radius_km=radius):
+            dist = osm_venues._dist_km(point[0], point[1], v["lat"], v["lon"]) if point else None
+            items.append((score, dist or 0, osm_venues.public(v, score if q else None, dist)))
+            osm_total += 1
+    if q or point:
+        items.sort(key=lambda x: (-x[0], x[1]))
+    page = [f for _, _, f in items[off:off + lim]]
+    payload: dict[str, Any] = {
+        "service": "rainout-source", "creator": "JEEZ Labs", "count": len(page), "total": len(items),
+        "offset": off, "limit": lim, "verification": level,
+        "counts": {"confirmed": len(items) - osm_total, "osm_only": osm_total},
+        "fields": page,
+    }
+    if off + lim < len(items):
+        payload["next_offset"] = off + lim
+    if level != "confirmed":
+        payload["attribution"] = osm_venues.ATTRIBUTION
+        payload["verification_levels"] = {
+            "confirmed": "Hand-verified venue with an official rainout source or phone where one exists.",
+            "osm_only": "From OpenStreetMap only; name and location are community data and no official status source is configured.",
+        }
+    filters = {k: v for k, v in (("sport", sport), ("state", state), ("q", q), ("near", near)) if v}
+    if filters:
+        payload["filters"] = filters
+    return payload
 
 
 def _parse_time(value: str | None) -> datetime | None:
@@ -256,6 +367,9 @@ def _has_published_rainout_phone(field: dict[str, Any]) -> bool:
 
 
 def _unknown_status_instruction(field: dict[str, Any]) -> str:
+    if field.get("verification_level") == "osm_only":
+        return ("check with your league or the venue before leaving; this venue comes from OpenStreetMap "
+                "and has no official rainout source on file")
     if _has_published_rainout_phone(field):
         return f"call {field['rainout_phone']} before leaving"
     return "check the official source before leaving"
@@ -360,6 +474,8 @@ def build_status_result(
             "creator": "JEEZ Labs",
             "error": "unknown_field",
             "supported_fields_url": "https://rainout-agent-source.vercel.app/v1/fields",
+            "search_url": "https://rainout-agent-source.vercel.app/v1/fields?q={venue name}&state={ST}",
+            "next_step": "Search /v1/fields?q=<name>&state=<ST> (includes OpenStreetMap venues) and retry with its field_id.",
             "spoken_answer": f"I do not know that field yet. Right now Rain-Outsource supports: {supported_names}.",
         }
 
@@ -415,8 +531,16 @@ def build_status_result(
             "forecast": weather_data.get("forecast"),
             "forecast_period_start": weather_data.get("forecast_period_start"),
             "historical_calibration": _public_calibration(calibration, probability),
+            "verification_level": field.get("verification_level", "confirmed"),
         }
     )
+    if field.get("verification_level") == "osm_only":
+        response["venue"] = {"name": field["field_name"], "city": field.get("city"), "state": field.get("state"),
+                             "sports": field.get("sports"), "venue_type": field.get("venue_type"),
+                             "coordinates": field.get("coordinates"), "osm_elements": field["osm"]["elements"]}
+        response["verification_note"] = ("OpenStreetMap venue: name and location are community map data and no official "
+                                         "rainout source is configured, so the odds are weather and NOAA history only.")
+        response["attribution"] = field["osm"]["attribution"]
 
     if response["official_status"] == "unknown":
         storm_phrase = " with storms possible" if response["thunderstorm_likely"] else ""

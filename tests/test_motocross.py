@@ -114,7 +114,8 @@ def test_resolve_track_by_id_short_id_and_alias():
     found = m.list_tracks("Swan MX Raceway Park")
     assert found["tracks"][0]["short_id"] == "swan" and found["next_step"] in ("confirm_with_user", "use_track")
     assert m.list_tracks("zzzz unknown motoplex")["next_step"] == "ask_user_for_events_url"
-    assert m.list_tracks(None, "FL")["count"] == 3
+    assert m.list_tracks(None, "FL")["counts"]["confirmed"] == 3
+    assert m.list_tracks(None, None)["count"] == 10  # default: confirmed only
 
 
 # ----------------------------------------------------------------- parsers
@@ -421,7 +422,7 @@ def test_wsgi_and_vercel_wiring(live):
         seen["status"], seen["headers"] = status, dict(headers)
 
     body = b"".join(application({"REQUEST_METHOD": "GET", "PATH_INFO": "/v1/tracks", "QUERY_STRING": "state=OK"}, sr))
-    assert seen["status"].startswith("200") and json.loads(body)["count"] == 2
+    assert seen["status"].startswith("200") and json.loads(body)["counts"]["confirmed"] == 2
     vercel = json.loads((Path(__file__).parents[1] / "vercel.json").read_text())
     dests = {r["src"]: r["dest"] for r in vercel["routes"]}
     assert dests["/v1/tracks/?"] == "/api/tracks.py"

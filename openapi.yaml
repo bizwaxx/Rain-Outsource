@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.10.0
+  version: 0.11.0
   description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup.
   x-creator: JEEZ Labs
 servers:
@@ -38,8 +38,12 @@ paths:
   /v1/fields:
     get:
       operationId: listFields
-      summary: List fields currently supported by Rainout Source.
-      description: Agents should call this endpoint to discover supported field IDs, aliases, status URLs, and official rainout sources before asking for status. Filter by sport and/or state.
+      summary: List or search venues (hand-verified plus nationwide OpenStreetMap venues).
+      description: >-
+        Discover field IDs, status URLs and official rainout sources before asking for status. Without q or near
+        this lists the hand-verified ("confirmed") venues. Search with q (name) and/or near (lat,lon) to include
+        tens of thousands of OpenStreetMap venues (verification_level "osm_only": community map data, no official
+        status source; map data (c) OpenStreetMap contributors, ODbL). OSM venues need state, q or near.
       parameters:
         - in: query
           name: sport
@@ -55,6 +59,12 @@ paths:
             type: string
           description: Comma-separated two-letter US state codes.
           example: TX,OK
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: Venue name search., example: Lamar Park}
+        - {in: query, name: near, required: false, schema: {type: string}, description: "lat,lon to search around.", example: "30.27,-97.74"}
+        - {in: query, name: radius_km, required: false, schema: {type: number, minimum: 1, maximum: 200, default: 25}}
+        - {in: query, name: verification, required: false, schema: {type: string, enum: [confirmed, osm_only, all]}, description: "Default: all when q or near is given, otherwise confirmed."}
+        - {in: query, name: limit, required: false, schema: {type: integer, minimum: 1, maximum: 500}, description: "Default 100 (25 when searching)."}
+        - {in: query, name: offset, required: false, schema: {type: integer, minimum: 0}}
       responses:
         "400":
           description: Invalid sport or state filter
@@ -476,11 +486,16 @@ paths:
       operationId: listTracks
       summary: Find a supported motocross track.
       description: >-
-        Find a motocross track by name, alias or town (empty q lists all). Confirm the track with the user.
-        If next_step is ask_user_for_events_url the track is not covered; ask the user for an event link.
+        Find a motocross track by name, alias or town (empty q lists the confirmed tracks). Confirm the track with the user.
+        With q or state, OpenStreetMap motocross tracks nationwide are included (verification_level "osm_only": no event
+        calendar or official status; check returns weather-only conditions_if_racing). If next_step is
+        ask_user_for_events_url the track is not covered; ask the user for an event link.
       parameters:
         - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, example: Swan MX}
         - {in: query, name: state, required: false, schema: {type: string}, example: TX}
+        - {in: query, name: verification, required: false, schema: {type: string, enum: [confirmed, osm_only, all]}}
+        - {in: query, name: limit, required: false, schema: {type: integer, minimum: 1, maximum: 500}}
+        - {in: query, name: offset, required: false, schema: {type: integer, minimum: 0}}
       responses:
         "200": {description: Candidate tracks, content: {application/json: {schema: {$ref: "#/components/schemas/TrackList"}}}}
         "400": {description: Bad query, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
