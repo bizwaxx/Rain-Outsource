@@ -49,6 +49,7 @@ OSM data as of the Geofabrik extract of 2026-10-16.
 | Phase | Scope |
 | --- | --- |
 | 1 | Motocross tracks in every state: 162 OSM tracks (158 with a NOAA station) plus the 10 confirmed tracks |
+| 2 | Ball fields and soccer in TX (3,928), FL (2,246), OK (600), LA (580): 7,354 venues, 99% with a NOAA station |
 
 ## Storage design
 
