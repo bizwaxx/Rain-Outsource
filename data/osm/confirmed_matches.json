@@ -1,4 +1,89 @@
 {
+ "austin-tx-anderson-high-school-baseball-field-ambl": [
+  "osm-tx-anderson-high-school-w204314427"
+ ],
+ "austin-tx-downs-field-ambl": [
+  "osm-tx-downs-mabson-fields-w289662833"
+ ],
+ "austin-tx-balcones-youth-sports": [
+  "osm-tx-balcones-youth-sports-baseball-and-softb-w469516061"
+ ],
+ "dripping-springs-tx-ctx-field-of-dreams": [
+  "osm-tx-field-of-dreams-w886561586"
+ ],
+ "dripping-springs-tx-dsysa-baseball-softball-sports-complex": [
+  "osm-tx-dripping-springs-high-school-w242723698"
+ ],
+ "dripping-springs-tx-dsysa-sports-park-fields": [
+  "osm-tx-the-dripping-springs-sports-recreation-p-w654482673"
+ ],
+ "georgetown-tx-san-gabriel-park-gyba-field-8-ambl": [
+  "osm-tx-san-gabriel-park-w28640647"
+ ],
+ "manchaca-tx-manchaca-optimist-youth-sports-complex": [
+  "osm-tx-manchaca-optimist-youth-sports-complex-w1278683614"
+ ],
+ "austin-metro-northeast-metropolitan-park": [
+  "osm-tx-northeast-metropolitan-park-w74845966"
+ ],
+ "austin-tx-northwest-little-league": [
+  "osm-tx-gullett-elementary-school-w191158473"
+ ],
+ "austin-tx-oak-hill-youth-sports-association": [
+  "osm-tx-oak-hill-youth-sports-association-w218578843"
+ ],
+ "round-rock-tx-old-settlers-baseball-complex": [
+  "osm-tx-old-settlers-park-w30894147"
+ ],
+ "austin-metro-southeast-metropolitan-park": [
+  "osm-tx-southeast-metropolitan-park-w137145032"
+ ],
+ "austin-tx-town-and-country-sports-complex": [
+  "osm-tx-town-country-sports-complex-w30835300"
+ ],
+ "helotes-tx-greater-helotes-little-league": [
+  "osm-tx-helotes-little-league-w133577062"
+ ],
+ "san-antonio-tx-normoyle-park-baseball-fields": [
+  "osm-tx-normoyle-park-w104758538"
+ ],
+ "san-antonio-tx-northside-suburban-little-league": [
+  "osm-tx-o-p-schnabel-park-w79120353"
+ ],
+ "san-antonio-tx-northwest-little-league": [
+  "osm-tx-northwest-little-league-w501194439"
+ ],
+ "san-antonio-tx-seniors-softball-league-normoyle-park": [
+  "osm-tx-texans-can-academy-san-antonio-w79433033"
+ ],
+ "dade-city-fl-dade-city-motocross": [
+  "osm-fl-dade-city-motocross-n12732322614"
+ ],
+ "fellsmere-fl-mesa-motocross-park": [
+  "osm-fl-mesa-motocross-park-w703107727"
+ ],
+ "jacksonville-fl-bob-hayes-sports-complex": [
+  "osm-fl-bob-hayes-soccer-complex-r13461578"
+ ],
+ "miami-fl-kendall-soccer-park": [
+  "osm-fl-kendall-soccer-park-w234378955"
+ ],
+ "orlando-fl-econ-soccer-complex": [
+  "osm-fl-econ-soccer-complex-r1161881",
+  "osm-fl-arcadia-acres-park-r1161882"
+ ],
+ "orlando-fl-orlando-mx-park": [
+  "osm-fl-orlando-mx-park-w1480883180"
+ ],
+ "tampa-fl-shimberg-sports-complex": [
+  "osm-fl-shimberg-soccer-park-w145640589"
+ ],
+ "baton-rouge-la-brec-burbank-soccer-complex": [
+  "osm-la-burbank-soccer-fields-park-w468539918"
+ ],
+ "lake-charles-la-lagrange-soccer-park": [
+  "osm-la-lagrange-soccer-park-w867768031"
+ ],
  "edmond-ok-service-blake-soccer-complex": [
   "osm-ok-edmond-soccer-club-w488722121"
  ],
@@ -14,5 +99,44 @@
  "tulsa-ok-bill-boevers-soccer-complex": [
   "osm-ok-boevers-elementary-w1381714733",
   "osm-ok-bill-boevers-soccer-complex-w250009032"
+ ],
+ "austin-tx-onion-creek-soccer-complex": [
+  "osm-tx-onion-creek-soccer-complex-w904330963"
+ ],
+ "conroe-tx-3-palms-action-sports-park": [
+  "osm-tx-3-palms-sports-park-n9284606377"
+ ],
+ "dallas-tx-moneygram-soccer-park-at-elm-fork": [
+  "osm-tx-moneygram-soccer-park-at-elm-fork-w471913943"
+ ],
+ "farmers-branch-tx-ross-stewart-soccer-complex": [
+  "osm-tx-ross-stewart-soccer-complex-w839492552"
+ ],
+ "irving-tx-irving-soccer-complex": [
+  "osm-tx-irving-soccer-complex-w646994549"
+ ],
+ "mansfield-tx-philip-thompson-soccer-complex": [
+  "osm-tx-phillip-thompson-soccer-complex-w352860612"
+ ],
+ "mckinney-tx-al-ruschhaupt-soccer-complex": [
+  "osm-tx-al-ruschhaupt-soccer-complex-w487447235"
+ ],
+ "mckinney-tx-mckinney-soccer-complex-at-craig-ranch": [
+  "osm-tx-mckinney-soccer-complex-at-craig-ranch-w449759755"
+ ],
+ "new-braunfels-tx-heb-soccer-complex": [
+  "osm-tx-h-e-b-soccer-complex-w541510107"
+ ],
+ "san-antonio-tx-gvtc-soccer-complex": [
+  "osm-tx-gvtc-soccer-complex-w373176746"
+ ],
+ "san-antonio-tx-mission-city-soccer-complex": [
+  "osm-tx-mission-city-soccer-complex-w320564912"
+ ],
+ "schertz-tx-schertz-soccer-complex": [
+  "osm-tx-schertz-soccer-complex-w489849710"
+ ],
+ "tyler-tx-swan-mx": [
+  "osm-tx-swan-mx-w1220668653"
  ]
 }

@@ -39,6 +39,17 @@ paginated (`limit` up to 500, `offset`, `next_offset`). MCP: `find_venue` search
 `osm_only`; `check_race` on an OSM track (or on any date with no listed event) adds
 `conditions_if_racing`, a weather-only estimate that assumes racing 8am-5pm local.
 
+## Coverage
+
+The rollout is state by state. `data/osm/index.json` (and `osm_coverage` in `/v1/fields` responses) lists
+`full_states` (ball fields, soccer complexes and motocross) and `motocross_only_states`.
+OSM data as of the Geofabrik extract of 2026-10-16.
+
+<!-- counts -->
+| Phase | Scope |
+| --- | --- |
+| 1 | Motocross tracks in every state: 162 OSM tracks (158 with a NOAA station) plus the 10 confirmed tracks |
+
 ## Storage design
 
 Tens of thousands of venues don't fit the per-venue JSON plus per-venue history model, and there's no

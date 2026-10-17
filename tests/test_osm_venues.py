@@ -162,6 +162,7 @@ def test_fields_payload_search_and_pagination(osm_data):
     assert all(f["verification_level"] == "confirmed" for f in default["fields"])
     tx = status_api.fields_payload(state="TX", verification="osm_only", limit=2)
     assert tx["total"] == 4 and tx["count"] == 2 and tx["next_offset"] == 2 and "OpenStreetMap" in tx["attribution"]
+    assert tx["osm_coverage"]["full_states"] == ["TX"]
     q = status_api.fields_payload(q="Lamar Park")
     assert q["fields"][0]["field_id"] == "osm-tx-lamar-park-w10" and q["fields"][0]["verification_level"] == "osm_only"
     near = status_api.fields_payload(near="30.05,-97.05", radius_km=2, sport="soccer")

@@ -86,6 +86,15 @@ def index() -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"states": {}, "totals": {}}
 
 
+def coverage() -> dict[str, Any]:
+    """Which states have every venue kind vs motocross tracks only (the rollout is state by state)."""
+    states = index().get("states", {})
+    return {"osm_data_as_of": index().get("osm_data_as_of"),
+            "full_states": sorted(st for st, d in states.items() if d.get("scope") != "motocross_only"),
+            "motocross_only_states": sorted(st for st, d in states.items() if d.get("scope") == "motocross_only"),
+            "venues": index().get("totals", {}).get("venues", 0)}
+
+
 def available_states() -> list[str]:
     return sorted(index().get("states", {}))
 
