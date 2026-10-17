@@ -12,11 +12,11 @@ import os
 from typing import Any, Callable
 from urllib.parse import urlsplit
 
-from rainout_agent import motocross, team_sources, teams
+from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.10.0"
+SERVER_VERSION = "0.11.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -29,7 +29,8 @@ INSTRUCTIONS = (
     "Rainout Source never writes to calendars. If they agree, create the game's `calendar_event` (Google Calendar "
     "event body with a stable iCalUID) using your calendar tool. Official league or venue status always wins over odds. "
     "Motocross: find_track (confirm the track with the user), then get_track_events or check_race for race-day odds, "
-    "and get_track_history for monthly rain stats and documented rain cancellations."
+    "and get_track_history for monthly rain stats and documented rain cancellations. "
+    "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -199,6 +200,28 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["track_id"],
         },
     },
+    {
+        "name": "get_rain_chance",
+        "title": "Rain chance anywhere",
+        "description": (
+            "Worldwide hourly or daily chance of rain and expected amount for a place name or lat/lon, e.g. "
+            "query='London' or query='Austin, TX' or lat/lon. Uses NWS in the US (Open-Meteo elsewhere and as fallback). "
+            "Read `summary` aloud. If ambiguous=true, ask the user which of `matches` they mean and call again with "
+            "a more specific query (add state/country), pick, or lat/lon."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Place name ('Tokyo', 'Austin, TX') or 'lat,lon'."},
+                "lat": {"type": "number", "minimum": -90, "maximum": 90},
+                "lon": {"type": "number", "minimum": -180, "maximum": 180},
+                "hours": {"type": "integer", "minimum": 1, "maximum": 384, "description": "Hourly rows from now (default 24)."},
+                "days": {"type": "integer", "minimum": 1, "maximum": 16, "description": "Daily rows from today."},
+                "at": {"type": "string", "description": "Local time at the place, e.g. '2026-10-18 19:00', or ISO with offset."},
+                "pick": {"type": "integer", "minimum": 1, "maximum": 5, "description": "Choose match N from an ambiguous result."},
+            },
+        },
+    },
 ]
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
@@ -296,6 +319,19 @@ def _get_track_history(args: dict[str, Any]) -> dict[str, Any]:
     return _track_call(motocross.track_history, _require(args, "track_id"))
 
 
+def _get_rain_chance(args: dict[str, Any]) -> dict[str, Any]:
+    if not args.get("query") and (args.get("lat") is None or args.get("lon") is None):
+        raise ToolError("Pass query (place name or 'lat,lon') or lat and lon.")
+    try:
+        return rain.rain_chance(args.get("query"), lat=args.get("lat"), lon=args.get("lon"), hours=args.get("hours"),
+                                days=args.get("days"), at=args.get("at"), pick=args.get("pick"))
+    except rain.RainError as exc:
+        raise ToolError(str(exc)) from exc
+    except rain.PlaceNotFound as exc:
+        names = "; ".join(s["label"] for s in exc.suggestions) or "none"
+        raise ToolError(f"No place matched '{exc.query}'. Similar names: {names}. Ask the user for a country or lat,lon.") from exc
+
+
 def _require(args: dict[str, Any], key: str) -> str:
     value = args.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -313,6 +349,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "get_track_events": _get_track_events,
     "check_race": _check_race,
     "get_track_history": _get_track_history,
+    "get_rain_chance": _get_rain_chance,
 }
 
 

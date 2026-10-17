@@ -20,7 +20,6 @@ from __future__ import annotations
 import json
 import re
 import time
-import urllib.parse
 from datetime import date, datetime, time as dtime, timedelta, timezone
 from difflib import SequenceMatcher
 from typing import Any, Callable
@@ -36,8 +35,6 @@ FORECAST_DAYS = 16          # Open-Meteo horizon; NWS covers about 7 days
 DEFAULT_RANGE_DAYS = 90
 MAX_RANGE_DAYS = 400
 NOTICE_LOOKAHEAD_DAYS = 10
-AMOUNTS_TTL_S = 1800
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 # Effective-rain multiplier: how much rain a track's dirt takes before it is
 # unrideable, relative to average loam. Sand drains fast, clay holds water.
@@ -338,38 +335,11 @@ def gather_events(track: dict[str, Any], *, today: date, events_url: str | None 
 
 
 # ----------------------------------------------------------------- weather
-def _open_meteo_amounts(field: dict[str, Any], timeout: float = 6.0) -> dict[str, Any]:
-    from rainout_agent.weather import _http_get_json, NWS_HEADERS
-
-    lat, lon = field["coordinates"]["lat"], field["coordinates"]["lon"]
-    query = urllib.parse.urlencode({
-        "latitude": lat, "longitude": lon, "hourly": "precipitation,precipitation_probability,weather_code",
-        "past_days": 3, "forecast_days": FORECAST_DAYS, "timezone": "GMT", "precipitation_unit": "inch",
-    })
-    payload = _http_get_json(f"{OPEN_METEO_URL}?{query}", {"User-Agent": NWS_HEADERS["User-Agent"]}, timeout)
-    h = payload["hourly"]
-    rows = []
-    for i, t in enumerate(h["time"]):
-        rows.append({"time": datetime.fromisoformat(t).replace(tzinfo=timezone.utc).isoformat(),
-                     "precip_in": h["precipitation"][i], "pop": (h.get("precipitation_probability") or [None] * len(h["time"]))[i],
-                     "code": (h.get("weather_code") or [None] * len(h["time"]))[i]})
-    return {"rows": rows, "source": "Open-Meteo (model estimates; past hours are model analysis, not a rain gauge)"}
-
-
 def get_amounts(field: dict[str, Any]) -> dict[str, Any] | None:
-    from rainout_agent.cache import get_cache
+    """Hourly rain amounts (past 3 days + 16 days) from the shared rain module."""
+    from rainout_agent import rain
 
-    key = f"mx:amounts:{field['coordinates']['lat']},{field['coordinates']['lon']}"
-    cache = get_cache()
-    hit = cache.get(key)
-    if hit:
-        return hit
-    try:
-        value = _open_meteo_amounts(field)
-    except Exception:
-        return None
-    cache.set(key, value, AMOUNTS_TTL_S)
-    return value
+    return rain.get_amounts(field["coordinates"]["lat"], field["coordinates"]["lon"])
 
 
 def get_hourly(field: dict[str, Any]) -> dict[str, Any] | None:

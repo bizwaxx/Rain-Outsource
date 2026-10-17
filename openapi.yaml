@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.9.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history.
+  version: 0.10.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -541,6 +541,27 @@ paths:
       responses:
         "200": {description: iCalendar feed (last 7 days through the next 180 days), content: {text/calendar: {schema: {type: string}}}}
         "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/rain:
+    get:
+      operationId: getRainChance
+      summary: Worldwide hourly or daily chance of rain and expected amount for a place or lat/lon.
+      description: >-
+        Place name (q) or lat/lon anywhere. NWS is primary in the US, Open-Meteo elsewhere and as fallback. Read
+        summary aloud. If ambiguous=true, ask which of matches the user means, then retry with a state/country,
+        pick or lat/lon.
+      parameters:
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: "Place name or 'lat,lon'.", example: "Austin, TX"}
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}}
+        - {in: query, name: hours, required: false, schema: {type: integer, minimum: 1, maximum: 384}, description: Hourly rows from now (default 24 when days and at are absent).}
+        - {in: query, name: days, required: false, schema: {type: integer, minimum: 1, maximum: 16}, description: Daily rows from today.}
+        - {in: query, name: at, required: false, schema: {type: string}, description: "Local time at the place (2026-10-18 19:00) or ISO with offset.", example: "2026-10-18 19:00"}
+        - {in: query, name: pick, required: false, schema: {type: integer, minimum: 1, maximum: 5}, description: Choose match N from an ambiguous name.}
+      responses:
+        "200": {description: Forecast, or matches when the name is ambiguous, content: {application/json: {schema: {$ref: "#/components/schemas/RainResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found (with suggestions), content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
     TeamCandidate:
@@ -785,3 +806,39 @@ components:
         next_step: {type: string}
         spoken_answer: {type: string}
         docs: {type: string}
+    RainHour:
+      type: object
+      properties:
+        time: {type: string, description: Local ISO time at the place.}
+        probability_percent: {type: integer}
+        precip_mm: {type: number, nullable: true}
+        precip_in: {type: number, nullable: true}
+        weather: {type: string, nullable: true}
+        probability_source: {type: string, enum: [nws, open_meteo]}
+    RainDay:
+      type: object
+      properties:
+        date: {type: string, format: date}
+        weekday: {type: string}
+        max_probability_percent: {type: integer}
+        precip_mm: {type: number, nullable: true}
+        precip_in: {type: number, nullable: true}
+        weather: {type: string, nullable: true}
+        probability_source: {type: string, enum: [nws, open_meteo]}
+    RainResult:
+      type: object
+      properties:
+        query: {type: string}
+        ambiguous: {type: boolean}
+        matches: {type: array, items: {type: object}, description: Present when ambiguous.}
+        next_step: {type: string, enum: [ask_user_which_place]}
+        place: {type: object, properties: {label: {type: string}, latitude: {type: number}, longitude: {type: number}, timezone: {type: string}, country_code: {type: string, nullable: true}, in_nws_coverage: {type: boolean}}}
+        timezone: {type: string}
+        units: {type: string, enum: [in, mm], description: Units used in summary; both are in the rows.}
+        source: {type: object, properties: {probability: {type: string}, amounts: {type: string}, nws_used: {type: boolean}, attribution: {type: string}}}
+        hourly: {type: array, items: {$ref: "#/components/schemas/RainHour"}}
+        daily: {type: array, items: {$ref: "#/components/schemas/RainDay"}}
+        at: {allOf: [{$ref: "#/components/schemas/RainHour"}], nullable: true}
+        summary: {type: string, description: One plain sentence to read aloud.}
+        other_matches: {type: array, items: {type: string}}
+        as_of: {type: string}

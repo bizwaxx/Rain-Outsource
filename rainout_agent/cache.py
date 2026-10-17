@@ -9,6 +9,7 @@ with ``RAINOUT_CACHE_BACKEND`` (``auto`` by default):
 * ``supabase`` - a Supabase Postgres table through PostgREST
   (``SUPABASE_URL`` + ``SUPABASE_SERVICE_ROLE_KEY``; table from
   ``RAINOUT_CACHE_TABLE``, default ``rainout_cache``; SQL in docs/caching.md).
+* ``file`` - JSON files in ``RAINOUT_CACHE_DIR`` behind memory (the box CLI).
 * ``memory`` - in-memory only.  ``none`` - disable caching.
 
 ``auto`` uses Upstash/KV when its env vars exist, else Supabase when its env vars
@@ -91,6 +92,53 @@ class MemoryCache(Cache):
 
     def __len__(self) -> int:
         return len(self._data)
+
+
+class FileCache(Cache):
+    """JSON files in one directory (for the box CLI, so every agent shares one cache).
+
+    Writes are atomic (temp file + rename); unreadable or expired files count as misses.
+    """
+
+    name = "file"
+
+    def __init__(self, directory: str, clock: Callable[[], float] = time.time):
+        self.directory = directory
+        self.clock = clock
+        os.makedirs(directory, exist_ok=True)
+
+    def _path(self, key: str) -> str:
+        import hashlib
+
+        return os.path.join(self.directory, hashlib.sha1(key.encode()).hexdigest() + ".json")
+
+    def get(self, key: str) -> Any | None:
+        try:
+            with open(self._path(key), encoding="utf-8") as fh:
+                item = json.load(fh)
+        except (OSError, ValueError):
+            return None
+        if item.get("key") != key or float(item.get("expires", 0)) <= self.clock():
+            return None
+        return item.get("value")
+
+    def set(self, key: str, value: Any, ttl: float) -> None:
+        if ttl <= 0:
+            return
+        path = self._path(key)
+        tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+        try:
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump({"key": key, "expires": self.clock() + ttl, "value": value}, fh)
+            os.replace(tmp, path)
+        except (OSError, TypeError, ValueError):
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+
+    def describe(self) -> dict[str, Any]:
+        return {"backend": self.name, "directory": self.directory}
 
 
 Transport = Callable[[str, str, dict[str, str], bytes | None, float], tuple[int, bytes]]
@@ -247,6 +295,8 @@ def build_cache(env: dict[str, str] | None = None, transport: Transport | None =
     memory = MemoryCache()
     if choice == "memory":
         return memory
+    if choice == "file":
+        return TieredCache(memory, FileCache(env.get("RAINOUT_CACHE_DIR") or "/tmp/rainout-cache"))
     if choice in {"auto", "upstash", "kv", "vercel-kv"} and upstash_url and upstash_token:
         return TieredCache(memory, UpstashCache(upstash_url, upstash_token, transport=transport))
     if choice in {"auto", "supabase"} and supa_url and supa_key:

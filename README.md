@@ -191,7 +191,7 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_track`, `get_track_events`, `check_race`, `get_track_history`. See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`. See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
 
 ## Motocross race checker
@@ -213,6 +213,13 @@ State Championship series, Florida Motocross Series), never invented; a user-sup
 forecast, the prior 24-72h of rain weighted by soil (soaked dirt cancels races) and NOAA history.
 History lists monthly rain stats and documented past rainouts with sources and coverage gaps.
 Details: [docs/motocross.md](docs/motocross.md).
+
+## Rain chance anywhere
+
+`GET /v1/rain?q=London&hours=12` (or `lat=&lon=`, `days=`, `at=`) gives the hourly or daily chance of rain and the
+amount for any place in the world, with a one-sentence `summary`. It uses NWS in the US and Open-Meteo
+elsewhere and as the fallback, all free with no key. The same module powers the MCP tool `get_rain_chance`, a box CLI
+(`rain "Austin, TX"`), the motocross checker and the venue checks. Details: [docs/rain.md](docs/rain.md).
 
 ## Weather caching and fallback
 
