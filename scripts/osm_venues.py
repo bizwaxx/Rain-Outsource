@@ -664,7 +664,7 @@ def station_stats(values, start, end):
     return clim["coverage_percent"], clim["annual"]["mean_precip_in"], monthly
 
 
-def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=25, min_cov=75.0):
+def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=25, min_cov=75.0, workers=3):
     sys.path.insert(0, str(ROOT / "scripts"))
     import fetch_noaa_history as fnh
 
@@ -697,7 +697,9 @@ def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=
             d = dist_m(v["lat"], v["lon"], s["lat"], s["lon"]) / 1000
             if d <= 40 and s["id"] not in rejected:
                 out.append((d, s))
-        out.sort(key=lambda x: x[0])
+        # Prefer long-record COOP/ASOS stations (USC/USW) over a slightly nearer volunteer gauge,
+        # so nearby venues share a station (fewer downloads, steadier records).
+        out.sort(key=lambda x: x[0] * (1.0 if x[1]["id"][:3] in ("USC", "USW") else 1.6))
         return out
 
     for rnd in range(4):
@@ -713,30 +715,45 @@ def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=
         if not want:
             break
         ids = sorted(want)
-        for i in range(0, len(ids), batch):
-            chunk = ids[i:i + batch]
+        chunks = [ids[i:i + batch] for i in range(0, len(ids), batch)]
+
+        def get_chunk(chunk):
             params = {"dataset": "daily-summaries", "stations": ",".join(chunk), "dataTypes": "PRCP",
                       "startDate": start.isoformat(), "endDate": end.isoformat(), "units": "standard",
                       "includeAttributes": "true", "format": "csv"}
             cpath = cache / f"ads_{fnh_hash(chunk)}.csv"
-            try:
-                text = fetch(f"{ADS_URL}?{urllib.parse.urlencode(params)}", cpath).read_text(encoding="utf-8")
-            except Exception as exc:
-                log(f"  batch failed ({exc}); retrying singly later")
+            for attempt in range(3):
+                try:
+                    return chunk, fetch(f"{ADS_URL}?{urllib.parse.urlencode(params)}", cpath).read_text(encoding="utf-8")
+                except Exception as exc:  # noqa: PERF203
+                    err = exc
+                    time.sleep(5 * (attempt + 1))
+            return chunk, err
+
+        from concurrent.futures import ThreadPoolExecutor
+
+        done = 0
+        with ThreadPoolExecutor(max_workers=workers) as pool:  # a few polite parallel requests
+            for chunk, text in pool.map(get_chunk, chunks):
+                done += len(chunk)
+                if isinstance(text, Exception):
+                    log(f"  batch failed ({text})")
+                    for sid in chunk:
+                        rejected[sid] = "fetch_failed"
+                    continue
+                data = parse_ads_multi(text)
                 for sid in chunk:
-                    rejected[sid] = "fetch_failed"
-                continue
-            data = parse_ads_multi(text)
-            for sid in chunk:
-                cov, annual, monthly = station_stats(data.get(sid, {}), start, end)
-                if (cov or 0) >= min_cov:
-                    s = want[sid]
-                    known[sid] = {"name": s["name"], "lat": s["lat"], "lon": s["lon"], "elevation_m": s["elevation_m"],
-                                  "coverage_percent": cov, "annual_mean_precip_in": annual, "monthly": monthly}
-                else:
-                    rejected[sid] = f"coverage {cov}%"
-            log(f"  {min(i + batch, len(ids))}/{len(ids)} fetched; {len(known)} good, {len(rejected)} rejected")
-            time.sleep(0.5)
+                    cov, annual, monthly = station_stats(data.get(sid, {}), start, end)
+                    if (cov or 0) >= min_cov:
+                        s = want[sid]
+                        known[sid] = {"name": s["name"], "lat": s["lat"], "lon": s["lon"], "elevation_m": s["elevation_m"],
+                                      "coverage_percent": cov, "annual_mean_precip_in": annual, "monthly": monthly}
+                    else:
+                        rejected[sid] = f"coverage {cov}%"
+                if done % (batch * 20) < batch or done == len(ids):
+                    log(f"  {done}/{len(ids)} fetched; {len(known)} good, {len(rejected)} rejected")
+                    NOAA_DIR.mkdir(parents=True, exist_ok=True)
+                    path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
         NOAA_DIR.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
 

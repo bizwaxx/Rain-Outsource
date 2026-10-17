@@ -214,6 +214,24 @@ forecast, the prior 24-72h of rain weighted by soil (soaked dirt cancels races) 
 History lists monthly rain stats and documented past rainouts with sources and coverage gaps.
 Details: [docs/motocross.md](docs/motocross.md).
 
+## Nationwide venues (OpenStreetMap)
+
+Beyond the hand-verified venues, Rainout Source knows tens of thousands of ball fields, soccer complexes and
+motocross tracks across the US, built from OpenStreetMap by a reproducible pipeline
+(`scripts/osm_venues.py`). They are labeled `verification_level: "osm_only"`: the name and location are
+community map data and there's no official status source, so answers use the forecast and the nearest NOAA
+station's 10-year monthly rain stats. Hand-verified venues stay `confirmed` and always win over OSM duplicates.
+
+```text
+GET /v1/fields?q=Lamar%20Park&state=TX
+GET /v1/fields?near=30.27,-97.74&radius_km=10&sport=soccer
+GET /v1/status?field_id=osm-tx-...&game_time=2026-10-20T19:00:00-05:00
+GET /v1/tracks?state=CA           # confirmed + OSM motocross tracks
+```
+
+Map data (c) OpenStreetMap contributors, ODbL 1.0. Storage design, pipeline and caveats:
+[docs/venues-osm.md](docs/venues-osm.md).
+
 ## Rain chance anywhere
 
 `GET /v1/rain?q=London&hours=12` (or `lat=&lon=`, `days=`, `at=`) gives the hourly or daily chance of rain and the

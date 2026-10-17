@@ -120,6 +120,21 @@ def _venue(row: dict[str, Any], state: str) -> dict[str, Any]:
     }
 
 
+GENERIC_WORDS = frozenset("park field fields sports complex school high middle elementary the and of at city county "
+                          "community recreation center centre stadium memorial ballpark athletic soccer baseball softball".split())
+
+
+def _search_keys(v: dict[str, Any]) -> tuple[str, frozenset[str], frozenset[str]]:
+    keys = v.get("_keys")
+    if keys is None:
+        name = _norm(v["name"])
+        keys = (name, frozenset(name.split()) | frozenset(_norm(v.get("city")).split()),
+                frozenset(t[:3] for t in name.split() if len(t) >= 3))
+        if "id" in v:  # cache on stored venues only
+            v["_keys"] = keys
+    return keys
+
+
 def is_osm_id(value: str | None) -> bool:
     return bool(ID_RE.match((value or "").strip().lower()))
 
@@ -143,24 +158,34 @@ def _dist_km(lat1, lon1, lat2, lon2) -> float:
     return 6371 * math.hypot(x, y)
 
 
+@lru_cache(maxsize=256)
+def _query_parts(q: str) -> tuple[str, frozenset[str], frozenset[str]]:
+    qn = _norm(q)
+    toks = frozenset(qn.split())
+    return qn, toks, frozenset(t[:3] for t in toks if len(t) >= 3 and t not in GENERIC_WORDS)
+
+
 def name_score(v: dict[str, Any], q: str) -> float:
     """0..1 match of a query against a venue's name and city."""
     from difflib import SequenceMatcher
 
-    qn = _norm(q)
+    qn, q_tokens, q_pref = _query_parts(q)
     if not qn:
         return 0.0
-    name = _norm(v["name"])
+    name, full_tokens, prefixes = _search_keys(v)
     if qn == name:
         return 1.0
-    full = f"{name} {_norm(v.get('city'))}"
-    q_tokens = set(qn.split())
-    if q_tokens and q_tokens <= set(full.split()):
+    if q_tokens <= full_tokens:
         return 0.9
     if len(qn) >= 4 and qn in name:
         return 0.85
-    overlap = len(q_tokens & set(full.split())) / max(1, len(q_tokens))
-    return round(max(SequenceMatcher(None, qn, name).ratio() * 0.85, overlap * 0.8), 3)
+    overlap = len(q_tokens & full_tokens) / max(1, len(q_tokens)) * 0.8
+    if not (q_pref & prefixes) or abs(len(qn) - len(name)) > max(len(qn), len(name)) * 0.6:
+        return round(overlap, 3)  # no distinctive word starts alike: skip the fuzzy compare
+    sm = SequenceMatcher(None, qn, name, autojunk=False)
+    if sm.real_quick_ratio() * 0.85 <= overlap or sm.quick_ratio() * 0.85 <= max(overlap, 0.55):
+        return round(overlap, 3)
+    return round(max(sm.ratio() * 0.85, overlap), 3)
 
 
 def search(q: str | None = None, *, states: list[str] | None = None, sports: list[str] | None = None,
