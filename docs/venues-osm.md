@@ -46,10 +46,25 @@ The rollout is state by state. `data/osm/index.json` (and `osm_coverage` in `/v1
 OSM data as of the Geofabrik extract of 2026-10-16.
 
 <!-- counts -->
-| Phase | Scope |
-| --- | --- |
-| 1 | Motocross tracks in every state: 162 OSM tracks (158 with a NOAA station) plus the 10 confirmed tracks |
-| 2 | Ball fields and soccer in TX (3,928), FL (2,246), OK (600), LA (580): 7,354 venues, 99% with a NOAA station |
+| State | Venues | Ball fields | Soccer | Multipurpose | Motocross | With NOAA station |
+| --- | --- | --- | --- | --- | --- | --- |
+| AK | 148 | 90 | 36 | 21 | 1 | 141 |
+| AL | 976 | 759 | 81 | 133 | 3 | 973 |
+| AR | 503 | 382 | 73 | 47 | 1 | 503 |
+| AZ | 1,243 | 675 | 212 | 350 | 6 | 1,217 |
+| CA | 5,599 | 3,512 | 911 | 1,152 | 24 | 5,584 |
+| CO | 1,342 | 719 | 285 | 334 | 4 | 1,341 |
+| CT | 925 | 513 | 142 | 270 | 0 | 925 |
+| DC | 127 | 56 | 49 | 22 | 0 | 127 |
+| FL | 2,246 | 1,373 | 375 | 498 | 0 | 2,243 |
+| LA | 580 | 466 | 47 | 67 | 0 | 571 |
+| OK | 601 | 434 | 86 | 80 | 1 | 593 |
+| TX | 3,933 | 2,404 | 804 | 720 | 5 | 3,903 |
+
+Full states: 12. Venues: 18,340 (incl. 162 motocross tracks). By kind: ball_field 11,383, soccer_complex 3,101, multipurpose_field 3,694, motocross_track 45. By sport tag: baseball 14,571, motocross 45, soccer 6,795, softball 1,996.
+<!-- /counts -->
+
+Motocross-only states still list their OSM motocross tracks.
 
 ## Storage design
 
