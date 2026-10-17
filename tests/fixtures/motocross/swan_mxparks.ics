@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//MX Parks//Events//EN
+BEGIN:VEVENT
+UID:mxp-swan-rd5@mxparks.com
+DTSTART:20261016T220000Z
+DTEND:20261018T230000Z
+SUMMARY:Lone Star Day and Night Series Round 5 (Rescheduled)
+URL:https://mxparks.com/events/swan-rd5
+STATUS:CONFIRMED
+END:VEVENT
+BEGIN:VEVENT
+UID:mxp-swan-practice@mxparks.com
+DTSTART:20261021T140000Z
+DTEND:20261021T220000Z
+SUMMARY:Open Practice
+URL:https://mxparks.com/events/swan-practice
+END:VEVENT
+BEGIN:VEVENT
+UID:mxp-swan-cancelled@mxparks.com
+DTSTART:20261205T060000Z
+DTEND:20261207T055900Z
+SUMMARY:Winter Warmup
+STATUS:CANCELLED
+URL:https://mxparks.com/events/swan-winter
+END:VEVENT
+END:VCALENDAR

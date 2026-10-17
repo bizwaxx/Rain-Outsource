@@ -191,8 +191,28 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`. See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_track`, `get_track_events`, `check_race`, `get_track_history`. See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
+
+## Motocross race checker
+
+For the 10 motocross tracks (Freestone, Swan MX, Murphy's MX, 3 Palms, Cycle Ranch, Dade City,
+Orlando MX Park, Mesa, OMC, Sweet 16), agents can ask whether a race will happen:
+
+```text
+GET /v1/tracks?q=swan
+GET /v1/tracks/swan/events?include_practice=false
+GET /v1/tracks/swan/check?date=saturday
+GET /v1/tracks/freestone/history
+GET /v1/tracks/swan/calendar.ics
+```
+
+Events come only from public track and series calendars (track sites, MX Parks, AMA Texas
+State Championship series, Florida Motocross Series), never invented; a user-supplied
+`events_url` is the fallback. Odds combine official cancel/postpone notices, the race-window
+forecast, the prior 24-72h of rain weighted by soil (soaked dirt cancels races) and NOAA history.
+History lists monthly rain stats and documented past rainouts with sources and coverage gaps.
+Details: [docs/motocross.md](docs/motocross.md).
 
 ## Weather caching and fallback
 

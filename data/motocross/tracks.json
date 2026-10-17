@@ -1,0 +1,1461 @@
+{
+ "version": 1,
+ "verified_on": "2026-10-16",
+ "notes": "Event, status and history sources for the motocross tracks. Only public pages that load without a login are read. 'history' entries are hand-checked against the cited page; nothing is inferred beyond what the source says (venue_attribution 'inferred' marks the one case where the venue is implied rather than named).",
+ "series": {
+  "tx_statewide_south": {
+   "type": "columns",
+   "name": "AMA Texas State Championship Series (South)",
+   "url": "https://www.texasstatewidechampionshipseries.com/southtexas",
+   "date_regex": "^(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\\.?\\s*\\d",
+   "venue_regex": "\\s-\\s[A-Z .']+,\\s*TX",
+   "round_label": "Round"
+  },
+  "tx_statewide_central": {
+   "type": "columns",
+   "name": "AMA Texas State Championship Series (Central)",
+   "url": "https://www.texasstatewidechampionshipseries.com/centraltexas",
+   "date_regex": "^(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\\.?\\s*\\d",
+   "venue_regex": "\\s-\\s[A-Z .']+,\\s*TX",
+   "round_label": "Round"
+  },
+  "florida_series": {
+   "type": "series_lines",
+   "name": "Florida Motocross Series",
+   "url": "https://floridaseries.com/",
+   "line_regex": "ROUND\\s+(\\d+)\\s+(.+)",
+   "section_start": "\\d{4} Florida Series",
+   "section_end": "LEARN MORE"
+  }
+ },
+ "tracks": [
+  {
+   "field_id": "wortham-tx-freestone-raceway",
+   "short_id": "freestone",
+   "name": "Freestone Raceway",
+   "aliases": [
+    "Freestone",
+    "Freestone Raceway",
+    "Freestone County Raceway",
+    "Freestone MX",
+    "FCR",
+    "Miller Ranch"
+   ],
+   "website": "https://freestonemx.com/",
+   "soil": "loam_sand",
+   "soil_source": "https://mxparks.com/motocross-tracks/texas/freestone-county-raceway-wortham",
+   "social": {
+    "facebook": "https://www.facebook.com/FreestoneMX/",
+    "instagram": "https://www.instagram.com/freestonemx"
+   },
+   "event_sources": [
+    {
+     "id": "freestone_calendar",
+     "type": "text_dates",
+     "name": "Freestone Raceway calendar",
+     "url": "https://freestonemx.com/racing/events/",
+     "section_start": "Events at Freestone",
+     "section_end": "A – Freestone Raceway|Share this",
+     "name_side": "after"
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=freestone-county-raceway-wortham",
+     "page_url": "https://mxparks.com/motocross-tracks/texas/freestone-county-raceway-wortham/events"
+    }
+   ],
+   "series_sources": [],
+   "status_sources": [
+    {
+     "type": "wp_posts",
+     "name": "Freestone Raceway news",
+     "url": "https://freestonemx.com/wp-json/wp/v2/posts?per_page=10&_fields=date,link,title,content",
+     "page_url": "https://freestonemx.com/category/latest-news/"
+    }
+   ],
+   "history": [
+    {
+     "date": "2012-06-01",
+     "event": "Friday practice before the Loretta Lynn South Central Amateur Regional",
+     "series": "Loretta Lynn's qualifier",
+     "kind": "practice",
+     "outcome": "practice_cancelled",
+     "cause": "rain",
+     "summary": "Practice cancelled after heavy rain on the Miller Ranch the day before; the regional itself ran as scheduled.",
+     "source_url": "https://freestonemx.com/latest-news/ll-regional-practice-cancelled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2012-05-31",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2012-05-29",
+        "prcp_in": 0.05
+       },
+       {
+        "date": "2012-05-30",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2012-05-31",
+        "prcp_in": 1.52
+       },
+       {
+        "date": "2012-06-01",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 1.57,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2012-08-18",
+     "event": "4th Annual AllStar Amateurs",
+     "kind": "race",
+     "outcome": "rained_out",
+     "cause": "rain",
+     "rescheduled_to": "2012-12-02",
+     "summary": "Rained out and rescheduled to December 2 on the Pro National track.",
+     "source_url": "https://freestonemx.com/latest-news/allstar-amateurs-rained-out/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2012-08-18",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2012-08-15",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2012-08-16",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2012-08-17",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2012-08-18",
+        "prcp_in": 0.2
+       }
+      ],
+      "four_day_total_in": 0.2,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2013-11-02",
+     "date_text": "weekend of 2013-11-02",
+     "event": "AMA AllStar Amateurs",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "rain",
+     "summary": "Cancelled after more than 8 inches of rain at Freestone with 24 hours until gates opened.",
+     "source_url": "https://freestonemx.com/latest-news/allstar-amateurs-cancelled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2013-11-01",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2013-10-30",
+        "prcp_in": 3.07
+       },
+       {
+        "date": "2013-10-31",
+        "prcp_in": 0.1
+       },
+       {
+        "date": "2013-11-01",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2013-11-02",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 3.17,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2015-03-17",
+     "event": "James Stewart Freestone Spring Championship",
+     "series": "JS7 Spring Championship",
+     "kind": "race",
+     "outcome": "schedule_changed",
+     "cause": "rain",
+     "summary": "Timed practice cancelled and racing moved up a day because of incoming weather after 4 inches of rain the week before.",
+     "source_url": "https://freestonemx.com/latest-news/alert-schedule-revised-version-1/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2015-03-16",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2015-03-14",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-03-15",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-03-16",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-03-17",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.0,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2016-04-22",
+     "event": "Friday practice before the Loretta Lynn's Area Qualifier",
+     "series": "Loretta Lynn's qualifier",
+     "kind": "practice",
+     "outcome": "practice_cancelled",
+     "cause": "rain",
+     "summary": "Friday practice cancelled because rain left parts of the track unreachable for medical crews; races ran rain or shine.",
+     "source_url": "https://freestonemx.com/latest-news/update-no-friday-practice-llaq/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2016-04-21",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2016-04-19",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2016-04-20",
+        "prcp_in": 0.97
+       },
+       {
+        "date": "2016-04-21",
+        "prcp_in": 0.8
+       },
+       {
+        "date": "2016-04-22",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 1.77,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2016-08-13",
+     "event": "AMA Main Event Series Round 4",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "rain_forecast",
+     "summary": "Cancelled ahead of time on an 80% rain forecast; not rescheduled.",
+     "source_url": "https://freestonemx.com/latest-news/alert-main-event-series-cancelled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2016-08-13",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2016-08-10",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2016-08-11",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2016-08-12",
+        "prcp_in": 0.31
+       },
+       {
+        "date": "2016-08-13",
+        "prcp_in": 1.22
+       }
+      ],
+      "four_day_total_in": 1.53,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2017-06-24",
+     "event": "FMF Texas Night Series Round 6",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "weather",
+     "rescheduled_to": "2017-07-01",
+     "summary": "Cancelled due to the weather; moved to July 1.",
+     "source_url": "https://freestonemx.com/latest-news/freestone-raceway-rd-6-texas-night-series-canceled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2017-06-24",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2017-06-21",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-06-22",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-06-23",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-06-24",
+        "prcp_in": 1.02
+       }
+      ],
+      "four_day_total_in": 1.02,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2017-07-01",
+     "event": "FMF Texas Night Series Round 6 (make-up)",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "rain_forecast",
+     "rescheduled_to": "2017-07-29",
+     "summary": "Make-up date cancelled on the extended forecast; finally raced July 29.",
+     "source_url": "https://freestonemx.com/latest-news/canceled-rd-6-texas-night-series-freestone/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2017-07-01",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2017-06-28",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-06-29",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-06-30",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2017-07-01",
+        "prcp_in": 1.5
+       }
+      ],
+      "four_day_total_in": 1.5,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2018-05-04",
+     "event": "Friday practice before the Loretta Lynn's Area Qualifier",
+     "series": "Loretta Lynn's qualifier",
+     "kind": "practice",
+     "outcome": "practice_cancelled",
+     "cause": "rain_forecast",
+     "summary": "Friday practice cancelled with rain chances Thursday and Friday; the May 5-6 qualifier ran.",
+     "source_url": "https://freestonemx.com/latest-news/friday-practice-canceled-loretta-lynns-area-qualifier/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2018-05-02",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2018-05-01",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2018-05-02",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2018-05-03",
+        "prcp_in": 0.06
+       },
+       {
+        "date": "2018-05-04",
+        "prcp_in": 1.45
+       }
+      ],
+      "four_day_total_in": 1.51,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2019-04-06",
+     "date_text": "opening weekend of April 2019",
+     "event": "FMF Texas Night Series Round 1",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "rescheduled",
+     "cause": "weather",
+     "rescheduled_to": "2019-04-27",
+     "summary": "Season opener at Freestone rescheduled due to the weather; became the April 27 double-header.",
+     "source_url": "https://freestonemx.com/latest-news/rd-1-tns-rescheduled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2019-04-05",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2019-04-03",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-04",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-05",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-06",
+        "prcp_in": 0.33
+       }
+      ],
+      "four_day_total_in": 0.33,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2021-01-02",
+     "date_text": "New Year's weekend 2021",
+     "event": "FMF Texas Winter Series Round 1",
+     "series": "FMF Texas Winter Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "flooding",
+     "summary": "Cancelled after statewide flooding; the post describes Freestone's ponds overflowing to track level and families unable to travel.",
+     "source_url": "https://freestonemx.com/latest-news/rnd-1-is-canceled-due-to-state-wide-flooding/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2020-12-31",
+     "venue_attribution": "inferred",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2020-12-30",
+        "prcp_in": 0.61
+       },
+       {
+        "date": "2020-12-31",
+        "prcp_in": 3.27
+       },
+       {
+        "date": "2021-01-01",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2021-01-02",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 3.88,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2023-06-10",
+     "event": "Night Flight Series Round 4",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "severe_weather_forecast",
+     "summary": "Cancelled because the forecast called for possible hail and tornadoes.",
+     "source_url": "https://freestonemx.com/latest-news/rnd-4-night-flight-canceled-due-to-possible-hail-and-tornados/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2023-06-10",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2023-06-07",
+        "prcp_in": 0.36
+       },
+       {
+        "date": "2023-06-08",
+        "prcp_in": 0.46
+       },
+       {
+        "date": "2023-06-09",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2023-06-10",
+        "prcp_in": 3.05
+       }
+      ],
+      "four_day_total_in": 3.87,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2024-05-18",
+     "event": "FMF Texas Night Series",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "rain",
+     "summary": "Cancelled because too much rain fell at the track the night before and it could not recover in time.",
+     "source_url": "https://freestonemx.com/latest-news/tns-may-18-canceled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2024-05-17",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2024-05-15",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2024-05-16",
+        "prcp_in": 0.42
+       },
+       {
+        "date": "2024-05-17",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2024-05-18",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.42,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2025-03-29",
+     "event": "Practice weekend (March 29-30)",
+     "kind": "practice",
+     "outcome": "practice_cancelled",
+     "cause": "rain",
+     "summary": "Practice cancelled because of rain already on the ground and more coming.",
+     "source_url": "https://freestonemx.com/latest-news/practice-canceled-march-29-10/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2025-03-27",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00053912",
+      "station_name": "CORSICANA CAMPBELL FLD",
+      "distance_km": 25.2,
+      "days": [
+       {
+        "date": "2025-03-26",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2025-03-27",
+        "prcp_in": 0.47
+       },
+       {
+        "date": "2025-03-28",
+        "prcp_in": 1.05
+       },
+       {
+        "date": "2025-03-29",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 1.52,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    }
+   ],
+   "history_coverage": "Freestone's own news archive (2010-2025) is public and searchable, so this track has the best documented history. Posts are written by the track; some archive pages contain unrelated injected spam text, which is ignored."
+  },
+  {
+   "field_id": "tyler-tx-swan-mx",
+   "short_id": "swan",
+   "name": "Swan MX",
+   "aliases": [
+    "Swan",
+    "Swan MX",
+    "Swan MX Raceway Park",
+    "Swan Raceway",
+    "Swan Raceway Park"
+   ],
+   "website": "https://swanmx.com/",
+   "soil": "clay",
+   "soil_source": "https://mxparks.com/motocross-tracks/texas/swan-mx-tyler",
+   "social": {
+    "facebook": "https://www.facebook.com/SwanMX/",
+    "instagram": "https://www.instagram.com/swanmx"
+   },
+   "event_sources": [
+    {
+     "id": "swan_schedule",
+     "type": "text_dates",
+     "name": "Swan MX race schedule",
+     "url": "https://swanmx.com/race-schedule/",
+     "section_start": "View Night Series Details",
+     "section_end": "Client Reviews",
+     "name_side": "before"
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=swan-mx-tyler",
+     "page_url": "https://mxparks.com/motocross-tracks/texas/swan-mx-tyler/events"
+    }
+   ],
+   "series_sources": [
+    "tx_statewide_central"
+   ],
+   "status_sources": [
+    {
+     "type": "ridemx",
+     "name": "RideMX track updates",
+     "url": "https://ridemx.com/track/swan-mx/"
+    },
+    {
+     "type": "page_notices",
+     "name": "Swan MX race schedule",
+     "url": "https://swanmx.com/race-schedule/"
+    }
+   ],
+   "history": [
+    {
+     "date": "2015-01-10",
+     "event": "Honda of Houston/FMF AMA Texas Winter Series Round 2",
+     "series": "FMF Texas Winter Series",
+     "kind": "race",
+     "outcome": "rescheduled",
+     "cause": "rain_forecast",
+     "rescheduled_to": "2015-01-17",
+     "summary": "Moved from January 10-11 to January 17-18 because of the forecast.",
+     "source_url": "https://freestonemx.com/latest-news/update-rd-2-swan-rescheduled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2015-01-07",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00013972",
+      "station_name": "TYLER POUNDS FLD",
+      "distance_km": 9.4,
+      "days": [
+       {
+        "date": "2015-01-07",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-01-08",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-01-09",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-01-10",
+        "prcp_in": 0.01
+       }
+      ],
+      "four_day_total_in": 0.01,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date_text": "March 2015 (exact day not given)",
+     "event": "Moto Masters Suzuki Cup Series Round 1",
+     "series": "Moto Masters",
+     "kind": "race",
+     "outcome": "rained_out",
+     "cause": "rain",
+     "summary": "Opening round at Swan was rained out in March 2015 (reported in a later post).",
+     "source_url": "https://freestonemx.com/latest-news/moto-masters-tries-to-head-to-swan/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2015-05-12",
+     "venue_attribution": "stated"
+    },
+    {
+     "date": "2015-05-16",
+     "event": "Moto Masters Suzuki Cup Series Round 1 (make-up)",
+     "series": "Moto Masters",
+     "kind": "race",
+     "outcome": "rained_out",
+     "cause": "rain",
+     "summary": "Make-up round rained out: Thursday-evening rain was too much with more on the way.",
+     "source_url": "https://freestonemx.com/latest-news/moto-masters-rained-out-at-swan-mx/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2015-05-15",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00013972",
+      "station_name": "TYLER POUNDS FLD",
+      "distance_km": 9.4,
+      "days": [
+       {
+        "date": "2015-05-13",
+        "prcp_in": 0.23
+       },
+       {
+        "date": "2015-05-14",
+        "prcp_in": 0.58
+       },
+       {
+        "date": "2015-05-15",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2015-05-16",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.81,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2021-01-09",
+     "date_text": "weekend of 2021-01-09",
+     "event": "FMF Texas Winter Series Round 1",
+     "series": "FMF Texas Winter Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "rain_and_cold",
+     "rescheduled_to": "2021-01-30",
+     "summary": "Cancelled: ground already soaked from inches of rain in Tyler, with freezing temperatures and snow forecast; moved to January 30-31.",
+     "source_url": "https://freestonemx.com/latest-news/tws-rnd-1-swan-canceled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2021-01-07",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00013972",
+      "station_name": "TYLER POUNDS FLD",
+      "distance_km": 9.4,
+      "days": [
+       {
+        "date": "2021-01-06",
+        "prcp_in": 1.89
+       },
+       {
+        "date": "2021-01-07",
+        "prcp_in": 0.01
+       },
+       {
+        "date": "2021-01-08",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2021-01-09",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 1.9,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date_text": "June 2026, the weekend before the June 12 report",
+     "event": "Loretta Lynn's South Central Amateur Regional Qualifier",
+     "series": "Loretta Lynn's qualifier",
+     "kind": "race",
+     "outcome": "shortened",
+     "cause": "rain",
+     "summary": "After one moto on Saturday, deteriorating track conditions in the rain forced officials to cancel the rest of Saturday's racing; the event finished Sunday in a two-moto format.",
+     "source_url": "https://elevatedmx.com/2026/06/12/captured-at-swan-mx-south-central-amateur-regional-gallery/",
+     "source_name": "ElevatedMx race report",
+     "published": "2026-06-12",
+     "venue_attribution": "stated"
+    },
+    {
+     "date": "2026-08-15",
+     "event": "Lone Star Day & Night Series Round 5",
+     "series": "Lone Star Day & Night Series",
+     "kind": "race",
+     "outcome": "rescheduled",
+     "cause": "not_stated",
+     "rescheduled_to": "2026-10-17",
+     "summary": "Rescheduled to October 17-18, 2026; no public reason given.",
+     "source_url": "https://mxparks.com/events/round-5-lone-star-day-night-series-2026-08-15",
+     "source_name": "MX Parks event page and Swan MX race schedule",
+     "published": "2026-10-16",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00013972",
+      "station_name": "TYLER POUNDS FLD",
+      "distance_km": 9.4,
+      "days": [
+       {
+        "date": "2026-08-12",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-13",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-14",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-15",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.0,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2026-08-22",
+     "event": "Texas State Championship Series Round 2",
+     "series": "AMA Texas State Championship Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "not_stated",
+     "summary": "Listed as cancelled; no public reason given.",
+     "source_url": "https://mxparks.com/events/texas-state-championship-series-round-2-2026-08-22",
+     "source_name": "MX Parks event page",
+     "published": "2026-10-16",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "USW00013972",
+      "station_name": "TYLER POUNDS FLD",
+      "distance_km": 9.4,
+      "days": [
+       {
+        "date": "2026-08-19",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-20",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-21",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-22",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.0,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    }
+   ],
+   "history_coverage": "Swan's own site has no news archive. History comes from the FMF Texas series promoter's news (Freestone site), MX Parks event pages and a race report. Swan posts closures on Facebook and Instagram, which need a login and are not read."
+  },
+  {
+   "field_id": "red-rock-tx-murphys-mx",
+   "short_id": "murphys",
+   "name": "Murphy's MX",
+   "aliases": [
+    "Murphys",
+    "Murphy's",
+    "Murphys MX",
+    "Murphy's MX",
+    "Murphys Motocross"
+   ],
+   "website": "https://www.murphysmx.com/",
+   "soil": "sand",
+   "soil_source": "https://www.murphysmx.com/",
+   "social": {
+    "facebook": "https://www.facebook.com/profile.php?id=100084023023175"
+   },
+   "event_sources": [
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=murphys-mx-red-rock",
+     "page_url": "https://mxparks.com/motocross-tracks/texas/murphys-mx-red-rock/events"
+    }
+   ],
+   "series_sources": [
+    "tx_statewide_south"
+   ],
+   "status_sources": [
+    {
+     "type": "ridemx",
+     "name": "RideMX track updates",
+     "url": "https://ridemx.com/track/murphys-mx/"
+    }
+   ],
+   "unparsed_sources": [
+    {
+     "name": "Murphy's MX calendar",
+     "url": "https://www.murphysmx.com/calendar-1",
+     "why": "The calendar is drawn in the browser by a Wix widget; no dates are in the page HTML."
+    }
+   ],
+   "history": [
+    {
+     "date": "2021-06-05",
+     "event": "FMF Texas Night Series Round 3 (South)",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "not_stated",
+     "rescheduled_to": "2021-06-19",
+     "summary": "Cancelled the day of the race (the series had been moved twice for weather that spring); rescheduled to June 19.",
+     "source_url": "https://freestonemx.com/latest-news/murphys-mx-tns-rnd-3-canceled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2021-06-05",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "US1TXBST090",
+      "station_name": "RED ROCK 1.2 N",
+      "distance_km": 4.7,
+      "days": [
+       {
+        "date": "2021-06-02",
+        "prcp_in": 0.03
+       },
+       {
+        "date": "2021-06-03",
+        "prcp_in": 0.29
+       },
+       {
+        "date": "2021-06-04",
+        "prcp_in": 0.9
+       },
+       {
+        "date": "2021-06-05",
+        "prcp_in": 0.06
+       }
+      ],
+      "four_day_total_in": 1.28,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2024-04-27",
+     "date_text": "weekend of 2024-04-27",
+     "event": "FMF Texas Night Series Round 2",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "cancelled",
+     "cause": "weather",
+     "summary": "Cancelled due to the weather; reschedule date TBA.",
+     "source_url": "https://freestonemx.com/latest-news/rnd-2-fmf-texas-night-series-canceled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2024-04-26",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "US1TXBST090",
+      "station_name": "RED ROCK 1.2 N",
+      "distance_km": 4.7,
+      "days": [
+       {
+        "date": "2024-04-24",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2024-04-25",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2024-04-26",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2024-04-27",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.0,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    }
+   ],
+   "history_coverage": "Murphy's own site has no news archive and its calendar can't be read without a browser. History comes from the FMF Texas series promoter's news. Closures are posted on Facebook (needs a login)."
+  },
+  {
+   "field_id": "conroe-tx-3-palms-action-sports-park",
+   "short_id": "3palms",
+   "name": "3 Palms Action Sports Park",
+   "aliases": [
+    "3 Palms",
+    "Three Palms",
+    "3 Palms MX",
+    "3 Palms Action Sports Park",
+    "Three Palms Action Sports Park",
+    "3P"
+   ],
+   "website": "https://www.threepalmsesp.com/",
+   "soil": "unknown",
+   "social": {
+    "facebook": "https://www.facebook.com/3Palms/",
+    "instagram": "https://www.instagram.com/3palmsmx"
+   },
+   "event_sources": [
+    {
+     "id": "3palms_home",
+     "type": "text_dates",
+     "name": "3 Palms upcoming races",
+     "url": "https://www.threepalmsesp.com/",
+     "section_start": "UPCOMING RACES",
+     "section_end": "RACE CALENDAR|ADDRESS",
+     "name_side": "after"
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=3-palms-action-sports-park-conroe",
+     "page_url": "https://mxparks.com/motocross-tracks/texas/3-palms-action-sports-park-conroe/events"
+    }
+   ],
+   "series_sources": [
+    "tx_statewide_south"
+   ],
+   "status_sources": [
+    {
+     "type": "page_notices",
+     "name": "3 Palms home page",
+     "url": "https://www.threepalmsesp.com/"
+    }
+   ],
+   "history": [
+    {
+     "date": "2019-04-13",
+     "event": "FMF Texas Night Series Round 1 (South)",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "rescheduled",
+     "cause": "weather",
+     "rescheduled_to": "2019-05-11",
+     "summary": "Moved from April 13 to May 11 as the promoter wrote that 'Mother nature has not been working with us'.",
+     "source_url": "https://freestonemx.com/latest-news/texas-night-series-rescheduled/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2019-04-13",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "US1TXMNG026",
+      "station_name": "THE WOODLANDS 2.8 N",
+      "distance_km": 6.0,
+      "days": [
+       {
+        "date": "2019-04-10",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-11",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-12",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2019-04-13",
+        "prcp_in": 0.02
+       }
+      ],
+      "four_day_total_in": 0.02,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    },
+    {
+     "date": "2019-05-11",
+     "date_text": "2019-05-11 per the April 13 schedule post",
+     "event": "FMF Texas Night Series Round 2 (South)",
+     "series": "FMF Texas Night Series",
+     "kind": "race",
+     "outcome": "rained_out",
+     "cause": "rain",
+     "rescheduled_to": "2019-05-25",
+     "summary": "Rain-date make-up set for May 25 ('Texas weather hasn't been cooperating').",
+     "source_url": "https://freestonemx.com/latest-news/tns-3-palms-rain-date/",
+     "source_name": "Freestone Raceway news (FMF Texas series promoter site)",
+     "published": "2019-05-14",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "US1TXMNG026",
+      "station_name": "THE WOODLANDS 2.8 N",
+      "distance_km": 6.0,
+      "days": [
+       {
+        "date": "2019-05-08",
+        "prcp_in": 0.77
+       },
+       {
+        "date": "2019-05-09",
+        "prcp_in": 1.2
+       },
+       {
+        "date": "2019-05-10",
+        "prcp_in": 1.97
+       },
+       {
+        "date": "2019-05-11",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 3.94,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    }
+   ],
+   "history_coverage": "3 Palms' site (Wix) has no news archive. History comes from the FMF Texas series promoter's news. Closures are posted on Facebook and Instagram (need a login)."
+  },
+  {
+   "field_id": "floresville-tx-cycle-ranch-motocross-park",
+   "short_id": "cycleranch",
+   "name": "Cycle Ranch Motocross Park",
+   "aliases": [
+    "Cycle Ranch",
+    "Cycle Ranch MX",
+    "Cycle Ranch Motocross Park",
+    "Cycle Ranch Floresville"
+   ],
+   "website": "https://cycleranchmx.com/",
+   "soil": "unknown",
+   "social": {
+    "facebook": "https://www.facebook.com/usamxchampionships",
+    "instagram": "https://www.instagram.com/cycleranchmx"
+   },
+   "event_sources": [
+    {
+     "id": "cycleranch_events",
+     "type": "shopify_collection",
+     "name": "Cycle Ranch race & event schedule",
+     "url": "https://cycleranchmx.com/collections/upcoming-motocross-community-events/products.json?limit=250",
+     "page_url": "https://cycleranchmx.com/collections/upcoming-motocross-community-events",
+     "tags": [
+      "racing",
+      "TICKETING"
+     ]
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=cycle-ranch-motocross-park-floresville",
+     "page_url": "https://mxparks.com/motocross-tracks/texas/cycle-ranch-motocross-park-floresville/events"
+    }
+   ],
+   "series_sources": [],
+   "status_sources": [
+    {
+     "type": "ridemx",
+     "name": "RideMX track updates",
+     "url": "https://ridemx.com/track/cycle-ranch/"
+    }
+   ],
+   "history": [],
+   "history_coverage": "No publicly documented race cancellations were found. The track's blog is guides, not news; closures are posted on Facebook and Instagram (need a login). Third-party copies of its Facebook posts show practice changes for wet tracks (for example October 1-2, 2026), but no race cancellations."
+  },
+  {
+   "field_id": "dade-city-fl-dade-city-motocross",
+   "short_id": "dadecity",
+   "name": "Dade City MX",
+   "aliases": [
+    "Dade City",
+    "Dade City MX",
+    "Dade City Motocross",
+    "Dade City Raceway",
+    "DCMX"
+   ],
+   "website": "https://dadecitymx.com/",
+   "soil": "sand_assumed",
+   "social": {
+    "facebook": "https://www.facebook.com/DadeCityMX",
+    "instagram": "https://www.instagram.com/dadecitymx"
+   },
+   "event_sources": [
+    {
+     "id": "dadecity_rounds",
+     "type": "text_dates",
+     "name": "Dade City MX championship schedule",
+     "url": "https://dadecitymx.com/",
+     "section_start": "Championship Racing Schedule",
+     "section_end": "Upcoming Special Events",
+     "name_side": "same",
+     "name_prefix": "DCMX Saturday Night Championship",
+     "default_start": "15:00",
+     "default_end": "23:00",
+     "time_note": "The track calendar lists Saturday race days from 3:00 to 11:00 PM."
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=dade-city-raceway-dade-city-mx-dade-city",
+     "page_url": "https://mxparks.com/motocross-tracks/florida/dade-city-raceway-dade-city-mx-dade-city/events"
+    }
+   ],
+   "series_sources": [
+    "florida_series"
+   ],
+   "status_sources": [
+    {
+     "type": "ridemx",
+     "name": "RideMX track updates",
+     "url": "https://ridemx.com/track/dade-city-mx/"
+    }
+   ],
+   "history": [
+    {
+     "date": "2026-08-27",
+     "event": "Thursday night practice",
+     "kind": "practice",
+     "outcome": "practice_cancelled",
+     "cause": "weather",
+     "summary": "Thursday night practice cancelled due to weather.",
+     "source_url": "https://ridemx.com/track/dade-city-mx/",
+     "source_name": "RideMX track update (posted by the track)",
+     "published": "2026-08-27",
+     "venue_attribution": "stated",
+     "noaa_observed": {
+      "station_id": "US1FLPS0010",
+      "station_name": "DADE CITY 1.8 WSW",
+      "distance_km": 1.7,
+      "days": [
+       {
+        "date": "2026-08-24",
+        "prcp_in": 0.03
+       },
+       {
+        "date": "2026-08-25",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-26",
+        "prcp_in": 0.0
+       },
+       {
+        "date": "2026-08-27",
+        "prcp_in": 0.0
+       }
+      ],
+      "four_day_total_in": 0.03,
+      "note": "Daily totals at the nearest NOAA station; rain at the track itself can differ."
+     }
+    }
+   ],
+   "history_coverage": "No publicly documented race cancellations were found. The track site has no news archive. Closures are posted on Facebook (needs a login) and sometimes as RideMX track updates."
+  },
+  {
+   "field_id": "orlando-fl-orlando-mx-park",
+   "short_id": "orlando",
+   "name": "Orlando MX Park",
+   "aliases": [
+    "Orlando MX",
+    "Orlando MX Park",
+    "Orlando Motocross Park",
+    "OMXP"
+   ],
+   "website": "https://orlandomxpark.com/",
+   "soil": "sand_assumed",
+   "social": {
+    "facebook": "https://www.facebook.com/orlandomxpark",
+    "instagram": "https://www.instagram.com/orlandomxpark"
+   },
+   "event_sources": [
+    {
+     "id": "orlando_home",
+     "type": "text_dates",
+     "name": "Orlando MX Park race events",
+     "url": "https://orlandomxpark.com/",
+     "section_start": "\\d{4} RACE EVENTS",
+     "section_end": "So do yourself a favor|mark your calendar",
+     "name_side": "same"
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=orlando-mx-park-orlando",
+     "page_url": "https://mxparks.com/motocross-tracks/florida/orlando-mx-park-orlando/events"
+    }
+   ],
+   "series_sources": [
+    "florida_series"
+   ],
+   "status_sources": [
+    {
+     "type": "page_notices",
+     "name": "Orlando MX Park home page",
+     "url": "https://orlandomxpark.com/"
+    }
+   ],
+   "history": [],
+   "history_coverage": "No publicly documented race cancellations were found. The track site has no news archive; closures are posted on Facebook and Instagram (need a login)."
+  },
+  {
+   "field_id": "fellsmere-fl-mesa-motocross-park",
+   "short_id": "mesa",
+   "name": "Mesa Motocross Park",
+   "aliases": [
+    "Mesa",
+    "Mesa MX",
+    "Mesa Motocross",
+    "Mesa Motocross Park",
+    "MesaMX Park"
+   ],
+   "website": "https://mesamotocross.com/",
+   "soil": "sand_assumed",
+   "social": {
+    "facebook": "https://www.facebook.com/mesamotocross"
+   },
+   "event_sources": [
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=mesa-motocross-park-fellsmere",
+     "page_url": "https://mxparks.com/motocross-tracks/florida/mesa-motocross-park-fellsmere/events"
+    }
+   ],
+   "series_sources": [],
+   "status_sources": [],
+   "unparsed_sources": [
+    {
+     "name": "Mesa Motocross race calendar",
+     "url": "https://www.facebook.com/mesamotocross",
+     "why": "The track site says the full race calendar is on Facebook, which needs a login."
+    }
+   ],
+   "history": [],
+   "history_coverage": "No publicly documented race cancellations were found. The race calendar and weather calls are on Facebook (needs a login). Mesa hosted I4MX Round 3 in March 2025; no 2026 I4MX round is listed there."
+  },
+  {
+   "field_id": "norman-ok-oklahoma-motorsports-complex",
+   "short_id": "omc",
+   "name": "Oklahoma Motorsports Complex",
+   "aliases": [
+    "OMC",
+    "OMC MX",
+    "Oklahoma Motorsports Complex",
+    "Oklahoma Motorsports",
+    "Norman MX"
+   ],
+   "website": "https://www.oklahomamotorsportscomplex.com/",
+   "soil": "unknown",
+   "social": {
+    "facebook": "https://www.facebook.com/p/Oklahoma-Motorsports-Complex-100057620050958/"
+   },
+   "event_sources": [
+    {
+     "id": "omc_schedule",
+     "type": "text_dates",
+     "name": "OMC motocross schedule",
+     "url": "https://www.oklahomamotorsportscomplex.com/omc-motocross-schedule.html",
+     "section_start": "Motocross Special Events",
+     "section_end": "Practice Day Fees",
+     "name_side": "after"
+    },
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=oklahoma-motorsports-complex-omc-norman",
+     "page_url": "https://mxparks.com/motocross-tracks/oklahoma/oklahoma-motorsports-complex-omc-norman/events"
+    }
+   ],
+   "series_sources": [],
+   "status_sources": [
+    {
+     "type": "page_notices",
+     "name": "OMC home page",
+     "url": "https://www.oklahomamotorsportscomplex.com/"
+    }
+   ],
+   "history": [
+    {
+     "date_text": "Rescheduled to Saturday Jan 28; the page does not give the year (Jan 28 was a Saturday in 2017 and 2023)",
+     "event": "MXStates Winter Series Round 1",
+     "series": "MXStates Winter Series",
+     "kind": "race",
+     "outcome": "rescheduled",
+     "cause": "weather",
+     "summary": "The track's series page lists Round 1 at OMC as 'rescheduled due to weather' to Saturday, January 28.",
+     "source_url": "https://www.oklahomamotorsportscomplex.com/Motocross-News/Motocross/oklahoma-mxstates-winter-series.html",
+     "source_name": "Oklahoma Motorsports Complex series page",
+     "venue_attribution": "stated"
+    }
+   ],
+   "history_coverage": "Only one weather reschedule is documented, on an undated series page. The track tells riders to call 405-579-2777 before hauling; its own schedule page says 'Schedule coming soon'."
+  },
+  {
+   "field_id": "muskogee-ok-sweet-16-mx",
+   "short_id": "sweet16",
+   "name": "Sweet 16 MX",
+   "aliases": [
+    "Sweet 16",
+    "Sweet 16 MX",
+    "Sweet Sixteen MX",
+    "Sweet16 MX"
+   ],
+   "website": null,
+   "soil": "unknown",
+   "social": {
+    "facebook": "https://www.facebook.com/sweet16mx/"
+   },
+   "event_sources": [
+    {
+     "id": "mxparks",
+     "type": "ics",
+     "name": "MX Parks track calendar",
+     "url": "https://mxparks.com/events/feed.ics?track=sweet-16-mx-muskogee",
+     "page_url": "https://mxparks.com/motocross-tracks/oklahoma/sweet-16-mx-muskogee/events"
+    }
+   ],
+   "series_sources": [],
+   "status_sources": [],
+   "unparsed_sources": [
+    {
+     "name": "Sweet 16 MX Facebook page",
+     "url": "https://www.facebook.com/sweet16mx/",
+     "why": "The track has no website; practice days and weather calls are on Facebook, which needs a login."
+    }
+   ],
+   "history": [],
+   "history_coverage": "No publicly documented race cancellations were found. The track has no website; it posts on Facebook (needs a login)."
+  }
+ ]
+}

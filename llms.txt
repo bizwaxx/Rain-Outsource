@@ -8,7 +8,8 @@ Base URL: https://rainout-agent-source.vercel.app
 
 - Rules: confirm the team match with the user; read the one-sentence `reason` aloud with the play odds; official status beats odds; **always ask the user before adding a game to their calendar**. Rainout Source never writes to calendars. It gives you a Google Calendar event body (`calendar_event`, with a stable `iCalUID`) and ICS text.
 - If team search returns `next_step: ask_user_for_schedule_url`, ask for the league's schedule link (ICS/webcal feed or schedule page) and search again with `schedule_url`.
-- MCP (Streamable HTTP, stateless, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: find_team, get_games, check_game, get_venue_status, check_schedule.
+- MCP (Streamable HTTP, stateless, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: find_team, get_games, check_game, get_venue_status, check_schedule, find_track, get_track_events, check_race, get_track_history.
+- Motocross: find_track, then confirm the track with the user. For "what are the chances the race at Swan MX on Saturday happens?" call check_race and read `answer`. Events come only from public track and series calendars and are never invented; if none are found (`next_step: ask_user_for_events_url`), ask for the event or series link and pass `events_url`.
 - OpenAPI (GPT Actions friendly operationIds): https://rainout-agent-source.vercel.app/openapi.yaml
 
 ## Endpoints
@@ -19,10 +20,16 @@ Base URL: https://rainout-agent-source.vercel.app
 - [Game status](https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-10-16T20:20:00-05:00): `GET /v1/status?field_id=&game_time=` for one venue and time
 - [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=`
 - `GET|POST /v1/schedule/check`: score a whole schedule (ICS URL, JSON, CSV)
+- [Motocross tracks](https://rainout-agent-source.vercel.app/v1/tracks): `GET /v1/tracks?q=&state=` lists the 10 supported tracks (TX, FL, OK)
+- [Track events](https://rainout-agent-source.vercel.app/v1/tracks/swan/events): `GET /v1/tracks/{track_id}/events?date=|from=&to=&include_practice=&events_url=` returns races with play_probability, reason, official_status, sources, calendar_event and ics
+- [Race check](https://rainout-agent-source.vercel.app/v1/tracks/swan/check?date=saturday): `GET /v1/tracks/{track_id}/check?date=|event_id=` returns `answer` (one sentence), the event and next_step
+- [Track history](https://rainout-agent-source.vercel.app/v1/tracks/freestone/history): `GET /v1/tracks/{track_id}/history` monthly NOAA rain stats plus documented past rain cancellations with sources and coverage gaps
+- `GET /v1/tracks/{track_id}/calendar.ics`: subscribable race feed with odds
 
 ## Docs
 
 - [Teams API](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/teams.md)
+- [Motocross race checker](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/motocross.md)
 - [MCP server](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/mcp.md)
 - [Example agent conversation](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/agent-conversation.md)
 - [Play probability model](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/play-probability.md)

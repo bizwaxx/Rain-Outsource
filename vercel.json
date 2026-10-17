@@ -30,6 +30,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/tracks.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "api/mcp.py",
       "use": "@vercel/python"
     },
@@ -74,6 +78,18 @@
     {
       "src": "/v1/teams/([^/]+)/calendar\\.ics",
       "dest": "/api/teams.py"
+    },
+    {
+      "src": "/v1/tracks/?",
+      "dest": "/api/tracks.py"
+    },
+    {
+      "src": "/v1/tracks/([^/]+)/(events|check|history)",
+      "dest": "/api/tracks.py"
+    },
+    {
+      "src": "/v1/tracks/([^/]+)/calendar\\.ics",
+      "dest": "/api/tracks.py"
     },
     {
       "src": "/mcp/?",
