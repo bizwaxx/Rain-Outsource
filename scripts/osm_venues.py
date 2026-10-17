@@ -271,7 +271,8 @@ def load_features(gj: Path):
             (lat, lon), bbox = cb
             item = {"ref": ref, "tags": tags, "lat": lat, "lon": lon, "bbox": bbox, "name": (tags.get("name") or "").strip()}
             sp = sports_of(tags)
-            if sp & MX:
+            if sp & MX or (MX_NAME.search(item["name"]) and not sp & NOT_MX
+                           and (tags.get("leisure") in ("sports_centre", "track", "pitch") or tags.get("highway") == "raceway" or "motor" in sp)):
                 mx.append(item)
             if tags.get("leisure") == "pitch" and sp & TARGET:
                 item["sports"] = sp & TARGET
@@ -371,6 +372,13 @@ def good_name(name: str) -> bool:
     return bool(name) and not GENERIC_PITCH.match(name.strip())
 
 
+MX_NAME = re.compile(r"\b(mx|motocross|moto-?x|motoplex|supercross|motorcross)\b", re.I)
+NOT_MX_NAME = re.compile(r"\bbmx\b|pump ?track|bicycle|\br/?c\b|snowmobile|\bdrags?\b|climb|riding academy|ironman|\bgym\b|\btank\b|singletrack", re.I)
+GENERIC_MX = re.compile(r"^(private |intermediate |pro |mini ?bikes? |minibike )?(motocross|mx|motorcross|dirt bike|moto/atv practice|"
+                        r"motorcycle practice|atv)( practice)? ?(track|course|area|park|range|tracks|track area)?s?$", re.I)
+MX_PLACE_NAME = re.compile(r"\b(mx|moto|motocross|motorcross|motoplex|supercross|raceway|racing|race|cycle|motorcycle|"
+                           r"orv|ohv|off-?road|dirt|speedway|track|motorsports?|park)\b", re.I)
+NOT_MX = {"bmx", "rc_car", "cycling", "mtb", "disc_golf", "skateboard"}
 SKIP_NAME = re.compile(r"batting cage|cage|bullpen|practice net|driving range", re.I)
 
 
@@ -386,7 +394,7 @@ def make_venue(st, members, container, kind_sports, places_grid, is_mx):
         name = rep["name"]
     else:
         return None
-    if SKIP_NAME.search(name):
+    if SKIP_NAME.search(name) or (is_mx and NOT_MX_NAME.search(name)):
         return None
     pts = [m for m in members if not m.get("complex")] or members
     lat = sum(m["lat"] for m in pts) / len(pts)
@@ -401,9 +409,12 @@ def make_venue(st, members, container, kind_sports, places_grid, is_mx):
     town = nearest_town(places_grid, lat, lon)
     city = city_tag or (town[1]["name"] if town else None)
     if addr and not re.search(r"\b[A-Z]{2}\b", addr):
-        addr = f"{addr} {st}" if re.search(r"\d{5}$", addr) else f"{addr}, {st}"
+        m_zip = re.search(r",?\s*(\d{5}(?:-\d{4})?)$", addr)
+        addr = f"{addr[:m_zip.start()]}, {st} {m_zip.group(1)}" if m_zip else f"{addr}, {st}"
     if not addr:
         addr = (f"near {town[1]['name']}, {st}" if town and town[2] > 1500 else f"{city}, {st}") if city else f"{st}"
+    if is_mx and GENERIC_MX.match(name.strip()) and town:
+        name = f"{name.strip()} near {town[1]['name']}"
     if is_mx:
         kind = "motocross_track"
         sports = ["motocross"]
@@ -480,8 +491,9 @@ def build_state(st, gj, confirmed):
         named = [m for m in grp if good_name(m["name"])]
         container = None
         if not named:
-            container = nearest_named(cgrid, lat, lon, 600,
-                                      lambda c: c["tags"].get("leisure") in ("sports_centre", "track") or c["tags"].get("highway") == "raceway")
+            container = nearest_named(cgrid, lat, lon, 1000,
+                                      lambda c: (c["tags"].get("leisure") in ("sports_centre", "track") or c["tags"].get("highway") == "raceway")
+                                      and bool(MX_PLACE_NAME.search(c["name"])))
         for m in grp:
             m["sports"] = {"motocross"}
         v = make_venue(st, grp, container, None, pgrid, True)
@@ -750,6 +762,8 @@ def main(argv=None):
     ap.add_argument("step", choices=["download", "build", "stations", "all"])
     ap.add_argument("--states", default="all")
     ap.add_argument("--pbf", default=str(WORK / "us-latest.osm.pbf"))
+    ap.add_argument("--full-states", default="all",
+                    help="states that keep every venue kind; other built states keep only motocross tracks (default: all)")
     ap.add_argument("--station-states", default=None, help="states to batch NOAA stats for (default: same as --states)")
     args = ap.parse_args(argv)
     states = sorted(STATES) if args.states == "all" else [s.strip().upper() for s in args.states.split(",")]
@@ -768,6 +782,12 @@ def main(argv=None):
             log(f"{st}: {len(per_state[st])} venues {stats[st]}")
         n = resolve_border_duplicates(per_state)
         log(f"border duplicates removed: {n}")
+        if args.full_states != "all":
+            full = {x.strip().upper() for x in args.full_states.split(",") if x.strip()}
+            for st in per_state:
+                if st not in full:
+                    per_state[st] = [v for v in per_state[st] if v["kind"] == "motocross_track"]
+                    stats[st] = {**stats[st], "scope": "motocross_only"}
         # keep station ids from a previous run
         old = {}
         for st in per_state:
