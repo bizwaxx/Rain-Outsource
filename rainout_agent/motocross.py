@@ -252,6 +252,13 @@ def list_tracks(q: str | None = None, state: str | None = None, verification: st
         from rainout_agent import osm_venues
 
         result["attribution"] = osm_venues.ATTRIBUTION
+    elif not q:
+        n_osm = len(_osm_track_matches("", st))
+        if n_osm:
+            result["osm_tracks_available"] = n_osm
+            result["note"] = (f"Showing the {n_confirmed} confirmed tracks only (event calendars and researched history). "
+                              f"Add state=, q= or verification=all to include {n_osm} OpenStreetMap motocross tracks "
+                              "(verification_level osm_only, weather-only odds).")
     if q and not rows:
         result["next_step"] = "ask_user_for_events_url"
         result["message"] = ("That track isn't one of the supported motocross tracks. Supported tracks are listed at /v1/tracks; "

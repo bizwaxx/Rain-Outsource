@@ -7,3 +7,6 @@ venv/
 token_user.json
 .vercel
 .cache/
+
+# never commit a virtualenv, even as a symlink
+/.venv
