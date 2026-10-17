@@ -757,9 +757,9 @@ def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=
                 if done % (batch * 20) < batch or done == len(ids):
                     log(f"  {done}/{len(ids)} fetched; {len(known)} good, {len(rejected)} rejected")
                     NOAA_DIR.mkdir(parents=True, exist_ok=True)
-                    path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
+                    full_path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
         NOAA_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
+        full_path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
 
     # assign the nearest good station to every venue (40 km max)
     for st, vs in venues.items():
