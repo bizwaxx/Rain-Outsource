@@ -439,7 +439,8 @@ def rain_chance(q: str | None = None, *, lat: float | str | None = None, lon: fl
         res = forecast(la, lo, place=place, hours=hours, days=days, at=at, now=now, cache=cache)
         res["query"], res["ambiguous"] = geo["query"], False
         if len(geo["matches"]) > 1:
-            res["other_matches"] = [m["label"] for m in geo["matches"] if m is not chosen][:4]
+            same = (chosen["latitude"], chosen["longitude"])
+            res["other_matches"] = [m["label"] for m in geo["matches"] if (m["latitude"], m["longitude"]) != same][:4]
         return res
     res = forecast(la, lo, hours=hours, days=days, at=at, now=now, cache=cache)
     res["query"], res["ambiguous"] = q or f"{la},{lo}", False

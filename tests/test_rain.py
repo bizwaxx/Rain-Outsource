@@ -164,6 +164,7 @@ def test_world_place_skips_nws(api):
     assert api.count("weather.gov") == 0 and not r["source"]["nws_used"]
     assert r["units"] == "mm" and r["hourly"][0]["time"].endswith("+01:00")
     assert r["source"]["probability"] == "Open-Meteo"
+    assert r["other_matches"] == ["London, Ontario, Canada"]
     assert "Open-Meteo.com" in r["source"]["attribution"]
 
 
