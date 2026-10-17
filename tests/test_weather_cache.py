@@ -265,7 +265,7 @@ def test_open_meteo_fallback_when_nws_fails_and_no_stale(http):
     assert r["source_id"] == "open_meteo" and r["cache"] == "miss"
     assert r["source"].startswith("Open-Meteo")
     url = [u for u in http.calls if "open-meteo" in u][0]
-    assert "latitude=30.2464" in url and "hourly=precipitation_probability%2Cweather_code" in url
+    assert "latitude=30.2464" in url and "hourly=precipitation_probability%2Cprecipitation%2Cweather_code" in url and "timezone=auto" in url
     second = weather.get_hourly_forecast(FIELD, cache=c, now=1100)
     assert second["cache"] == "hit" and http.count("open-meteo") == 1
 

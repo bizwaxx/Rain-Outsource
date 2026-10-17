@@ -29,12 +29,15 @@ from rainout_agent.cache import Cache, get_cache
 
 log = logging.getLogger("rainout.weather")
 
-NWS_HEADERS = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)", "Accept": "application/geo+json"}
+# NWS asks every client for a User-Agent that identifies the app and a contact.
+USER_AGENT = "RainoutSource/1.0 (JEEZ Labs; +https://rainout-agent-source.vercel.app; github.com/bizwaxx/Rain-Outsource)"
+NWS_HEADERS = {"User-Agent": USER_AGENT, "Accept": "application/geo+json"}
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 NWS_SOURCE = "National Weather Service API"
 NWS_STALE_SOURCE = "National Weather Service API (cached; NWS currently unavailable)"
 OPEN_METEO_SOURCE = "Open-Meteo (fallback; NWS unavailable)"
+OPEN_METEO_WORLD_SOURCE = "Open-Meteo"
 
 POINTS_TTL_S = 7 * 24 * 3600
 MAX_BODY_BYTES = 4 * 1024 * 1024
@@ -94,10 +97,15 @@ def _nws_gridpoint(field: dict[str, Any], cache: Cache, timeout: float) -> str:
     if isinstance(cached, dict) and cached.get("forecastHourly"):
         return cached["forecastHourly"]
     points = _http_get_json(f"https://api.weather.gov/points/{lat},{lon}", NWS_HEADERS, timeout)
-    hourly_url = points["properties"]["forecastHourly"]
+    props = points["properties"]
+    hourly_url = props["forecastHourly"]
     if not str(hourly_url).startswith("https://api.weather.gov/"):
         raise ValueError("unexpected NWS forecastHourly URL")
-    cache.set(key, {"forecastHourly": hourly_url}, POINTS_TTL_S)
+    entry: dict[str, Any] = {"forecastHourly": hourly_url}
+    rel = ((props.get("relativeLocation") or {}).get("properties") or {})
+    if rel.get("city"):
+        entry["near"] = {"city": rel.get("city"), "state": rel.get("state"), "timeZone": props.get("timeZone")}
+    cache.set(key, entry, POINTS_TTL_S)
     return hourly_url
 
 
@@ -151,20 +159,12 @@ def open_meteo_periods(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return periods
 
 
-def _fetch_open_meteo(field: dict[str, Any], timeout: float) -> list[dict[str, Any]]:
+def _fetch_open_meteo(field: dict[str, Any], timeout: float, cache: Cache | None = None) -> list[dict[str, Any]]:
+    """Fallback periods from the shared Open-Meteo payload (one request serves rain, amounts and fallback)."""
+    from rainout_agent import rain
+
     lat, lon = _coords(field)
-    query = urllib.parse.urlencode(
-        {
-            "latitude": lat,
-            "longitude": lon,
-            "hourly": "precipitation_probability,weather_code",
-            "timezone": "GMT",
-            "timeformat": "unixtime",
-            "forecast_days": 7,
-        }
-    )
-    payload = _http_get_json(f"{OPEN_METEO_URL}?{query}", {"User-Agent": NWS_HEADERS["User-Agent"]}, timeout)
-    return open_meteo_periods(payload)
+    return open_meteo_periods(rain.open_meteo_payload(lat, lon, timeout=timeout, cache=cache))
 
 
 def get_hourly_forecast(
@@ -172,6 +172,7 @@ def get_hourly_forecast(
     timeout: float = 10.0,
     cache: Cache | None = None,
     now: float | None = None,
+    use_nws: bool = True,
 ) -> dict[str, Any]:
     """Return ``{periods, source, source_id, cache, fetched_at}`` for a field.
 
@@ -193,30 +194,34 @@ def get_hourly_forecast(
     start = time.monotonic()
     nws_budget = max(1.0, timeout * 2 / 3)
     nws_error: Exception | None = None
-    try:
-        periods = _fetch_nws_live(field, cache, start + nws_budget)
-        cache.set(forecast_key, {"periods": periods, "fetched_at": wall_now}, stale_ttl_s())
-        return _result(periods, NWS_SOURCE, "nws", "miss", wall_now)
-    except Exception as exc:  # network errors, timeouts, bad JSON, 5xx
-        nws_error = exc
-        log.warning("NWS forecast failed for %s,%s: %s", lat, lon, exc.__class__.__name__)
+    if use_nws:
+        try:
+            periods = _fetch_nws_live(field, cache, start + nws_budget)
+            cache.set(forecast_key, {"periods": periods, "fetched_at": wall_now}, stale_ttl_s())
+            return _result(periods, NWS_SOURCE, "nws", "miss", wall_now)
+        except Exception as exc:  # network errors, timeouts, bad JSON, 5xx
+            nws_error = exc
+            log.warning("NWS forecast failed for %s,%s: %s", lat, lon, exc.__class__.__name__)
+    else:
+        nws_error = RuntimeError("outside NWS coverage")
 
     if cached and wall_now - float(cached.get("fetched_at", 0)) < stale_ttl_s():
         return _result(cached["periods"], NWS_STALE_SOURCE, "nws_stale", "stale", cached["fetched_at"])
 
     fallback_key = f"openmeteo:hourly:{lat},{lon}"
     fb_cached = cache.get(fallback_key)
+    om_label = OPEN_METEO_SOURCE if use_nws else OPEN_METEO_WORLD_SOURCE
     if isinstance(fb_cached, dict) and fb_cached.get("periods"):
-        return _result(fb_cached["periods"], OPEN_METEO_SOURCE, "open_meteo", "hit", fb_cached["fetched_at"])
+        return _result(fb_cached["periods"], om_label, "open_meteo", "hit", fb_cached["fetched_at"])
     try:
         remaining = max(2.0, timeout - (time.monotonic() - start))
-        periods = _fetch_open_meteo(field, remaining)
+        periods = _fetch_open_meteo(field, remaining, cache)
     except Exception as exc:
         raise WeatherUnavailable(
             f"NWS failed ({nws_error.__class__.__name__}) and Open-Meteo failed ({exc.__class__.__name__})"
         ) from exc
     cache.set(fallback_key, {"periods": periods, "fetched_at": wall_now}, fallback_ttl_s())
-    return _result(periods, OPEN_METEO_SOURCE, "open_meteo", "miss", wall_now)
+    return _result(periods, om_label, "open_meteo", "miss", wall_now)
 
 
 def _result(periods: list[dict[str, Any]], source: str, source_id: str, cache_state: str, fetched_at: float) -> dict[str, Any]:

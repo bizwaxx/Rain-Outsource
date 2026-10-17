@@ -34,6 +34,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/rain.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "api/mcp.py",
       "use": "@vercel/python"
     },
@@ -90,6 +94,10 @@
     {
       "src": "/v1/tracks/([^/]+)/calendar\\.ics",
       "dest": "/api/tracks.py"
+    },
+    {
+      "src": "/v1/rain/?",
+      "dest": "/api/rain.py"
     },
     {
       "src": "/mcp/?",

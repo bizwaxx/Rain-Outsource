@@ -109,6 +109,22 @@ def application(environ, start_response):
         )
         return [payload]
 
+    if path.rstrip("/") == "/v1/rain":
+        from rainout_agent.rain_api import handle_rain_request
+
+        status, content_type, payload, cache_control = handle_rain_request(method, path, environ.get("QUERY_STRING", ""))
+        reason = {200: "OK", 400: "Bad Request", 404: "Not Found", 405: "Method Not Allowed", 502: "Bad Gateway"}
+        start_response(
+            f"{status} {reason.get(status, 'Error')}",
+            [
+                ("Content-Type", content_type),
+                ("Content-Length", str(len(payload))),
+                ("Access-Control-Allow-Origin", "*"),
+                ("Cache-Control", cache_control),
+            ],
+        )
+        return [payload]
+
     if method != "GET":
         return _json_response(start_response, "405 Method Not Allowed", {"error": "method_not_allowed"})
 
