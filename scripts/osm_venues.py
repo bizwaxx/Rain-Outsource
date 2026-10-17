@@ -678,12 +678,16 @@ def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=
     for s in good:
         sgrid.add(s["lat"], s["lon"], s)
     path = NOAA_DIR / "stations.json"
-    doc = json.loads(path.read_text()) if path.exists() else {
+    # Every station ever computed is kept in the work dir (stations_all.json), so rebuilding a
+    # subset is a cache hit; the repo copy only carries stations that venues reference.
+    full_path = cache / "stations_all.json"
+    seed = full_path if full_path.exists() else path
+    doc = json.loads(seed.read_text()) if seed.exists() else {
         "version": 1, "source": "NOAA NCEI GHCN-Daily (Access Data Service, daily-summaries)",
         "period": {"start": start.isoformat(), "end": end.isoformat()},
         "monthly_fields": ["days_observed", "mean_precip_in", "wet_day_frac"] + [threshold_key(t) for t in REPORT_THRESHOLDS_IN],
         "stations": {}, "rejected": {}}
-    known, rejected = doc["stations"], doc["rejected"]
+    known, rejected = doc["stations"], doc.setdefault("rejected", {})
     all_states = sorted(p.stem for p in OUT_DIR.glob("[A-Z][A-Z].json"))
     venues = {st: read_state(st) for st in all_states}
     states = set(states)
@@ -764,6 +768,12 @@ def step_stations(states, start=date(2016, 1, 1), end=date(2025, 12, 31), batch=
                 continue
             c = [x for x in candidates(v) if x[1]["id"] in known]
             v["station"] = c[0][1]["id"] if c else None
+    full_path.write_text(json.dumps(doc, separators=(",", ":")) + "\n", encoding="utf-8")
+    used = {v["station"] for vs in venues.values() for v in vs if v.get("station")}
+    pruned = {k: v for k, v in doc.items() if k not in ("stations", "rejected")}
+    pruned["stations"] = {sid: known[sid] for sid in sorted(used)}
+    pruned["stations_rejected"] = len(rejected)
+    path.write_text(json.dumps(pruned, separators=(",", ":")) + "\n", encoding="utf-8")
     return venues
 
 
