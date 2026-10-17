@@ -49,7 +49,9 @@ def handle_tracks_request(method: str, path: str, query_string: str, *,
     events_url = params.get("events_url") or None
     try:
         if action == "list":
-            return _json(200, motocross.list_tracks(params.get("q") or None, params.get("state") or None), LIST_CACHE)
+            return _json(200, motocross.list_tracks(params.get("q") or None, params.get("state") or None,
+                                                          verification=params.get("verification") or None,
+                                                          limit=params.get("limit") or None, offset=params.get("offset") or None), LIST_CACHE)
         if not track_id or not TRACK_ID_RE.match(track_id.lower()):
             raise motocross.UnknownTrack(track_id or "")
         if action == "events":

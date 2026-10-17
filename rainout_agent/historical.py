@@ -153,7 +153,12 @@ def _profiles_by_field_id() -> dict[str, dict[str, Any]]:
 
 
 def load_historical_profile(field_id: str) -> dict[str, Any] | None:
-    return _profiles_by_field_id().get(field_id)
+    profile = _profiles_by_field_id().get(field_id)
+    if profile is None and str(field_id).startswith("osm-"):
+        from rainout_agent import osm_venues
+
+        profile = osm_venues.history_profile(field_id)
+    return profile
 
 
 def calibration_for(field_id: str, game_time: datetime | None) -> dict[str, Any] | None:

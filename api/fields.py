@@ -3,22 +3,12 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from rainout_agent import http_cache
-from rainout_agent.status_api import list_supported_fields
+from rainout_agent.status_api import fields_payload
 from rainout_agent.venue_schema import SPORTS
 
 
-def build_fields_payload(sport=None, state=None):
-    fields = list_supported_fields(sport=sport, state=state)
-    payload = {
-        "service": "rainout-source",
-        "creator": "JEEZ Labs",
-        "count": len(fields),
-        "fields": fields,
-    }
-    filters = {key: value for key, value in (("sport", sport), ("state", state)) if value}
-    if filters:
-        payload["filters"] = filters
-    return payload
+def build_fields_payload(sport=None, state=None, **kw):
+    return fields_payload(sport=sport, state=state, **kw)
 
 
 def invalid_filter_payload(message):
@@ -27,16 +17,16 @@ def invalid_filter_payload(message):
         "message": message,
         "allowed_sports": list(SPORTS),
         "state_format": "Two-letter US state code, e.g. TX; comma-separate several (TX,OK).",
+        "params": "q, near=lat,lon, radius_km (1-200), verification=confirmed|osm_only|all, limit (1-500), offset",
     }
 
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         params = parse_qs(urlparse(self.path).query, keep_blank_values=True)
-        sport = (params.get("sport") or [None])[0]
-        state = (params.get("state") or [None])[0]
+        args = {k: (params.get(k) or [None])[0] for k in ("sport", "state", "q", "near", "radius_km", "verification", "limit", "offset")}
         try:
-            payload = build_fields_payload(sport=sport, state=state)
+            payload = build_fields_payload(**args)
         except ValueError as exc:
             return self._send_json(400, invalid_filter_payload(str(exc)))
         self._send_json(200, payload, http_cache.fields_cache_control(200))

@@ -1,0 +1,659 @@
+{
+ "version": 1,
+ "generated_at": "2026-10-17T23:26:37+00:00",
+ "osm_data_as_of": "2026-10-16T20:21:21Z",
+ "source": "OpenStreetMap via Geofabrik US extract",
+ "license": "Open Database License (ODbL) 1.0; (c) OpenStreetMap contributors",
+ "attribution_url": "https://www.openstreetmap.org/copyright",
+ "row_fields": [
+  "id",
+  "name",
+  "sports",
+  "kind",
+  "lat",
+  "lon",
+  "city",
+  "address",
+  "pitches",
+  "osm",
+  "station"
+ ],
+ "kind_codes": {
+  "ball_field": "b",
+  "soccer_complex": "s",
+  "multipurpose_field": "m",
+  "motocross_track": "x"
+ },
+ "states": {
+  "AK": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 67,
+   "unnamed_motocross_dropped": 1,
+   "scope": "motocross_only"
+  },
+  "AL": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 421,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "AR": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 234,
+   "unnamed_motocross_dropped": 2,
+   "scope": "motocross_only"
+  },
+  "AZ": {
+   "venues": 6,
+   "by_kind": {
+    "motocross_track": 6
+   },
+   "by_sport": {
+    "motocross": 6
+   },
+   "with_station": 6,
+   "unnamed_pitch_clusters_dropped": 317,
+   "unnamed_motocross_dropped": 9,
+   "scope": "motocross_only"
+  },
+  "CA": {
+   "venues": 24,
+   "by_kind": {
+    "motocross_track": 24
+   },
+   "by_sport": {
+    "motocross": 24
+   },
+   "with_station": 22,
+   "unnamed_pitch_clusters_dropped": 613,
+   "unnamed_motocross_dropped": 14,
+   "scope": "motocross_only"
+  },
+  "CO": {
+   "venues": 4,
+   "by_kind": {
+    "motocross_track": 4
+   },
+   "by_sport": {
+    "motocross": 4
+   },
+   "with_station": 4,
+   "unnamed_pitch_clusters_dropped": 315,
+   "unnamed_motocross_dropped": 8,
+   "scope": "motocross_only"
+  },
+  "CT": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 242,
+   "unnamed_motocross_dropped": 2,
+   "scope": "motocross_only"
+  },
+  "DC": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 9,
+   "scope": "motocross_only"
+  },
+  "DE": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 110,
+   "scope": "motocross_only"
+  },
+  "FL": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 715,
+   "unnamed_motocross_dropped": 4,
+   "duplicates_of_confirmed": 8,
+   "scope": "motocross_only"
+  },
+  "GA": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 882,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "HI": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 41,
+   "scope": "motocross_only"
+  },
+  "IA": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 420,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "ID": {
+   "venues": 4,
+   "by_kind": {
+    "motocross_track": 4
+   },
+   "by_sport": {
+    "motocross": 4
+   },
+   "with_station": 4,
+   "unnamed_pitch_clusters_dropped": 137,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "IL": {
+   "venues": 4,
+   "by_kind": {
+    "motocross_track": 4
+   },
+   "by_sport": {
+    "motocross": 4
+   },
+   "with_station": 4,
+   "unnamed_pitch_clusters_dropped": 735,
+   "unnamed_motocross_dropped": 15,
+   "scope": "motocross_only"
+  },
+  "IN": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 734,
+   "unnamed_motocross_dropped": 7,
+   "scope": "motocross_only"
+  },
+  "KS": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 493,
+   "unnamed_motocross_dropped": 1,
+   "scope": "motocross_only"
+  },
+  "KY": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 442,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "LA": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 226,
+   "duplicates_of_confirmed": 2,
+   "scope": "motocross_only"
+  },
+  "MA": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 376,
+   "unnamed_motocross_dropped": 2,
+   "scope": "motocross_only"
+  },
+  "MD": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 323,
+   "scope": "motocross_only"
+  },
+  "ME": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 148,
+   "scope": "motocross_only"
+  },
+  "MI": {
+   "venues": 12,
+   "by_kind": {
+    "motocross_track": 12
+   },
+   "by_sport": {
+    "motocross": 12
+   },
+   "with_station": 12,
+   "unnamed_pitch_clusters_dropped": 977,
+   "unnamed_motocross_dropped": 11,
+   "scope": "motocross_only"
+  },
+  "MN": {
+   "venues": 6,
+   "by_kind": {
+    "motocross_track": 6
+   },
+   "by_sport": {
+    "motocross": 6
+   },
+   "with_station": 6,
+   "unnamed_pitch_clusters_dropped": 1026,
+   "unnamed_motocross_dropped": 7,
+   "scope": "motocross_only"
+  },
+  "MO": {
+   "venues": 6,
+   "by_kind": {
+    "motocross_track": 6
+   },
+   "by_sport": {
+    "motocross": 6
+   },
+   "with_station": 6,
+   "unnamed_pitch_clusters_dropped": 609,
+   "unnamed_motocross_dropped": 6,
+   "scope": "motocross_only"
+  },
+  "MS": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 383,
+   "scope": "motocross_only"
+  },
+  "MT": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 92,
+   "unnamed_motocross_dropped": 7,
+   "scope": "motocross_only"
+  },
+  "NC": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 881,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "ND": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 279,
+   "scope": "motocross_only"
+  },
+  "NE": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 242,
+   "scope": "motocross_only"
+  },
+  "NH": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 109,
+   "unnamed_motocross_dropped": 1,
+   "scope": "motocross_only"
+  },
+  "NJ": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 1056,
+   "unnamed_motocross_dropped": 2,
+   "scope": "motocross_only"
+  },
+  "NM": {
+   "venues": 5,
+   "by_kind": {
+    "motocross_track": 5
+   },
+   "by_sport": {
+    "motocross": 5
+   },
+   "with_station": 5,
+   "unnamed_pitch_clusters_dropped": 175,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "NV": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 56,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "NY": {
+   "venues": 4,
+   "by_kind": {
+    "motocross_track": 4
+   },
+   "by_sport": {
+    "motocross": 4
+   },
+   "with_station": 4,
+   "unnamed_pitch_clusters_dropped": 1444,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "OH": {
+   "venues": 7,
+   "by_kind": {
+    "motocross_track": 7
+   },
+   "by_sport": {
+    "motocross": 7
+   },
+   "with_station": 7,
+   "unnamed_pitch_clusters_dropped": 1529,
+   "unnamed_motocross_dropped": 16,
+   "scope": "motocross_only"
+  },
+  "OK": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 440,
+   "unnamed_motocross_dropped": 4,
+   "duplicates_of_confirmed": 6,
+   "scope": "motocross_only"
+  },
+  "OR": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 147,
+   "unnamed_motocross_dropped": 7,
+   "scope": "motocross_only"
+  },
+  "PA": {
+   "venues": 6,
+   "by_kind": {
+    "motocross_track": 6
+   },
+   "by_sport": {
+    "motocross": 6
+   },
+   "with_station": 6,
+   "unnamed_pitch_clusters_dropped": 1547,
+   "unnamed_motocross_dropped": 14,
+   "scope": "motocross_only"
+  },
+  "PR": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "scope": "motocross_only"
+  },
+  "RI": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 84,
+   "scope": "motocross_only"
+  },
+  "SC": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 574,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "SD": {
+   "venues": 0,
+   "by_kind": {},
+   "by_sport": {},
+   "with_station": 0,
+   "unnamed_pitch_clusters_dropped": 197,
+   "scope": "motocross_only"
+  },
+  "TN": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 538,
+   "unnamed_motocross_dropped": 7,
+   "scope": "motocross_only"
+  },
+  "TX": {
+   "venues": 5,
+   "by_kind": {
+    "motocross_track": 5
+   },
+   "by_sport": {
+    "motocross": 5
+   },
+   "with_station": 5,
+   "unnamed_pitch_clusters_dropped": 1284,
+   "unnamed_motocross_dropped": 3,
+   "duplicates_of_confirmed": 32,
+   "scope": "motocross_only"
+  },
+  "UT": {
+   "venues": 8,
+   "by_kind": {
+    "motocross_track": 8
+   },
+   "by_sport": {
+    "motocross": 8
+   },
+   "with_station": 8,
+   "unnamed_pitch_clusters_dropped": 207,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  },
+  "VA": {
+   "venues": 3,
+   "by_kind": {
+    "motocross_track": 3
+   },
+   "by_sport": {
+    "motocross": 3
+   },
+   "with_station": 3,
+   "unnamed_pitch_clusters_dropped": 554,
+   "unnamed_motocross_dropped": 1,
+   "scope": "motocross_only"
+  },
+  "VT": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 84,
+   "unnamed_motocross_dropped": 1,
+   "scope": "motocross_only"
+  },
+  "WA": {
+   "venues": 7,
+   "by_kind": {
+    "motocross_track": 7
+   },
+   "by_sport": {
+    "motocross": 7
+   },
+   "with_station": 7,
+   "unnamed_pitch_clusters_dropped": 221,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "WI": {
+   "venues": 4,
+   "by_kind": {
+    "motocross_track": 4
+   },
+   "by_sport": {
+    "motocross": 4
+   },
+   "with_station": 4,
+   "unnamed_pitch_clusters_dropped": 504,
+   "unnamed_motocross_dropped": 4,
+   "scope": "motocross_only"
+  },
+  "WV": {
+   "venues": 1,
+   "by_kind": {
+    "motocross_track": 1
+   },
+   "by_sport": {
+    "motocross": 1
+   },
+   "with_station": 1,
+   "unnamed_pitch_clusters_dropped": 171,
+   "scope": "motocross_only"
+  },
+  "WY": {
+   "venues": 2,
+   "by_kind": {
+    "motocross_track": 2
+   },
+   "by_sport": {
+    "motocross": 2
+   },
+   "with_station": 2,
+   "unnamed_pitch_clusters_dropped": 64,
+   "unnamed_motocross_dropped": 3,
+   "scope": "motocross_only"
+  }
+ },
+ "totals": {
+  "venues": 162,
+  "motocross_tracks": 162
+ }
+}
