@@ -552,6 +552,12 @@ def build_status_result(
             f"Estimated play probability is {response['game_time_play_probability_percent']}%. "
             f"Please {source_instruction}."
         )
+    try:
+        from rainout_agent import reports
+
+        reports.apply_to_status(response, field, _parse_time(game_time))
+    except Exception:  # pragma: no cover - reports must never break a status answer
+        pass
     return response
 
 

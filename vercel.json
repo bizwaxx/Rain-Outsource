@@ -68,6 +68,10 @@
       "dest": "/api/status.py"
     },
     {
+      "src": "/v1/reports/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/v1/schedule/check",
       "dest": "/api/schedule.py"
     },

@@ -43,6 +43,24 @@ def application(environ, start_response):
         start_response(f"{status} {reasons.get(status, 'Error')}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
         return [payload]
 
+    if path.rstrip("/") == "/v1/reports":
+        from http import HTTPStatus
+
+        from rainout_agent.reports_api import MAX_BODY as REPORT_MAX, handle_reports_request
+
+        try:
+            length = int(environ.get("CONTENT_LENGTH") or 0)
+        except ValueError:
+            length = 0
+        body = environ["wsgi.input"].read(min(length, REPORT_MAX + 1)) if length > 0 else b""
+        headers = {k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")}
+        status, out_headers, payload = handle_reports_request(method, environ.get("QUERY_STRING", ""), body,
+                                                              environ.get("CONTENT_TYPE", ""), headers,
+                                                              client=environ.get("REMOTE_ADDR"))
+        out_headers = {**out_headers, "Access-Control-Allow-Origin": "*"}
+        start_response(f"{status} {HTTPStatus(status).phrase}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
+        return [payload]
+
     if path == "/llms.txt":
         from pathlib import Path
 
