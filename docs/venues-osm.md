@@ -74,10 +74,18 @@ OSM data as of the Geofabrik extract of 2026-10-16.
 | MN | 2,026 | 1,390 | 185 | 445 | 6 | 2,019 |
 | MO | 1,138 | 650 | 244 | 238 | 6 | 1,138 |
 | MS | 402 | 307 | 27 | 68 | 0 | 402 |
+| MT | 294 | 203 | 57 | 31 | 3 | 292 |
+| NC | 1,935 | 1,318 | 256 | 358 | 3 | 1,935 |
+| ND | 193 | 132 | 33 | 27 | 1 | 185 |
+| NE | 670 | 411 | 139 | 117 | 3 | 670 |
+| NH | 529 | 277 | 76 | 173 | 3 | 529 |
+| NJ | 1,663 | 926 | 235 | 501 | 1 | 1,663 |
+| NM | 366 | 228 | 72 | 61 | 5 | 359 |
+| NV | 341 | 240 | 39 | 60 | 2 | 336 |
 | OK | 601 | 434 | 86 | 80 | 1 | 593 |
 | TX | 3,933 | 2,404 | 804 | 720 | 5 | 3,903 |
 
-Full states: 28. Venues: 37,944 (incl. 162 motocross tracks). By kind: ball_field 24,183, soccer_complex 5,818, multipurpose_field 7,781, motocross_track 93. By sport tag: baseball 30,995, motocross 93, soccer 13,599, softball 3,672.
+Full states: 36. Venues: 43,914 (incl. 162 motocross tracks). By kind: ball_field 27,918, soccer_complex 6,725, multipurpose_field 9,109, motocross_track 114. By sport tag: baseball 35,877, motocross 114, soccer 15,834, softball 4,245.
 <!-- /counts -->
 
 Motocross-only states still list their OSM motocross tracks.
