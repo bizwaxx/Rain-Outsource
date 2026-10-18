@@ -92,8 +92,15 @@ OSM data as of the Geofabrik extract of 2026-10-16.
 | SD | 225 | 154 | 43 | 28 | 0 | 223 |
 | TN | 949 | 599 | 162 | 187 | 1 | 948 |
 | TX | 3,933 | 2,404 | 804 | 720 | 5 | 3,903 |
+| UT | 815 | 382 | 208 | 217 | 8 | 811 |
+| VA | 1,803 | 977 | 309 | 514 | 3 | 1,803 |
+| VT | 198 | 99 | 33 | 65 | 1 | 198 |
+| WA | 1,924 | 1,097 | 323 | 497 | 7 | 1,912 |
+| WI | 1,870 | 1,199 | 307 | 360 | 4 | 1,870 |
+| WV | 328 | 239 | 42 | 46 | 1 | 328 |
+| WY | 137 | 77 | 43 | 15 | 2 | 135 |
 
-Full states: 44. Venues: 57,338 (incl. 162 motocross tracks). By kind: ball_field 36,338, soccer_complex 8,667, multipurpose_field 12,171, motocross_track 136. By sport tag: baseball 47,066, motocross 136, soccer 20,838, softball 5,183.
+Full states: 51. Venues: 64,387 (incl. 162 motocross tracks). By kind: ball_field 40,408, soccer_complex 9,932, multipurpose_field 13,885, motocross_track 162. By sport tag: baseball 52,727, motocross 162, soccer 23,817, softball 5,661.
 <!-- /counts -->
 
 Motocross-only states still list their OSM motocross tracks.
