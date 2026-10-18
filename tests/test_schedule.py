@@ -225,8 +225,10 @@ def test_calendar_cancelled_events_and_all_day_events():
     by_uid = {g["uid"]: g for g in report["games"]}
     assert by_uid["g4"]["play_probability_percent"] == 0 and by_uid["g4"]["at_risk"]
     assert by_uid["g3"]["all_day"] and by_uid["g3"]["start"].startswith("2026-05-11T12:00:00-05:00")
-    assert by_uid["g2"]["note"].startswith("Recurring")
-    assert by_uid["g2"]["venue"]["field_id"] == "austin-tx-havins-softball-complex"
+    weekly = [g for g in report["games"] if g["uid"].startswith("g2#")]
+    assert weekly and all(g["note"].startswith("Occurrence of a repeating") for g in weekly)
+    assert weekly[0]["venue"]["field_id"] == "austin-tx-havins-softball-complex"
+    assert weekly[0]["recurrence"]["rule"] == "FREQ=WEEKLY" and report["summary"]["repeating_occurrences"] == len(weekly)
     starts = [datetime.fromisoformat(g["start"]) for g in report["games"]]
     assert starts == sorted(starts)
 

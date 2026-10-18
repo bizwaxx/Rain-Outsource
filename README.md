@@ -169,7 +169,8 @@ POST https://rainout-agent-source.vercel.app/v1/schedule/check   (JSON games, ra
 
 Each game is matched to a venue, scored with the NWS forecast plus NOAA history (or a
 history-only outlook beyond ~7 days) and flagged when at risk. Add `format=ics` to get
-the calendar back with risk notes in each event. Stateless, SSRF-protected URL fetching,
+the calendar back with risk notes in each event. Repeating events (`RRULE`, `EXDATE`,
+`RECURRENCE-ID`) are expanded into one game per occurrence in the window. Stateless, SSRF-protected URL fetching,
 size/time limits for Vercel. Details: `docs/schedule.md`.
 
 ## Teams (for AI agents)
