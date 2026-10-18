@@ -3,14 +3,19 @@
   "field_name": "Western Hills Little League",
   "city": "Austin",
   "state": "TX",
-  "address": "Austin, TX",
+  "address": "1407 Reserve Rd, Austin, TX 78703",
   "coordinates": {
-    "lat": 30.2977609,
-    "lon": -97.7772211
+    "lat": 30.27051,
+    "lon": -97.76122
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/180567958",
+      "https://www.westernhillslittleleague.com/Default.aspx?tabid=1818097"
+    ],
+    "verified_on": "2026-10-17",
+    "note": "Coordinates are the OpenStreetMap feature centroid (the venue's main or headquarters field); the public source lists that field. Fixed 2026-10-17: the legacy coordinates were 3.4 km off (they pointed north of the league's fields; the 1st Street Fields (Kocurek, Bishop and Sayers) are its main site)."
   },
   "sport": "baseball",
   "sports": [

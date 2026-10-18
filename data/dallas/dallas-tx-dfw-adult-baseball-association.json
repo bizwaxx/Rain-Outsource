@@ -1,16 +1,21 @@
 {
   "id": "dallas-tx-dfw-adult-baseball-association",
   "field_name": "DFW Adult Baseball Association",
-  "city": "Dallas",
+  "city": "Euless",
   "state": "TX",
-  "address": "Dallas-Fort Worth, TX",
+  "address": "The Parks at Texas Star (Legends Field), 1501 S Pipeline Rd, Euless, TX 76040",
   "coordinates": {
-    "lat": 32.7766642,
-    "lon": -96.7969879
+    "lat": 32.81784,
+    "lon": -97.10673
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/1107143136",
+      "https://dfw-aba.com/"
+    ],
+    "verified_on": "2026-10-17",
+    "note": "Coordinates are the OpenStreetMap feature centroid (the venue's main or headquarters field); the public source lists that field. Fixed 2026-10-17: the legacy coordinates were 29.2 km off (they were the Dallas city centre; the league is based in Euless and uses Legends Field at the Parks at Texas Star, other games are at fields across DFW)."
   },
   "sport": "baseball",
   "sports": [
@@ -42,5 +47,6 @@
   "agent_rule": "Official source wins. This organization site is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving.",
   "operator": null,
   "surface": "unknown",
-  "drainage": "unknown"
+  "drainage": "unknown",
+  "multi_site": true
 }

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-18T00:30:28+00:00",
+ "generated_at": "2026-10-18T00:38:07+00:00",
  "osm_data_as_of": "2026-10-16T20:21:21Z",
  "source": "OpenStreetMap via Geofabrik US extract",
  "license": "Open Database License (ODbL) 1.0; (c) OpenStreetMap contributors",
@@ -711,8 +711,7 @@
    "venues": 0,
    "by_kind": {},
    "by_sport": {},
-   "with_station": 0,
-   "scope": "motocross_only"
+   "with_station": 0
   },
   "RI": {
    "venues": 222,
@@ -781,23 +780,23 @@
    "unnamed_motocross_dropped": 7
   },
   "TX": {
-   "venues": 3933,
+   "venues": 3930,
    "by_kind": {
-    "ball_field": 2404,
+    "ball_field": 2403,
     "soccer_complex": 804,
-    "multipurpose_field": 720,
+    "multipurpose_field": 718,
     "motocross_track": 5
    },
    "by_sport": {
-    "baseball": 2985,
+    "baseball": 2982,
     "motocross": 5,
-    "soccer": 1524,
-    "softball": 606
+    "soccer": 1522,
+    "softball": 605
    },
-   "with_station": 3903,
+   "with_station": 3899,
    "unnamed_pitch_clusters_dropped": 1284,
    "unnamed_motocross_dropped": 3,
-   "duplicates_of_confirmed": 32
+   "duplicates_of_confirmed": 35
   },
   "UT": {
    "venues": 815,
@@ -926,7 +925,7 @@
   }
  },
  "totals": {
-  "venues": 64387,
+  "venues": 64384,
   "motocross_tracks": 162
  }
 }

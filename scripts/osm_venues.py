@@ -512,7 +512,8 @@ def build_state(st, gj, confirmed):
             radius = 1500 if v["kind"] == "motocross_track" else 500
             d = dist_m(v["lat"], v["lon"], c["lat"], c["lon"])
             same_sport = bool(set(v["sports"]) & set(c["sports"])) or "multipurpose" in c["sports"]
-            if same_sport and (d <= radius or (d <= 3000 and _similar(v["name"], c["name"]))):
+            near = d <= radius and not c.get("multi_site")  # a league playing at many parks doesn't own the park
+            if same_sport and (near or (d <= 3000 and _similar(v["name"], c["name"]))):
                 dup = c
                 break
         if dup:
@@ -542,7 +543,8 @@ def load_confirmed():
         if c.get("lat") is None:
             continue
         out.append({"id": f["id"], "name": f["field_name"], "state": f.get("state"), "lat": float(c["lat"]),
-                    "lon": float(c["lon"]), "sports": sports_for(f) or ["multipurpose"]})
+                    "lon": float(c["lon"]), "sports": sports_for(f) or ["multipurpose"],
+                    "multi_site": bool(f.get("multi_site"))})
     known = {o["id"] for o in out}
     for t in motocross.tracks():
         if t["field_id"] not in known:

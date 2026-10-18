@@ -28,6 +28,7 @@ mirrored by a dependency-free validator in `rainout_agent/venue_schema.py`.
 | `rainout_phone` | yes | Published rainout line or `not_published` |
 | `weather_source`, `aliases` | yes | |
 | `official_status_source_name`, `status_source_type`, `poll_official_status`, `ownership_type`, `rain_to_cancel_threshold_in`, `agent_rule` | no | |
+| `multi_site` | no | `true` for a league that plays at many parks (its coordinates are its main field); OSM parks near it are not treated as duplicates |
 
 ## Verification standard
 
