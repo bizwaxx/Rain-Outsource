@@ -241,3 +241,32 @@ def test_shipped_data_is_consistent():
             assert len(v["id"]) <= 81  # fits the tracks route pattern
             ids.add(v["id"])
             assert v["station"] is None or v["station"] in stations
+
+
+def test_multi_site_league_does_not_swallow_nearby_park(tmp_path):
+    league = [{"id": "x-league", "name": "Some Adult League", "state": "XX", "lat": 30.4005, "lon": -97.4005,
+               "sports": ["softball"], "multi_site": True}]
+    venues, stats = pipe.build_state("XX", _gj(tmp_path, FEATURES), league)
+    assert "Confirmed Fields North" in {v["name"] for v in venues} and not stats.get("duplicates_of_confirmed")
+
+
+FIXED_TX = {  # 2026-10-17: legacy coordinates were 3-29 km off; now on the OSM feature
+    "austin-tx-western-hills-little-league": (30.27051, -97.76122),
+    "san-antonio-tx-northwest-little-league": (29.4962, -98.61763),
+    "fort-worth-tx-fort-worth-university-little-league": (32.66214, -97.32392),
+    "fort-worth-tx-senior-softball-dfw": (32.78489, -97.02715),
+    "dallas-tx-dfw-adult-baseball-association": (32.81784, -97.10673),
+}
+
+
+@pytest.mark.parametrize("field_id", sorted(FIXED_TX))
+def test_fixed_texas_coordinates(field_id):
+    f = status_api.load_field(field_id)
+    lat, lon = FIXED_TX[field_id]
+    assert osm_venues._dist_km(float(f["coordinates"]["lat"]), float(f["coordinates"]["lon"]), lat, lon) < 0.3
+    cs = f["coordinates_source"]
+    assert cs["method"] == "openstreetmap_cross_checked" and cs["sources"][0].startswith("https://www.openstreetmap.org/")
+    from rainout_agent.historical import load_historical_profile
+
+    station = load_historical_profile(field_id)["noaa_history"]["station"]
+    assert station["distance_km"] < 15

@@ -3,14 +3,19 @@
   "field_name": "Fort Worth University Little League",
   "city": "Fort Worth",
   "state": "TX",
-  "address": "Fort Worth, TX",
+  "address": "5901 Old Hemphill Rd, Fort Worth, TX 76134",
   "coordinates": {
-    "lat": 32.7554883,
-    "lon": -97.3307658
+    "lat": 32.66214,
+    "lon": -97.32392
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/1470156952",
+      "https://www.fwull.com/"
+    ],
+    "verified_on": "2026-10-17",
+    "note": "Coordinates are the OpenStreetMap feature centroid (the venue's main or headquarters field); the public source lists that field. Fixed 2026-10-17: the legacy coordinates were 10.4 km off (they were the Fort Worth city centre)."
   },
   "sport": "baseball/softball",
   "sports": [

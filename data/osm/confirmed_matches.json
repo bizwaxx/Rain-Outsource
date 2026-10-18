@@ -41,6 +41,12 @@
  "austin-tx-town-and-country-sports-complex": [
   "osm-tx-town-country-sports-complex-w30835300"
  ],
+ "austin-tx-western-hills-little-league": [
+  "osm-tx-volma-overton-sr-beach-at-town-lake-metr-w971507719"
+ ],
+ "fort-worth-tx-fort-worth-university-little-league": [
+  "osm-tx-university-little-league-w1470156952"
+ ],
  "helotes-tx-greater-helotes-little-league": [
   "osm-tx-helotes-little-league-w133577062"
  ],
@@ -51,7 +57,8 @@
   "osm-tx-o-p-schnabel-park-w79120353"
  ],
  "san-antonio-tx-northwest-little-league": [
-  "osm-tx-northwest-little-league-w501194439"
+  "osm-tx-northwest-little-league-w501194439",
+  "osm-tx-raymund-rimkus-park-w81053362"
  ],
  "san-antonio-tx-seniors-softball-league-normoyle-park": [
   "osm-tx-texans-can-academy-san-antonio-w79433033"

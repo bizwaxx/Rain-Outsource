@@ -5,12 +5,17 @@
   "state": "TX",
   "address": "6828 Poss Road, San Antonio, TX 78238",
   "coordinates": {
-    "lat": 29.4702,
-    "lon": -98.6197
+    "lat": 29.4962,
+    "lon": -98.61763
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/501194439",
+      "https://www.northwestll.org/Default.aspx?tabid=1235067"
+    ],
+    "verified_on": "2026-10-17",
+    "note": "Coordinates are the OpenStreetMap feature centroid (the venue's main or headquarters field); the public source lists that field. Fixed 2026-10-17: the legacy coordinates were 3.0 km off (the listed address, 6828 Poss Road, geocodes to the OSM complex)."
   },
   "sport": "baseball/softball",
   "sports": [

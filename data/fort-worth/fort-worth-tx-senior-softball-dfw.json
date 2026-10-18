@@ -1,16 +1,21 @@
 {
   "id": "fort-worth-tx-senior-softball-dfw",
   "field_name": "Senior Softball DFW",
-  "city": "Fort Worth",
+  "city": "Grand Prairie",
   "state": "TX",
-  "address": "Dallas-Fort Worth, TX",
+  "address": "Mike Lewis Park, 2410 N Carrier Pkwy, Grand Prairie, TX 75050",
   "coordinates": {
-    "lat": 32.7554883,
-    "lon": -97.3307658
+    "lat": 32.78489,
+    "lon": -97.02715
   },
   "coordinates_source": {
-    "method": "legacy",
-    "note": "Coordinates predate the venue schema and were not re-verified in this migration."
+    "method": "openstreetmap_cross_checked",
+    "sources": [
+      "https://www.openstreetmap.org/way/311057744",
+      "https://seniorsoftballdfw.com/field-directions/"
+    ],
+    "verified_on": "2026-10-17",
+    "note": "Coordinates are the OpenStreetMap feature centroid (the venue's main or headquarters field); the public source lists that field. Fixed 2026-10-17: the legacy coordinates were 28.6 km off (they were the Fort Worth city centre; Mike Lewis Park hosts most of the league's teams, other games are at parks across DFW)."
   },
   "sport": "softball",
   "sports": [
@@ -42,5 +47,6 @@
   "agent_rule": "Official source wins. This organization site is not treated as a live rainout feed, so keep official status unknown unless a clear official closure/cancellation source is found. Tell the user to check the official source before leaving.",
   "operator": null,
   "surface": "unknown",
-  "drainage": "unknown"
+  "drainage": "unknown",
+  "multi_site": true
 }
