@@ -130,6 +130,12 @@ def validate_venue(field: Any) -> list[str]:
     elif url is not None and not _is_url(url):
         errors.append("official_status_source_url: must be an http(s) URL or null")
 
+    match = field.get("official_status_match")
+    if match is not None and (not isinstance(match, list) or not match or not all(isinstance(m, str) and len(m.strip()) >= 3 for m in match)):
+        errors.append("official_status_match: must be a non-empty list of names (3+ characters) as written on the status page")
+    if field.get("official_status_scope") not in (None, "all", "page"):
+        errors.append("official_status_scope: must be 'all' (every entry on the page is this venue) or 'page' (page-wide notices apply)")
+
     aliases = field.get("aliases")
     if not isinstance(aliases, list) or not aliases or not all(isinstance(a, str) and a.strip() for a in aliases):
         errors.append("aliases: required non-empty list of strings")

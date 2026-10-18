@@ -28,6 +28,14 @@ def build_agent_status_response(
             f"Official status for {field_name} is cancelled or closed. "
             "Do not drive unless the official source changes."
         )
+    elif official in {"delayed", "mixed"}:
+        what = "delayed" if official == "delayed" else "partly closed: some fields are open and some are closed"
+        spoken = (
+            f"Official status for {field_name} is {what}. "
+            f"At game time, {game_time}, rain chance is {rain_chance_percent}%{storm_phrase}. "
+            f"Estimated play probability is {play_probability_percent}%. "
+            f"{final_check}"
+        )
     else:
         unknown_check = "Check the official rainout line before leaving." if has_rainout_phone else "Check the official source before leaving."
         spoken = (

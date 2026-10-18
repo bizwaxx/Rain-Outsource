@@ -389,7 +389,7 @@ def test_cache_control_headers_on_wsgi_app(http, monkeypatch):
     _, h, _ = wsgi("/v1/status", "field_id=Krieg")
     assert h["Cache-Control"] == "no-store"
     monkeypatch.setattr("rainout_agent.status_api.fetch_official_rainout_status",
-                        lambda field: {"official_status": "unknown", "checked": False})
+                        lambda field, **kw: {"official_status": "unknown", "checked": False})
     s, h, _ = wsgi("/v1/status", "field_id=Krieg&game_time=2026-10-14T15:10:00-05:00")
     assert s.startswith("200") and h["Cache-Control"].startswith("public, max-age=60")
     http.nws_fail = True

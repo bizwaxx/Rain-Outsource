@@ -265,11 +265,19 @@ def test_parse_official_rainout_status_is_conservative():
     assert parse_official_rainout_status("Fields are closed due to wet conditions") == "field_closed"
     assert parse_official_rainout_status("Games delayed 30 minutes for lightning") == "delayed"
     assert parse_official_rainout_status("Registration is open for summer softball") == "unknown"
+    # Words that only explain policy or navigation are not a status.
+    assert parse_official_rainout_status("If games are cancelled, make-up dates are posted here.") == "unknown"
+    assert parse_official_rainout_status("<nav>Rainout</nav><p>Fall Baseball Registration Is Open</p>") == "unknown"
+    assert parse_official_rainout_status("Spring registration is now closed.") == "unknown"
 
 
 def test_parse_official_rainout_status_handles_private_field_status_widgets():
-    assert parse_official_rainout_status('<li class="skItem skOpen"><p>Northwest Little League</p></li>') == "on"
-    assert parse_official_rainout_status('<li class="skItem skClose"><p>Balcones Youth Sports</p></li>') == "field_closed"
+    widget = ('<ul class="skField"><li class="skItem skFirst skLast {cls}"><p class="skName">Northwest Little League</p>'
+              '<span class="skDate">Updated: {date}</span></li></ul>')
+    from datetime import datetime
+    today = datetime.now().strftime("%m/%d/%Y 08:00AM")
+    assert parse_official_rainout_status(widget.format(cls="skOpen", date=today)) == "on"
+    assert parse_official_rainout_status(widget.format(cls="skClose", date=today)) == "field_closed"
     assert parse_official_rainout_status("Baseball: Fields 1-9 Open. Subject to closure at time of play.") == "on"
     assert parse_official_rainout_status("Softball: All diamonds Closed due to weather.") == "field_closed"
     assert parse_official_rainout_status("Brushy Creek Sports Park Softball Fields: CLOSED") == "field_closed"
@@ -283,7 +291,7 @@ def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_c
         def __exit__(self, exc_type, exc, tb):
             return False
 
-        def read(self):
+        def read(self, limit=-1):
             return b"<html><body>Austin Parks Athletics registration is open.</body></html>"
 
     requests = []
@@ -304,6 +312,8 @@ def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_c
     assert result["source_url"] == "https://rainoutline.com/search/dnis/5124000060/"
     assert result["source_name"] == "Austin Parks and Recreation Athletics page"
     assert result["checked"] is True
+    assert result["check"]["outcome"] == "unparseable"
+    assert "Check https://rainoutline.com/search/dnis/5124000060/ directly." in result["check"]["message"]
     assert "last_checked" in result
     assert requests == [("https://rainoutline.com/search/dnis/5124000060/", 20, "Rainout Source by JEEZ Labs (public pilot)")]
 
@@ -346,7 +356,7 @@ def test_fetch_official_rainout_status_does_not_poll_directory_pages(monkeypatch
 def test_build_status_result_uses_fetched_official_status_when_not_provided(monkeypatch):
     monkeypatch.setattr(
         "rainout_agent.status_api.fetch_official_rainout_status",
-        lambda field: {
+        lambda field, **kw: {
             "official_status": "cancelled",
             "source_url": field["official_status_source_url"],
             "source_name": field["official_status_source_name"],
