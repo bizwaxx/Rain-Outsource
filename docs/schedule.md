@@ -59,6 +59,23 @@ For ICS, `DTSTART` (UTC, `TZID`, floating or all-day), `DTEND`, `SUMMARY`, `LOCA
 `UID` and `STATUS:CANCELLED` are used. The venue is matched from `LOCATION`, then
 `SUMMARY`, then the `venue` option.
 
+### Repeating events (RRULE)
+
+Repeating events are expanded into one game per occurrence inside the checked window
+(from 3 hours ago to `window_days` ahead). Supported:
+
+- `FREQ` = `DAILY`, `WEEKLY`, `MONTHLY` or `YEARLY`, with `INTERVAL`, `COUNT`, `UNTIL` and `WKST`
+- `BYDAY` (e.g. `TU,TH`; with ordinals such as `2SA` or `-1FR` for monthly and yearly rules),
+  `BYMONTHDAY` (negative values count from the end of the month) and `BYMONTH`
+- `EXDATE` removes occurrences, and an event with the same `UID` and a `RECURRENCE-ID`
+  replaces the occurrence it points at (a moved or cancelled single game)
+
+Occurrences keep the first event's local wall-clock time across DST changes and its
+duration. Each one gets the id `<UID>#<local start>` and a `recurrence` object
+(`rule`, `series_id`, `first_start`); `summary.repeating_occurrences` counts them.
+Rules using anything else (`BYSETPOS`, `HOURLY`, `RDATE` and so on) aren't expanded:
+only the first occurrence is checked, and the game note and `warnings` say so.
+
 ## How each game is scored
 
 1. **Venue match**: exact id/alias first, then the longest venue name or alias found as
@@ -111,6 +128,7 @@ official source. At-risk events also get `CATEGORIES:RAIN RISK`.
 | Request body / fetched ICS | 1 MB |
 | Games read from input | 2,000 |
 | Games evaluated (inside the window) | 300 |
+| Occurrences per repeating event | 400 (from up to 5,000 periods after `DTSTART`) |
 | Venues with live forecasts per request | 20 (others get history-only) |
 | Time budget for all forecast/official fetches | 8 s total (6 s per NWS call, 4 s per official page) |
 | ICS URL fetch | 8 s total, 3 redirects |

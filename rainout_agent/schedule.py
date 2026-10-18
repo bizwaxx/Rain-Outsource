@@ -201,6 +201,14 @@ def parse_ics(text: str) -> list[dict[str, Any]]:
             event["status"] = value.strip()
         elif name == "RRULE":
             event["recurring"] = True
+            event["rrule"] = value.strip()
+        elif name == "EXDATE":
+            for part in value.split(","):
+                parsed, _ = _parse_ics_datetime(part, params)
+                if parsed is not None:
+                    event.setdefault("exdates", []).append(parsed)
+        elif name == "RECURRENCE-ID":
+            event["recurrence_id"], _ = _parse_ics_datetime(value, params)
         elif name in {"DTSTART", "DTEND"}:
             parsed, floating = _parse_ics_datetime(value, params)
             key = "start" if name == "DTSTART" else "end"
@@ -386,6 +394,12 @@ def check_schedule(
         raise ScheduleInputError(f"unknown default venue {default_venue!r}")
     fields = {f["id"]: f for f in _load_all_fields()}
     warnings: list[str] = []
+    input_count = len(games)
+    if any(g.get("rrule") for g in games):
+        from rainout_agent.rrule import expand_events
+
+        games, rrule_warnings = expand_events(games, now - PAST_GRACE, window_end)
+        warnings += rrule_warnings
 
     # 1) normalise, match, window
     prepared = []
@@ -489,8 +503,11 @@ def check_schedule(
             entry["end"] = _iso(end.astimezone(start.tzinfo))
         if p.get("all_day"):
             entry["all_day"] = True
-        if game.get("recurring"):
-            entry["note"] = "Recurring calendar event: only the first occurrence is evaluated."
+        if game.get("recurrence"):
+            entry["recurrence"] = game["recurrence"]
+            entry["note"] = "Occurrence of a repeating calendar event."
+        elif game.get("recurring"):
+            entry["note"] = "Repeating calendar event with a rule Rainout Source can't expand: only the first occurrence is evaluated."
         if not field:
             entry.update({"status": "unmatched_venue", "venue": None, "at_risk": False,
                           "recommendation": "Venue not recognised. Pass venue=<field id or alias> or check /v1/fields."})
@@ -602,7 +619,8 @@ def check_schedule(
         "risk_threshold_percent": risk_threshold,
         "window": {"start": (now - PAST_GRACE).isoformat(), "end": window_end.isoformat(), "days": window_days},
         "summary": {
-            "games_in_input": len(games),
+            "games_in_input": input_count,
+            "repeating_occurrences": sum(1 for g in games if g.get("recurrence")),
             "games_in_window": len(prepared),
             "evaluated": len(evaluated),
             "at_risk": sum(1 for r in results if r.get("at_risk")),
