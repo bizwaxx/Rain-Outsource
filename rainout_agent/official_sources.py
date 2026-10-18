@@ -8,6 +8,8 @@ and where to check instead. Free: plain HTTP GET of public pages, no paid AI or 
 
 Adapters (see docs/official-status.md):
 
+* ``rainoutline`` - Rainout Line (rainoutline.com) organization pages, one entry per extension
+* ``rainedout`` - RainedOut (rainedout.net) public team pages: dated alert messages
 * ``sportsconnect`` - Blue Sombrero / SportsConnect "Field Status" widgets (skOpen/skClose)
 * ``ambl`` - Austin Metro Baseball League rainout.php (weather outlook + rainout codes)
 * ``field_list`` - city parks and league pages that list "Field name: OPEN/CLOSED"
@@ -138,6 +140,50 @@ def _item(name: str, status: str | None, label: str = "", message: str = "", pos
 
 # --------------------------------------------------------------------- adapters
 # Each adapter: (url, html, tz, now) -> {"items": [...], "page_posted_at": iso|None, "note": str|None}
+
+def parse_rainoutline(url: str, html: str, tz: ZoneInfo, now: datetime) -> dict[str, Any]:
+    """Rainout Line extension list (the dnis_refresh fragment the public page loads)."""
+    items = []
+    for chunk in re.split(r'(?i)<div class="trigger"', html)[1:]:
+        title = re.search(r'title="([^"]*)"', chunk)
+        name = re.search(r"(?is)<h5>\s*<a[^>]*>(.*?)</a>", chunk)
+        if not name:
+            continue
+        tip = unescape(title.group(1)) if title else ""
+        posted_text = re.search(r"(?is)<div class='tipTs'>(.*?)</div>", tip)
+        tip_text = re.sub(r"<[^>]+>", " ", tip).strip()
+        label, _, message = tip_text.partition(" - ")
+        span = re.search(r'(?is)<span class="status(\d+)">(.*?)</span>', chunk)
+        if span and not label:
+            label = unescape(span.group(2))
+        message = re.sub(r"\s+", " ", message.replace(posted_text.group(1) if posted_text else "\0", "")).strip()
+        status = normalize_status(label)
+        items.append(_item(unescape(re.sub(r"<[^>]+>", " ", name.group(1))), status, label, message,
+                           parse_posted_time(posted_text.group(1) if posted_text else "", tz, now)))
+    if not items:
+        raise Unparseable("Rainout Line page lists no extensions")
+    # Extensions are usually per weekly game day, so last week's "Cancelled" must not carry over.
+    return {"items": items, "stateful": True, "fresh_hours": 96}
+
+
+def parse_rainedout(url: str, html: str, tz: ZoneInfo, now: datetime) -> dict[str, Any]:
+    """RainedOut team_page.php: an organization's recent alert messages, newest first."""
+    block = re.search(r'(?is)<ul class="alerts">(.*?)</ul>', html)
+    if not block:
+        raise Unparseable("RainedOut page has no alert list")
+    org = re.search(r'(?is)<h2 class="title">(.*?)</h2>', html)
+    org_name = unescape(re.sub(r"<[^>]+>", " ", org.group(1))).strip() if org else ""
+    items = []
+    for li in re.findall(r"(?is)<li[^>]*>(.*?)</li>", block.group(1)):
+        text = re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", li))).strip()
+        if not text or text.lower() == "[no messages to show]":
+            continue
+        items.append(_item(f"{org_name}: {text}", normalize_status(text), message=text,
+                           posted=parse_posted_time(text, tz, now), page_wide=True, parent=org_name))
+    if not items:
+        return {"items": [], "no_alerts": True, "org": org_name}
+    return {"items": items, "latest_only": True}
+
 
 def parse_sportsconnect(url: str, html: str, tz: ZoneInfo, now: datetime) -> dict[str, Any]:
     items = []
@@ -279,6 +325,10 @@ def parse_announcement(url: str, html: str, tz: ZoneInfo, now: datetime) -> dict
 def detect_adapter(url: str, html: str) -> tuple[str, Callable[..., dict[str, Any]]]:
     host = (urlsplit(url).hostname or "").lower()
     low = (html or "").lower()
+    if host.endswith("rainoutline.com"):
+        return "rainoutline", parse_rainoutline
+    if host.endswith("rainedout.net") or host.endswith("rainedout.com"):
+        return "rainedout", parse_rainedout
     if "austinmetrobaseball.com" in host:
         return "ambl", parse_ambl
     if 'class="skfield"' in low or re.search(r"\bsk(open|close)\b", low):
@@ -326,6 +376,8 @@ def decide(page: dict[str, Any], field: dict[str, Any], game_time: datetime | No
     def unknown(outcome: str, message: str, **extra: Any) -> dict[str, Any]:
         return {"official_status": "unknown", **out, "outcome": outcome, "message": f"{message} {fallback}", **extra}
 
+    if page.get("no_alerts"):
+        return unknown("no_alerts", "The official alert page has no current messages (that usually means no cancellation was posted, but it isn't a confirmation).")
     if not page.get("items"):
         return unknown("unparseable", f"The official page couldn't be read automatically ({page.get('unparseable') or 'format not recognized'}).")
     terms = match_terms(field)
@@ -365,6 +417,9 @@ def decide(page: dict[str, Any], field: dict[str, Any], game_time: datetime | No
             matched = named
         elif any(re.search(r"\b(" + "|".join(WEEKDAYS) + r")s?\b", (i["name"] or "").lower()) for i in matched):
             return unknown("no_match", f"The official page lists this venue for other days, not {weekday.title()}.")
+    if page.get("latest_only"):
+        dated = sorted((i for i in matched if i.get("posted_at")), key=lambda i: i["posted_at"], reverse=True)
+        matched = dated[:1] or matched[:1]
     statuses = [i for i in matched if i.get("status") in STATUSES]
     if not statuses:
         notes = [i for i in matched if i.get("message") or i.get("label")]
@@ -392,9 +447,9 @@ def decide(page: dict[str, Any], field: dict[str, Any], game_time: datetime | No
     if not latest:
         return unknown("undated", f"The official page shows {WORDS[value]} but no posting date, so it may be old.", **extra)
     age = now - latest
-    limit = timedelta(days=STATEFUL_FRESH_DAYS) if page.get("stateful") else timedelta(hours=FRESH_HOURS)
-    if age > limit:
-        span = f"{STATEFUL_FRESH_DAYS} days" if page.get("stateful") else f"{FRESH_HOURS} hours"
+    hours = page.get("fresh_hours") or (STATEFUL_FRESH_DAYS * 24 if page.get("stateful") else FRESH_HOURS)
+    if age > timedelta(hours=hours):
+        span = f"{hours // 24} days" if hours % 24 == 0 else f"{hours} hours"
         return unknown("stale", f"The official page last changed to \"{WORDS[value]}\" on {latest.strftime('%b %d %I:%M %p')}, more than {span} ago, so it may not be current.", **extra)
     if game_time and game_time - now > timedelta(hours=POSTED_AHEAD_HOURS):
         return unknown("not_posted_yet", f"The official page shows {WORDS[value]} now; the status for a game more than {POSTED_AHEAD_HOURS} hours away isn't posted yet.", **extra)
@@ -437,7 +492,10 @@ def fetch_page(url: str, timeout: float) -> tuple[int | None, str]:
 
 
 def data_url(url: str) -> str:
-    """Some services load status from a second URL; adapters may rewrite (see later adapters)."""
+    """Rainout Line's public page loads its list from a fragment URL; fetch that directly."""
+    m = re.match(r"https?://(?:www\.)?rainoutline\.com/search/dnis/(\d{10})", url or "")
+    if m:
+        return f"https://rainoutline.com/search/dnis_refresh/{m.group(1)}/extension/1"
     return url
 
 

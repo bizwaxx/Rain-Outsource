@@ -256,10 +256,10 @@ paths:
                       parser:
                         type: string
                         nullable: true
-                        description: sportsconnect, field_list, ambl, announcement or none.
+                        description: rainoutline, rainedout, sportsconnect, field_list, ambl, announcement or none.
                       outcome:
                         type: string
-                        enum: [matched, no_match, no_status, unparseable, stale, undated, not_posted_yet, not_posted,
+                        enum: [matched, no_match, no_status, no_alerts, unparseable, stale, undated, not_posted_yet, not_posted,
                                no_game_listed, needs_game_time, blocked, unavailable, not_polled, no_source]
                       message:
                         type: string

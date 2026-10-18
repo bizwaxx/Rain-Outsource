@@ -13,6 +13,8 @@ venue and it's current. Otherwise `official_status` stays `unknown` and
 
 | Parser | Pages | How it reads them |
 |---|---|---|
+| `rainoutline` | Rainout Line organization pages (`rainoutline.com/search/dnis/<number>`), e.g. Austin Sports & Social Club (Havins), Frisco, Carrollton | Reads the extension list the public page loads (`dnis_refresh`). Each extension's label ("It's A Go!", "Open", "Cancelled", "Closed", "Delayed") and time; "Info"/"Notice" entries are shown but aren't a status. Extensions named for a weekday ("Sunday Softball at Havins Fields") only count for games on that day. Postings older than 4 days are stale, so last week's "Cancelled" never carries over |
+| `rainedout` | RainedOut public pages (`rainedout.net/team_page.php?a=…`) | The newest dated alert message that names the venue (or any, with `official_status_scope: "page"`). "[No messages to show]" gives the outcome `no_alerts`: usually nothing was cancelled, but it isn't a confirmation, so the status stays unknown |
 | `sportsconnect` | Blue Sombrero / SportsConnect league sites with a "Field Status" widget | Each organization and field with its Open/Closed class and "Updated" time. The widget shows the current state, so its time is the last change |
 | `field_list` | City parks and league pages listing fields, e.g. Cedar Park "Brushy Creek Sports Park Softball Fields: OPEN", TeamSideline "Rain-Out Info" pages ("FIELD 1 - CLOSED" under a park heading), College Station style "Field 1: Fri/Sat: Open \| Sun: Closed", T&C style tables | Lines of *name : status*; park headings are kept as context; day-by-day entries use the game's weekday; the page's "as of / updated" date is the posting time |
 | `ambl` | Austin Metro Baseball League `rainout.php` | Only rainout codes (`999`, `777`) or explicit "rained out"/"postponed" inside the game-day section for the venue. The page is mostly a weather outlook, so its menu and help text are ignored |
@@ -40,6 +42,7 @@ single organization also counts as the whole venue.
 | `no_match` | The page lists statuses, but none for this venue (or only for other weekdays) |
 | `no_status` | The venue is mentioned but with no open/closed status |
 | `unparseable` | No supported format on the page |
+| `no_alerts` | A RainedOut page with no current messages |
 | `stale` | Last posting is too old: more than 36 hours for daily posted pages, 14 days for status widgets |
 | `undated` | A status is shown but with no posting date |
 | `not_posted_yet` | The game is more than 36 hours away; today's posting isn't about it |

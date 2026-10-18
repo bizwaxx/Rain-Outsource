@@ -315,7 +315,7 @@ def test_fetch_official_rainout_status_checks_source_and_keeps_unknown_without_c
     assert result["check"]["outcome"] == "unparseable"
     assert "Check https://rainoutline.com/search/dnis/5124000060/ directly." in result["check"]["message"]
     assert "last_checked" in result
-    assert requests == [("https://rainoutline.com/search/dnis/5124000060/", 20, "Rainout Source by JEEZ Labs (public pilot)")]
+    assert requests == [("https://rainoutline.com/search/dnis_refresh/5124000060/extension/1", 20, "Rainout Source by JEEZ Labs (public pilot)")]
 
 
 def test_fetch_official_rainout_status_stays_unknown_when_source_unavailable(monkeypatch):
