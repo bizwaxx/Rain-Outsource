@@ -21,6 +21,7 @@
   "ownership_type": "private_nonprofit",
   "status_source_type": "official_field_status_page",
   "poll_official_status": true,
+  "official_status_scope": "all",
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.tandcsports.org/field-status/",
   "official_status_source_name": "T&C Sports official field status page",

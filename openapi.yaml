@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.12.0
+  version: 0.13.0
   description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup. Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
@@ -246,6 +246,39 @@ paths:
                     type: string
                     nullable: true
                     description: ISO-8601 timestamp for the official source check when available.
+                  official_status_check:
+                    type: object
+                    nullable: true
+                    description: >-
+                      How the official status was read. When the page couldn't be read clearly, official_status is
+                      unknown and `message` says why and where to check instead (rainout phone or the page).
+                    properties:
+                      parser:
+                        type: string
+                        nullable: true
+                        description: sportsconnect, field_list, ambl, announcement or none.
+                      outcome:
+                        type: string
+                        enum: [matched, no_match, no_status, unparseable, stale, undated, not_posted_yet, not_posted,
+                               no_game_listed, needs_game_time, blocked, unavailable, not_polled, no_source]
+                      message:
+                        type: string
+                      fallback:
+                        type: string
+                      posted_status:
+                        type: string
+                        description: What the page shows, even when it is too old or undated to be used.
+                      posted_at:
+                        type: string
+                        nullable: true
+                      matched:
+                        type: array
+                        description: Status entries on the page that name this venue.
+                        items:
+                          type: object
+                      cache:
+                        type: string
+                        description: hit when the page was read from the 5-minute page cache.
                   rain_chance_percent:
                     type: integer
                     minimum: 0

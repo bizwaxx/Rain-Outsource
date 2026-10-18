@@ -27,7 +27,8 @@ from zoneinfo import ZoneInfo
 
 USER_AGENT = "Rainout Source by JEEZ Labs (public pilot)"
 MAX_PAGE_BYTES = 2_000_000
-FRESH_HOURS = 36          # a posted status older than this is "stale"
+FRESH_HOURS = 36          # a posted status older than this is "stale" (daily posted pages)
+STATEFUL_FRESH_DAYS = 14  # status widgets show the current state; their time is the last change
 POSTED_AHEAD_HOURS = 36   # pages post today's status; games further out aren't decided yet
 PAGE_CACHE_TTL_S = 300
 FAILURE_CACHE_TTL_S = 120
@@ -75,7 +76,7 @@ def normalize_status(label: str) -> str | None:
 
 
 MONTHS = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
-_TIME = r"(?:\s*(?:at|@|-)?\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?)?"
+_TIME = r"(?:\s*(?:at|@|-|as of)?\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?)?"
 
 
 def parse_posted_time(text: str, tz: ZoneInfo, now: datetime) -> datetime | None:
@@ -97,7 +98,7 @@ def parse_posted_time(text: str, tz: ZoneInfo, now: datetime) -> datetime | None
         hour, minute, ampm = m.group(4), m.group(5), m.group(6)
         if not m.group(3):  # no year: pick the year that puts the date closest to now
             try:
-                if datetime(year, month, day, tzinfo=tz) - local_now > timedelta(days=180):
+                if datetime(year, month, day, tzinfo=tz) - local_now > timedelta(days=7):  # posted dates are recent
                     year -= 1
             except ValueError:
                 return None
@@ -159,7 +160,7 @@ def parse_sportsconnect(url: str, html: str, tz: ZoneInfo, now: datetime) -> dic
                                "Closed" if st == "field_closed" else "Open" if st else "", posted=posted, parent=org_name))
     if not items:
         raise Unparseable("SportsConnect field-status widget has no fields")
-    return {"items": items}
+    return {"items": items, "stateful": True}
 
 
 def parse_ambl(url: str, html: str, tz: ZoneInfo, now: datetime) -> dict[str, Any]:
@@ -391,14 +392,17 @@ def decide(page: dict[str, Any], field: dict[str, Any], game_time: datetime | No
     if not latest:
         return unknown("undated", f"The official page shows {WORDS[value]} but no posting date, so it may be old.", **extra)
     age = now - latest
-    if age > timedelta(hours=FRESH_HOURS):
-        return unknown("stale", f"The official page last posted {WORDS[value]} on {latest.strftime('%b %d %I:%M %p')}, more than {FRESH_HOURS} hours ago.", **extra)
+    limit = timedelta(days=STATEFUL_FRESH_DAYS) if page.get("stateful") else timedelta(hours=FRESH_HOURS)
+    if age > limit:
+        span = f"{STATEFUL_FRESH_DAYS} days" if page.get("stateful") else f"{FRESH_HOURS} hours"
+        return unknown("stale", f"The official page last changed to \"{WORDS[value]}\" on {latest.strftime('%b %d %I:%M %p')}, more than {span} ago, so it may not be current.", **extra)
     if game_time and game_time - now > timedelta(hours=POSTED_AHEAD_HOURS):
         return unknown("not_posted_yet", f"The official page shows {WORDS[value]} now; the status for a game more than {POSTED_AHEAD_HOURS} hours away isn't posted yet.", **extra)
     if value == "mixed":
         msg = "The official page shows some of this venue's fields open and some closed."
     else:
-        msg = f"Official page shows {WORDS[value]} (posted {latest.strftime('%b %d %I:%M %p')})."
+        verb = "unchanged since" if page.get("stateful") else "posted"
+        msg = f"Official page shows {WORDS[value]} ({verb} {latest.strftime('%b %d %I:%M %p')})."
     return {"official_status": value, **out, "outcome": "matched", **extra, "message": msg}
 
 

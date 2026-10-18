@@ -20,6 +20,9 @@
   "ownership_type": "public",
   "status_source_type": "official_field_status_page",
   "poll_official_status": true,
+  "official_status_match": [
+    "Elizabeth Milburn Park Multipurpose"
+  ],
   "rainout_phone": "not_published",
   "official_status_source_url": "https://www.cedarparktexas.gov/947/Athletic-Facilities",
   "official_status_source_name": "City of Cedar Park Athletic Field Status page",
