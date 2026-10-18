@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-18T00:01:46+00:00",
+ "generated_at": "2026-10-18T00:07:35+00:00",
  "osm_data_as_of": "2026-10-16T20:21:21Z",
  "source": "OpenStreetMap via Geofabrik US extract",
  "license": "Open Database License (ODbL) 1.0; (c) OpenStreetMap contributors",
@@ -320,17 +320,22 @@
    "unnamed_motocross_dropped": 1
   },
   "KY": {
-   "venues": 2,
+   "venues": 619,
    "by_kind": {
+    "ball_field": 417,
+    "soccer_complex": 78,
+    "multipurpose_field": 122,
     "motocross_track": 2
    },
    "by_sport": {
-    "motocross": 2
+    "baseball": 520,
+    "motocross": 2,
+    "soccer": 200,
+    "softball": 66
    },
-   "with_station": 2,
+   "with_station": 617,
    "unnamed_pitch_clusters_dropped": 442,
-   "unnamed_motocross_dropped": 4,
-   "scope": "motocross_only"
+   "unnamed_motocross_dropped": 4
   },
   "LA": {
    "venues": 580,
@@ -349,88 +354,125 @@
    "duplicates_of_confirmed": 2
   },
   "MA": {
-   "venues": 2,
+   "venues": 1955,
    "by_kind": {
+    "ball_field": 1126,
+    "soccer_complex": 332,
+    "multipurpose_field": 495,
     "motocross_track": 2
    },
    "by_sport": {
-    "motocross": 2
+    "baseball": 1578,
+    "motocross": 2,
+    "soccer": 827,
+    "softball": 169
    },
-   "with_station": 2,
+   "with_station": 1955,
    "unnamed_pitch_clusters_dropped": 376,
-   "unnamed_motocross_dropped": 2,
-   "scope": "motocross_only"
+   "unnamed_motocross_dropped": 2
   },
   "MD": {
-   "venues": 2,
+   "venues": 1446,
    "by_kind": {
+    "ball_field": 906,
+    "soccer_complex": 210,
+    "multipurpose_field": 328,
     "motocross_track": 2
    },
    "by_sport": {
-    "motocross": 2
+    "baseball": 1194,
+    "motocross": 2,
+    "soccer": 538,
+    "softball": 99
    },
-   "with_station": 2,
-   "unnamed_pitch_clusters_dropped": 323,
-   "scope": "motocross_only"
+   "with_station": 1446,
+   "unnamed_pitch_clusters_dropped": 323
   },
   "ME": {
-   "venues": 1,
+   "venues": 575,
    "by_kind": {
+    "ball_field": 368,
+    "soccer_complex": 63,
+    "multipurpose_field": 143,
     "motocross_track": 1
    },
    "by_sport": {
-    "motocross": 1
+    "baseball": 483,
+    "motocross": 1,
+    "soccer": 206,
+    "softball": 115
    },
-   "with_station": 1,
-   "unnamed_pitch_clusters_dropped": 148,
-   "scope": "motocross_only"
+   "with_station": 566,
+   "unnamed_pitch_clusters_dropped": 148
   },
   "MI": {
-   "venues": 12,
+   "venues": 2685,
    "by_kind": {
+    "ball_field": 1655,
+    "soccer_complex": 397,
+    "multipurpose_field": 621,
     "motocross_track": 12
    },
    "by_sport": {
-    "motocross": 12
+    "baseball": 2236,
+    "motocross": 12,
+    "soccer": 1018,
+    "softball": 142
    },
-   "with_station": 12,
+   "with_station": 2681,
    "unnamed_pitch_clusters_dropped": 977,
-   "unnamed_motocross_dropped": 11,
-   "scope": "motocross_only"
+   "unnamed_motocross_dropped": 11
   },
   "MN": {
-   "venues": 6,
+   "venues": 2026,
    "by_kind": {
+    "ball_field": 1390,
+    "soccer_complex": 185,
+    "multipurpose_field": 445,
     "motocross_track": 6
    },
    "by_sport": {
-    "motocross": 6
+    "baseball": 1761,
+    "motocross": 6,
+    "soccer": 630,
+    "softball": 175
    },
-   "with_station": 6,
+   "with_station": 2019,
    "unnamed_pitch_clusters_dropped": 1026,
-   "unnamed_motocross_dropped": 7,
-   "scope": "motocross_only"
+   "unnamed_motocross_dropped": 7
   },
   "MO": {
-   "venues": 6,
+   "venues": 1138,
    "by_kind": {
+    "ball_field": 650,
+    "soccer_complex": 244,
+    "multipurpose_field": 238,
     "motocross_track": 6
    },
    "by_sport": {
-    "motocross": 6
+    "baseball": 857,
+    "motocross": 6,
+    "soccer": 482,
+    "softball": 92
    },
-   "with_station": 6,
+   "with_station": 1138,
    "unnamed_pitch_clusters_dropped": 609,
-   "unnamed_motocross_dropped": 6,
-   "scope": "motocross_only"
+   "unnamed_motocross_dropped": 6
   },
   "MS": {
-   "venues": 0,
-   "by_kind": {},
-   "by_sport": {},
-   "with_station": 0,
-   "unnamed_pitch_clusters_dropped": 383,
-   "scope": "motocross_only"
+   "venues": 402,
+   "by_kind": {
+    "ball_field": 307,
+    "soccer_complex": 27,
+    "multipurpose_field": 68
+   },
+   "by_sport": {
+    "baseball": 369,
+    "soccer": 95,
+    "softball": 43
+   },
+   "with_station": 402,
+   "unnamed_pitch_clusters_dropped": 383
   },
   "MT": {
    "venues": 3,
@@ -765,7 +807,7 @@
   }
  },
  "totals": {
-  "venues": 27129,
+  "venues": 37944,
   "motocross_tracks": 162
  }
 }
