@@ -35,7 +35,8 @@ Current backend status:
 7. Checks each field's official source page on each status request, but stays conservative: if there is no clear cancelled, delayed, or field-closed signal, official status remains `unknown` and the spoken answer tells the user to call the rainout line or check the official source before leaving.
 8. Calibrates play probability with 10 years of NOAA daily rain history for each field and returns the station used in `historical_calibration`.
 9. Checks whole schedules (ICS URL/upload, JSON or CSV) at `/v1/schedule/check` and flags at-risk games.
-10. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
+10. Accepts community cancellation reports at `POST /v1/reports` (and the MCP tool `report_cancellation`); recent reports adjust the odds while the official status is unknown. Details: `docs/reports.md`.
+11. Returns `answer_requirements` so outside agents must include field name, official status, rain chance, play probability, and rainout phone or official source in their answer.
 
 ## Pilot fields
 
@@ -192,7 +193,7 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP, read-only): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`. See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
 
 ## Motocross race checker

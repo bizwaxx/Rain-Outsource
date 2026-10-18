@@ -1,6 +1,6 @@
 # MCP server
 
-Rainout Source runs a stateless, read-only MCP server using the **Streamable HTTP** transport:
+Rainout Source runs a stateless MCP server (read-only except `report_cancellation`) using the **Streamable HTTP** transport:
 
 ```
 https://rainout-agent-source.vercel.app/mcp
@@ -20,8 +20,9 @@ https://rainout-agent-source.vercel.app/mcp
 | `check_game` | "do I have a game today?" (team_id + date) or a venue + time | teams API / `/v1/status` |
 | `get_venue_status` | one venue at one time | `/v1/status` |
 | `check_schedule` | score a whole schedule (ICS URL or list of games) | `/v1/schedule/check` |
+| `report_cancellation` | the user says their game was rained out, delayed, the field is closed or they're playing | `POST /v1/reports` ([docs/reports.md](reports.md)) |
 
-All tools are annotated `readOnlyHint: true`. Results come back as `structuredContent` and as JSON text. Problems such as an unknown team or a league site being down come back as `isError: true` with a plain-language message that tells the agent what to do next, for example "ask the user for their schedule link."
+All tools are annotated `readOnlyHint: true` except `report_cancellation` (`readOnlyHint: false`, `destructiveHint: false`, `idempotentHint: false`), which stores an anonymous report in the cache for 24 hours, rate limited per client. Results come back as `structuredContent` and as JSON text. Problems such as an unknown team or a league site being down come back as `isError: true` with a plain-language message that tells the agent what to do next, for example "ask the user for their schedule link."
 
 The tool descriptions and the `initialize` instructions tell the agent to:
 1. confirm the team match with the user,

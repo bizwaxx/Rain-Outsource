@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.11.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup.
+  version: 0.12.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup. Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -334,6 +334,8 @@ paths:
                         type: number
                         nullable: true
                         description: Multiplier applied to the rain chance (1.0 = rain chance counts fully).
+                  community_reports:
+                    $ref: '#/components/schemas/CommunityReportSummary'
               example:
                 creator: JEEZ Labs
                 field: Havins Softball Complex
@@ -353,6 +355,101 @@ paths:
                 answer_requirements:
                   must_include: [field name, official status, rain chance, play probability, rainout phone or official source]
                   if_official_status_unknown: "Say official status is unknown and tell the user to call 512-978-2680 before leaving."
+  /v1/reports:
+    post:
+      operationId: reportCancellation
+      summary: Report what you see at a field (cancelled, delayed, field closed or playing).
+      description: >-
+        Stores an anonymous, unverified report in the server cache for 24 hours (in memory per instance by
+        default, or a shared Upstash/Vercel KV cache when configured). Reports from the last 12 hours for the
+        same local game date adjust `game_time_play_probability_percent` in /v1/status while the official
+        status is unknown; a known official status always wins. Rate limits per client: 3 reports per field
+        and 10 in total per hour (429 with Retry-After).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [field_id, status]
+              properties:
+                field_id:
+                  type: string
+                  description: Venue field_id (or alias) from /v1/fields.
+                status:
+                  type: string
+                  enum: [cancelled, delayed, field_closed, playing]
+                  description: Aliases such as rained_out, postponed, closed and on are accepted.
+                game_time:
+                  type: string
+                  format: date-time
+                  description: Game start with UTC offset, from 12 hours ago to 36 hours ahead. Defaults to now.
+                note:
+                  type: string
+                  maxLength: 280
+            example:
+              field_id: austin-tx-krieg-field-softball-complex
+              status: cancelled
+              game_time: "2026-06-05T19:00:00-05:00"
+              note: Umpires called it at 6:40.
+      responses:
+        "201":
+          description: Report stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted:
+                    type: boolean
+                  report:
+                    $ref: '#/components/schemas/CancellationReport'
+                  recent:
+                    $ref: '#/components/schemas/CommunityReportSummary'
+                  storage:
+                    type: object
+        "400":
+          description: Invalid input (error is missing_field_id, invalid_status, invalid_game_time, game_time_out_of_range, note_too_long, ...).
+        "404":
+          description: Unknown field_id.
+        "413":
+          description: Body over 4 KB.
+        "429":
+          description: Rate limited; see Retry-After.
+    get:
+      operationId: listCancellationReports
+      summary: Recent reports for one field (last 24 hours, newest first, up to 20).
+      parameters:
+        - name: field_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: game_time
+          in: query
+          required: false
+          description: Only reports for this game's local date.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Recent reports.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  field_id:
+                    type: string
+                  summary:
+                    $ref: '#/components/schemas/CommunityReportSummary'
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CancellationReport'
+        "404":
+          description: Unknown field_id.
   /v1/schedule/check:
     get:
       operationId: checkScheduleByUrl
@@ -579,6 +676,53 @@ paths:
         "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    CancellationReport:
+      type: object
+      properties:
+        id:
+          type: string
+        field_id:
+          type: string
+        status:
+          type: string
+          enum: [cancelled, delayed, field_closed, playing]
+        game_date:
+          type: string
+          description: Local date of the game at the venue (YYYY-MM-DD).
+        game_time:
+          type: string
+        reported_at:
+          type: string
+        note:
+          type: string
+          nullable: true
+    CommunityReportSummary:
+      type: object
+      description: Unverified user reports from the last 12 hours for the game's local date.
+      properties:
+        count:
+          type: integer
+        by_status:
+          type: object
+          additionalProperties:
+            type: integer
+        latest_reported_at:
+          type: string
+          nullable: true
+        window_hours:
+          type: integer
+        game_date:
+          type: string
+          nullable: true
+        applied:
+          type: boolean
+          description: True when the reports changed the play probability (only while the official status is unknown).
+        adjustment_percent_points:
+          type: integer
+        play_probability_before_reports:
+          type: integer
+        reason:
+          type: string
     TeamCandidate:
       type: object
       properties:
