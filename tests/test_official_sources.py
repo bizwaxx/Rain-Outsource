@@ -220,3 +220,55 @@ def test_spoken_answers_for_delayed_and_mixed():
     assert "partly closed" in mixed["spoken_answer"] and mixed["game_time_play_probability_percent"] <= 50
     delayed = build_status_result("Krieg", "2026-10-17T19:00:00-05:00", weather=dict(weather), official_status="delayed")
     assert "is delayed" in delayed["spoken_answer"]
+
+
+# ------------------------------------------------------------------ Rainout Line and RainedOut
+def _rol(name, label, message, ts, cls=0):
+    return (f'<div class="trigger" style="z-index:1000;" title="{label} - {message}&lt;div class=\'tipTs\'&gt;{ts}&lt;/div&gt;">'
+            f'<div class="gridcell1 tborder"></div><div class="floatleft gridcell2"><h5><a href="https://rainoutline.com/search/extension/1/2">{name}</a></h5></div></div>'
+            f'<div class="slidingDiv"><span class="status{cls}">{label}</span> {message} <span class="clue">{ts}</span></div>')
+
+
+ROL = (_rol("Sunday Softball at Havins Fields", "It's A Go!", "Games are on as scheduled.", "10/17/26 12:10 pm")
+       + _rol("Saturday Softball at Havins Fields", "Cancelled", "Fields are wet.", "10/17/26 3:05 pm", 2)
+       + _rol("Saturday Kickball at Zilker", "It's A Go!", "On.", "10/17/26 3:05 pm")
+       + _rol("Warren Sports Complex - Diamond Fields", "Info", "Closed for Seeding/Maintenance", "10/5/26 9:26 am", 3))
+
+
+def test_rainoutline_extensions_by_venue_and_weekday():
+    url = "https://rainoutline.com/search/dnis/5124000060/"
+    assert o.data_url(url) == "https://rainoutline.com/search/dnis_refresh/5124000060/extension/1"
+    havins = field(field_name="Havins Softball Complex", aliases=["Havins"], official_status_source_url=url)
+    sat = run(ROL, havins)
+    assert (sat["official_status"], sat["parser"]) == ("cancelled", "rainoutline")
+    assert sat["matched"][0]["message"] == "Fields are wet." and sat["posted_at"].startswith("2026-10-17T15:05")
+    sun = run(ROL, havins, game=TONIGHT + timedelta(days=1))
+    assert sun["official_status"] == "on"
+    mon = run(ROL, havins, game=TONIGHT + timedelta(days=2))
+    assert mon["outcome"] in {"no_match", "not_posted_yet"}
+    # Info/Notice entries are shown but are not a status.
+    warren = run(ROL, field(field_name="Warren Sports Complex", aliases=[], official_status_source_url=url))
+    assert warren["outcome"] == "no_status" and "Seeding" in warren["matched"][0]["message"]
+    # Last week's posting doesn't carry over.
+    old = run(ROL.replace("10/17/26", "10/10/26"), havins)
+    assert old["outcome"] == "stale" and old["posted_status"] == "cancelled"
+
+
+RAINEDOUT = """<h2 class="title">Springfield Parks Athletics</h2><div class="purple bold"><ul class="alerts">{items}</ul></div>"""
+
+
+def test_rainedout_alert_messages():
+    url = "https://www.rainedout.net/team_page.php?a=abc"
+    f = field(field_name="Springfield Parks", aliases=[], official_status_source_url=url, official_status_scope="page")
+    none = run(RAINEDOUT.format(items="<li>[No messages to show]</li>"), f, url=url)
+    assert (none["official_status"], none["outcome"]) == ("unknown", "no_alerts")
+    msgs = ("<li>10/17/2026 2:15 PM - All fields closed tonight due to rain.</li>"
+            "<li>10/16/2026 3:00 PM - All fields open.</li>")
+    r = run(RAINEDOUT.format(items=msgs), f, url=url)
+    assert (r["official_status"], r["parser"]) == ("field_closed", "rainedout")
+    reopened = ("<li>10/17/2026 4:30 PM - Fields reopened, games on as scheduled.</li>"
+                "<li>10/17/2026 2:15 PM - All fields closed due to rain.</li>")
+    assert run(RAINEDOUT.format(items=reopened), f, url=url)["official_status"] == "on"
+    # Without opting in, an organization-wide message only counts when it names the venue.
+    other = field(field_name="Lakeside Park", aliases=[], official_status_source_url=url)
+    assert run(RAINEDOUT.format(items=msgs), other, url=url)["outcome"] == "no_match"
