@@ -2,11 +2,12 @@
 
 Endpoint: ``POST /mcp`` takes JSON-RPC 2.0 messages and returns ``application/json``.
 ``GET /mcp`` answers 405 because the server never opens SSE streams. Every tool is
-read-only. No tool writes to calendars: the tools return a ready-made Google
+read-only except report_cancellation, which stores an anonymous report in the cache. No tool writes to calendars: the tools return a ready-made Google
 Calendar event, and their descriptions tell the agent to ask the user first.
 """
 from __future__ import annotations
 
+import contextvars
 import json
 import os
 from typing import Any, Callable
@@ -16,7 +17,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.12.0"
+SERVER_VERSION = "0.13.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -33,6 +34,8 @@ INSTRUCTIONS = (
     "Venues not in the hand-verified list: find_venue searches tens of thousands of OpenStreetMap fields, soccer complexes "
     "and motocross tracks nationwide (verification_level osm_only: community map data, no official status source); pass its "
     "field_id as venue to get_venue_status, or as track_id to check_race. "
+    "If the user says their game was rained out, delayed, the field is closed or they are playing, offer to share it with "
+    "report_cancellation (unverified, expires in 24 h, nudges the odds others see while the official status is unknown). "
     "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts."
 )
 
@@ -252,8 +255,31 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
 ]
+TOOLS.append({
+    "name": "report_cancellation",
+    "title": "Report a cancellation",
+    "description": (
+        "Share what the user sees at the field: status='cancelled' (rained out/postponed), 'delayed', 'field_closed' or "
+        "'playing'. Only report what the user told you, after they agree to share it. field_id from find_venue/find_team "
+        "venues (or a venue alias); game_time ISO 8601 with offset, from 12 hours ago to 36 hours ahead (default now). "
+        "Reports are anonymous and unverified, expire after 24 hours and adjust the play odds in get_venue_status only "
+        "while the official status is unknown. Limited to 3 reports per venue and 10 in total per hour."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "field_id": {"type": "string", "description": "Venue field_id or alias."},
+            "status": {"type": "string", "enum": ["cancelled", "delayed", "field_closed", "playing"]},
+            "game_time": {"type": "string", "description": "Game start, ISO 8601 with UTC offset (default now)."},
+            "note": {"type": "string", "maxLength": 280, "description": "Optional short note, e.g. 'umpire called it at 7:10'."},
+        },
+        "required": ["field_id", "status"],
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
+TOOLS[-1]["annotations"] = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True}
+_CLIENT: contextvars.ContextVar[str | None] = contextvars.ContextVar("rainout_mcp_client", default=None)
 
 
 class ToolError(ValueError):
@@ -374,6 +400,16 @@ def _get_rain_chance(args: dict[str, Any]) -> dict[str, Any]:
         raise ToolError(f"No place matched '{exc.query}'. Similar names: {names}. Ask the user for a country or lat,lon.") from exc
 
 
+def _report_cancellation(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent import reports
+
+    try:
+        return reports.submit_report(dict(args), client=_CLIENT.get())
+    except reports.ReportError as exc:
+        extra = f" Retry after {exc.extra['retry_after_seconds']} s." if exc.status == 429 else ""
+        raise ToolError(str(exc) + extra) from exc
+
+
 def _require(args: dict[str, Any], key: str) -> str:
     value = args.get(key)
     if not isinstance(value, str) or not value.strip():
@@ -393,6 +429,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "check_race": _check_race,
     "get_track_history": _get_track_history,
     "get_rain_chance": _get_rain_chance,
+    "report_cancellation": _report_cancellation,
 }
 
 
@@ -505,6 +542,9 @@ def handle_http(method: str, headers: dict[str, str], body: bytes) -> tuple[int,
         payload = json.loads(body.decode("utf-8") or "null")
     except (ValueError, UnicodeDecodeError):
         return 400, {**out, "Content-Type": "application/json"}, json.dumps(_err(None, -32700, "Parse error")).encode()
+    from rainout_agent.reports import client_from_headers
+
+    _CLIENT.set(client_from_headers(h))
     if isinstance(payload, list):
         if not payload or len(payload) > 20:
             return 400, {**out, "Content-Type": "application/json"}, json.dumps(_err(None, -32600, "Invalid batch")).encode()
