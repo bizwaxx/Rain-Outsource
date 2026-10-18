@@ -56,12 +56,20 @@ OSM data as of the Geofabrik extract of 2026-10-16.
 | CO | 1,342 | 719 | 285 | 334 | 4 | 1,341 |
 | CT | 925 | 513 | 142 | 270 | 0 | 925 |
 | DC | 127 | 56 | 49 | 22 | 0 | 127 |
+| DE | 157 | 86 | 18 | 53 | 0 | 157 |
 | FL | 2,246 | 1,373 | 375 | 498 | 0 | 2,243 |
+| GA | 1,340 | 836 | 219 | 282 | 3 | 1,322 |
+| HI | 205 | 164 | 19 | 21 | 1 | 204 |
+| IA | 1,355 | 1,047 | 154 | 154 | 0 | 1,353 |
+| ID | 369 | 266 | 41 | 58 | 4 | 369 |
+| IL | 3,294 | 2,162 | 449 | 679 | 4 | 3,294 |
+| IN | 1,286 | 859 | 180 | 244 | 3 | 1,286 |
+| KS | 800 | 561 | 101 | 136 | 2 | 799 |
 | LA | 580 | 466 | 47 | 67 | 0 | 571 |
 | OK | 601 | 434 | 86 | 80 | 1 | 593 |
 | TX | 3,933 | 2,404 | 804 | 720 | 5 | 3,903 |
 
-Full states: 12. Venues: 18,340 (incl. 162 motocross tracks). By kind: ball_field 11,383, soccer_complex 3,101, multipurpose_field 3,694, motocross_track 45. By sport tag: baseball 14,571, motocross 45, soccer 6,795, softball 1,996.
+Full states: 20. Venues: 27,129 (incl. 162 motocross tracks). By kind: ball_field 17,364, soccer_complex 4,282, multipurpose_field 5,321, motocross_track 62. By sport tag: baseball 21,997, motocross 62, soccer 9,603, softball 2,771.
 <!-- /counts -->
 
 Motocross-only states still list their OSM motocross tracks.
