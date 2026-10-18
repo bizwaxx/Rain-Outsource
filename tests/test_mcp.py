@@ -109,7 +109,7 @@ def test_source_outage_tells_agent_to_ask_for_link(monkeypatch):
 def test_get_venue_status_tool(monkeypatch):
     monkeypatch.setattr("rainout_agent.status_api.fetch_nws_weather", lambda field, gt: {
         "rain_chance_percent": 5, "thunderstorm_likely": False, "source": "National Weather Service API", "source_id": "nws"})
-    monkeypatch.setattr("rainout_agent.status_api.fetch_official_rainout_status", lambda field: {"official_status": "unknown", "checked": False})
+    monkeypatch.setattr("rainout_agent.status_api.fetch_official_rainout_status", lambda field, **kw: {"official_status": "unknown", "checked": False})
     res = rpc("tools/call", {"name": "get_venue_status", "arguments": {"venue": "Craig Fields", "game_time": "2026-10-16T20:20:00-05:00"}})[2]["result"]
     assert res["structuredContent"]["field_id"] == "austin-tx-krieg-field-softball-complex"
     res = rpc("tools/call", {"name": "get_venue_status", "arguments": {"venue": "Nowhere Park", "game_time": "2026-10-16T20:20:00-05:00"}})[2]["result"]

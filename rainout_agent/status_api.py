@@ -271,17 +271,19 @@ def _display_game_time(value: str) -> str:
     return f"{hour}{minute} {am_pm}"
 
 
-def fetch_official_rainout_status(field: dict[str, Any], timeout: float = 20) -> dict[str, Any]:
-    """Safely check the official status page without guessing.
+def fetch_official_rainout_status(field: dict[str, Any], timeout: float = 20, game_time: str | datetime | None = None) -> dict[str, Any]:
+    """Check the venue's official status page without guessing.
 
-    The first public Austin source is a general athletics page, not a structured
-    rainout feed. This poller only promotes clear closure/cancellation/delay
-    language; otherwise it returns unknown with provenance so agents know the
-    source was checked.
+    ``rainout_agent.official_sources`` reads common formats (SportsConnect field-status
+    widgets, city/league "Field: OPEN/CLOSED" lists, AMBL's rainout page, explicit
+    "all games cancelled" notices). Anything it can't read clearly stays ``unknown`` and
+    ``check`` explains why (blocked, unparseable, no match, stale, ...) and where to look.
     """
+    from rainout_agent import official_sources
+
     source_url = field.get("official_status_source_url")
     source_name = field.get("official_status_source_name")
-    result = {
+    result: dict[str, Any] = {
         "official_status": "unknown",
         "source_url": source_url,
         "source_name": source_name,
@@ -289,77 +291,36 @@ def fetch_official_rainout_status(field: dict[str, Any], timeout: float = 20) ->
         "last_checked": datetime.now(timezone.utc).isoformat(),
     }
     if not source_url:
+        result["check"] = {"outcome": "no_source", "message": f"No official status page is on file. {official_sources._fallback_text(field)}"}
         return result
     if field.get("poll_official_status") is False:
         result["polling_skipped"] = "not_a_status_feed"
+        result["check"] = {"outcome": "not_polled",
+                           "message": f"The official source is an information page, not a status feed, so it isn't read automatically. {official_sources._fallback_text(field)}"}
         return result
-
-    is_ambl = "austinmetrobaseball.com/rainout.php" in (source_url or "")
-
-    headers = {"User-Agent": "Rainout Source by JEEZ Labs (public pilot)"}
-    request = urllib.request.Request(source_url, headers=headers)
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            raw_text = response.read().decode("utf-8", errors="replace")
-    except Exception:
+    when = _parse_time(game_time) if isinstance(game_time, str) else game_time
+    check = official_sources.check_official_status(field, game_time=when, timeout=timeout)
+    result["official_status"] = check.pop("official_status")
+    result["checked"] = bool(check.pop("checked", False))
+    if check.get("outcome") in {"blocked", "unavailable"}:
         result["error"] = "official_source_unavailable"
-        return result
-
-    if is_ambl:
-        result["official_status"] = _parse_ambl_rainout_status(raw_text)
-    else:
-        result["official_status"] = parse_official_rainout_status(raw_text)
-    result["checked"] = True
+    result["check"] = check
     return result
 
 
-def _parse_ambl_rainout_status(raw_text: str) -> str:
-    """Conservative parser for AMBL rainout.php - only explicit signals."""
-    text = (raw_text or "").lower()
-    if re.search(r"\b(rainout|postponed)\b", text) or re.search(r"\b(777|999)\b", raw_text or ""):
-        return "cancelled"
-    return "unknown"
-
-
 def parse_official_rainout_status(source_text: str) -> str:
-    """Parse clear official rainout signals from source text conservatively."""
-    raw_text = source_text or ""
-    raw_lower = raw_text.lower()
+    """Page-wide status of a single-venue page (compatibility helper for scripts and tests)."""
+    from rainout_agent import official_sources
 
-    # SportsConnect/Blue Sombrero field-status widgets use CSS classes such as
-    # skOpen and skClose instead of plain text labels. Promote those only when
-    # the page has a clear one-sided signal.
-    open_count = len(re.findall(r"\bskopen\b", raw_lower))
-    close_count = len(re.findall(r"\bskclose\b", raw_lower))
-    if close_count and close_count > open_count:
-        return "field_closed"
-    if open_count and not close_count:
-        return "on"
-
-    text = unescape(re.sub(r"<[^>]+>", " ", raw_text)).lower()
-    text = " ".join(text.split())
-    if not text:
-        return "unknown"
-
-    # Some private complexes publish sport-specific lines like
-    # "Baseball: Field 1 Open". Prefer those over generic page words like
-    # "closure" that may only explain weather policy.
-    sport_status = re.search(r"\b(baseball|softball)\b.{0,200}\b(open|closed|cancelled|canceled|delayed|postponed)\b", text)
-    if sport_status:
-        status_word = sport_status.group(2)
-        if status_word == "open":
-            return "on"
-        if status_word in {"closed", "cancelled", "canceled"}:
-            return "field_closed" if status_word == "closed" else "cancelled"
-        return "delayed"
-
-    if re.search(r"\b(cancelled|canceled|cancellations?|rain(?:ed)? out|rainedout)\b", text):
-        return "cancelled"
-    if re.search(r"\b(fields?|diamonds?)\b.{0,40}\b(closed|closure)\b|\b(closed|closure)\b.{0,40}\b(fields?|diamonds?)\b", text):
-        return "field_closed"
-    if re.search(r"\b(delayed?|postponed|lightning delay)\b", text):
-        return "delayed"
-    return "unknown"
+    now = datetime.now(timezone.utc)
+    field = {"official_status_scope": "all", "official_status_source_url": "https://example.invalid/"}
+    page = official_sources.page_items("https://example.invalid/", source_text, official_sources.field_zone({}), now)
+    for item in page.get("items", []):
+        item.setdefault("posted_at", now.isoformat())
+        if not item.get("posted_at"):
+            item["posted_at"] = now.isoformat()
+    page["page_posted_at"] = page.get("page_posted_at") or now.isoformat()
+    return official_sources.decide(page, field, None, now)["official_status"]
 
 
 def _has_published_rainout_phone(field: dict[str, Any]) -> bool:
@@ -489,7 +450,7 @@ def build_status_result(
         "last_checked": None,
     }
     if official_status is None:
-        official_data = fetch_official_rainout_status(field)
+        official_data = fetch_official_rainout_status(field, game_time=game_time)
     official_status_value = official_data.get("official_status") or "unknown"
 
     weather_data = weather or fetch_nws_weather(field, game_time)
@@ -520,6 +481,7 @@ def build_status_result(
             "official_status_source_name": official_data.get("source_name"),
             "official_status_checked": bool(official_data.get("checked")),
             "official_status_last_checked": official_data.get("last_checked"),
+            "official_status_check": official_data.get("check"),
             "source_reliability": _calculate_source_reliability(official_data),
             "recommendation": probability["recommendation"],
             "risk_level": probability["risk_level"],
