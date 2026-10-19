@@ -270,3 +270,19 @@ def test_fixed_texas_coordinates(field_id):
 
     station = load_historical_profile(field_id)["noaa_history"]["station"]
     assert station["distance_km"] < 15
+
+
+def test_documented_venue_search_example_returns_results():
+    """The /v1/fields?q=... example in README, llms.txt and OpenAPI must find something."""
+    import re
+    from pathlib import Path
+
+    from rainout_agent.status_api import fields_payload
+
+    root = Path(__file__).resolve().parents[1]
+    for doc in ("README.md", "llms.txt", "docs/venues-osm.md"):
+        for q, state in re.findall(r"/v1/fields\?q=([^&\s)]+)&state=([A-Z]{2})", (root / doc).read_text()):
+            payload = fields_payload(q=q.replace("%20", " "), state=state, verification="all")
+            assert payload["count"] >= 1, f"{doc}: example q={q}&state={state} finds nothing"
+    example = re.search(r"description: Venue name search\., example: ([^}]+)}", (root / "openapi.yaml").read_text()).group(1)
+    assert fields_payload(q=example, state="TX", verification="all")["count"] >= 1

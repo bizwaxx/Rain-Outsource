@@ -59,7 +59,7 @@ paths:
             type: string
           description: Comma-separated two-letter US state codes.
           example: TX,OK
-        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: Venue name search., example: Lamar Park}
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: Venue name search., example: Zilker}
         - {in: query, name: near, required: false, schema: {type: string}, description: "lat,lon to search around.", example: "30.27,-97.74"}
         - {in: query, name: radius_km, required: false, schema: {type: number, minimum: 1, maximum: 200, default: 25}}
         - {in: query, name: verification, required: false, schema: {type: string, enum: [confirmed, osm_only, all]}, description: "Default: all when q or near is given, otherwise confirmed."}
