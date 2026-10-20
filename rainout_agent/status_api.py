@@ -427,8 +427,12 @@ def build_status_result(
     game_time: str,
     weather: dict[str, Any] | None = None,
     official_status: str | None = None,
+    venue_override: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Build the live API JSON result for one field and game time."""
+    """Build the live API JSON result for one field and game time.
+
+    ``venue_override`` (from ``venue_maintenance`` / ``venue_level`` / ``venue_surface``) lets a league state its
+    venue's tarp/crew, level and surface; it is labelled as unverified in ``venue_profile.sources``."""
     field_id = resolve_field_id(field_query)
     if not field_id:
         supported_names = ", ".join(field["name"] for field in list_supported_fields())
@@ -441,7 +445,10 @@ def build_status_result(
             "spoken_answer": f"I do not know that field yet. Right now Rain-Outsource supports: {supported_names}.",
         }
 
-    field = load_field(field_id)
+    from rainout_agent import venue_profile
+
+    field = dict(load_field(field_id))
+    field["venue_profile_resolved"] = venue_profile.build(field, venue_override)
     official_data = {
         "official_status": official_status or "unknown",
         "source_url": field.get("official_status_source_url"),
@@ -498,6 +505,7 @@ def build_status_result(
             "historical_calibration": _public_calibration(calibration, probability),
             "verification_level": field.get("verification_level", "confirmed"),
             "model": model_info,
+            "venue_profile": field["venue_profile_resolved"],
         }
     )
     if field.get("verification_level") == "osm_only":
@@ -548,8 +556,10 @@ def _apply_event_risk(field: dict[str, Any], game_time: str, official_status: st
     if start is None or coords.get("lat") is None:
         return {"version": "v1", "note": "no game time or coordinates for the event model"}
     try:
+        prof = field.get("venue_profile_resolved") or {}
         v2 = event_weather.evaluate(coords["lat"], coords["lon"], start, _event_duration_h(field),
-                                    event_risk.drainage_class(field), thunder_forecast=bool(weather_data.get("thunderstorm_likely")))
+                                    event_risk.drainage_class(field), thunder_forecast=bool(weather_data.get("thunderstorm_likely")),
+                                    maintained=bool(prof.get("maintained")))
     except Exception:  # pragma: no cover - the event model must never break a status answer
         v2 = None
     if v2 is None:

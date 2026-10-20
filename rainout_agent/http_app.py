@@ -192,7 +192,9 @@ def application(environ, start_response):
         return _json_response(start_response, "400 Bad Request", {"error": "missing_game_time"})
 
     try:
-        payload = build_status_result(field_query=field_query, game_time=game_time)
+        from rainout_agent.venue_profile import parse_override
+
+        payload = build_status_result(field_query=field_query, game_time=game_time, venue_override=parse_override(params))
     except Exception as exc:  # pragma: no cover - safety net for live hosting
         return _json_response(
             start_response,
