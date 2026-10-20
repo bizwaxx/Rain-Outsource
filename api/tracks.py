@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+from rainout_agent import metrics
 from rainout_agent.tracks_api import handle_tracks_request
 
 
@@ -22,3 +23,6 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
+
+
+metrics.instrument(handler)

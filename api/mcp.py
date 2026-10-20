@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 
+from rainout_agent import metrics
 from rainout_agent.mcp_server import MAX_BODY, handle_http
 
 
@@ -30,3 +31,6 @@ class handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self._run("OPTIONS")
+
+
+metrics.instrument(handler)

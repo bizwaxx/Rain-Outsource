@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler
 
+from rainout_agent import metrics
 from rainout_agent import http_cache
 from rainout_agent.cache import get_cache
 from rainout_agent.status_api import list_supported_fields
@@ -37,3 +38,6 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+
+metrics.instrument(handler)
