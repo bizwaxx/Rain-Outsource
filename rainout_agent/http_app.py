@@ -154,7 +154,8 @@ def application(environ, start_response):
                 length = 0
             body = environ["wsgi.input"].read(min(length, C_MAX + 1)) if length > 0 else b""
         status, content_type, payload, cache_control = handle_construction_request(
-            method, path, environ.get("QUERY_STRING", ""), body, environ.get("CONTENT_TYPE", ""))
+            method, path, environ.get("QUERY_STRING", ""), body, environ.get("CONTENT_TYPE", ""),
+            headers={k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")})
         start_response(f"{status} {HTTPStatus(status).phrase}",
                        [("Content-Type", content_type), ("Content-Length", str(len(payload))),
                         ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache_control)])
