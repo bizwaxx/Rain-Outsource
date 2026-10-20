@@ -275,6 +275,16 @@ bigger batch checks (10 games or 3 teams per call). Paid plans are available lat
 </form>"""
 
 
+def _count_signup(headers: dict[str, str] | None) -> None:
+    """Daily signup counter (usage-metrics PR). Optional: does nothing if that module is absent; never raises."""
+    try:
+        from rainout_agent import metrics  # type: ignore[attr-defined]
+
+        metrics.event("free_key_signup", headers)
+    except Exception:
+        pass
+
+
 def _keys(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str, Any]) -> Response:
     if method == "GET":
         return _html(200, SIGNUP_PAGE)
@@ -300,6 +310,7 @@ def _keys(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str
         if is_form:
             return _html(exc.status, f"<!doctype html><meta charset=utf-8><p>{exc.message}</p><p><a href=/v1/keys>Back</a></p>")
         return _error(exc.status, exc.code, exc.message, extra)
+    _count_signup(headers)
     if is_form:
         return _html(201, "<!doctype html><meta charset=utf-8><title>Your free key</title><h1>Your free API key</h1>"
                           f"<p><code style='word-break:break-all'>{result['api_key']}</code></p>"
