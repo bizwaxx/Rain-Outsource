@@ -262,7 +262,7 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, `get_precipitation_nowcast`, `check_concrete_pour`, `check_materials_risk`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, `get_precipitation_nowcast`, `check_concrete_pour`, `check_materials_risk`, `go_no_go`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
 
 ## Motocross race checker
@@ -328,6 +328,10 @@ Weather screening for outdoor construction, built on the same free forecast plum
 - Materials: `GET|POST /v1/construction/materials?lat=&lon=&materials=drywall,lumber,cement_bags&covered=false`
   (MCP `check_materials_risk`) rates rain damage risk per material (low to severe) over a window, with the expected
   rain total and intensity and plain protective actions.
+- One answer for anything: `GET|POST /v1/go-no-go?activity=roofing&lat=&lon=&time=` (MCP `go_no_go`) for softball,
+  baseball, soccer, motocross, concrete_pour, roofing, painting or general_outdoor_work. Sports with a venue use the
+  official status + forecast + NOAA model, motocross uses the race checker, construction uses workability rules. Same
+  shape every time: decision, probability_percent, reason, recheck_at, sources.
 
 Details: [docs/construction.md](docs/construction.md).
 

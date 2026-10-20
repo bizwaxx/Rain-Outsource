@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.16.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). The v2 beta construction layer adds a concrete pour go/no-go and materials rain-damage risk (weather screening, not engineering advice). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
+  version: 2.0.0-beta
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). The v2 beta construction layer adds a concrete pour go/no-go, materials rain-damage risk and a unified go/no-go for every activity (weather screening, not engineering advice). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -774,8 +774,52 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/go-no-go:
+    get:
+      operationId: goNoGo
+      summary: One go / wait / no-go answer for any outdoor activity (sports, motocross, concrete, roofing, painting, outdoor work).
+      description: >-
+        Routes softball, baseball and soccer with a venue to the sports status model, motocross with a track_id to the
+        race checker, concrete_pour to the concrete checker, and roofing, painting and general_outdoor_work to workability
+        rules (rain during and after, thunder, gusts, temperature, humidity and dew point, heat index). With only a
+        location, sports get weather-only play odds. Always returns decision, probability_percent, reason, recheck_at,
+        sources and routed_to. Also POST with a JSON body. Construction answers are weather screening, not engineering advice.
+      parameters:
+        - {in: query, name: activity, required: true, schema: {type: string, enum: [softball, baseball, soccer, motocross, concrete_pour, roofing, painting, general_outdoor_work]}}
+        - {in: query, name: venue, required: false, schema: {type: string}, description: Sports venue name or field_id (alias field_id).}
+        - {in: query, name: track_id, required: false, schema: {type: string}, description: Motocross track_id from /v1/tracks.}
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}}
+        - {in: query, name: location, required: false, schema: {type: string, maxLength: 120}, description: "Town name or 'lat,lon' (alias q)."}
+        - {in: query, name: time, required: false, schema: {type: string}, description: "Local time at the place, ISO 8601 with offset, or now (default now).", example: "2026-10-21 07:00"}
+        - {in: query, name: duration_hours, required: false, schema: {type: number, minimum: 0.5, maximum: 16}}
+        - {in: query, name: mix, required: false, schema: {type: string}, description: concrete_pour only.}
+        - {in: query, name: protection, required: false, schema: {type: boolean}, description: concrete_pour only.}
+      responses:
+        "200": {description: Decision (or matches when the town name is ambiguous), content: {application/json: {schema: {$ref: "#/components/schemas/GoNoGoResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    GoNoGoResult:
+      type: object
+      required: [activity, decision, reason, event_confirmed, weather_decision, recheck_at, sources, routed_to]
+      properties:
+        activity: {type: string}
+        decision: {type: string, enum: [go, wait, no_go, no_event_found], description: "no_event_found means a schedule lookup ran (motocross with track_id) and nothing is listed at that time; never read it as go."}
+        event_confirmed: {type: boolean, nullable: true, description: "true if a listed event was found, false if looked and none is listed, null if no schedule lookup ran (venue or location checks, construction)."}
+        weather_decision: {type: string, enum: [go, wait, no_go], description: "The weather/status-only decision, also given when decision is no_event_found."}
+        probability_percent: {type: integer, nullable: true, description: "Chance the game is played or the work goes ahead as planned (weather-only odds when decision is no_event_found)."}
+        reason: {type: string}
+        recheck_at: {type: string}
+        sources: {type: array, items: {type: object}}
+        routed_to: {type: string, enum: [get_venue_status, check_race, weather_only_play_odds, check_concrete_pour, workability]}
+        time: {type: object}
+        location: {type: object}
+        best_alternative: {type: object, nullable: true}
+        details: {type: object}
+        disclaimer: {type: string}
     MaterialsRiskResult:
       type: object
       properties:

@@ -3,6 +3,7 @@
 GET /v1/nowcast?lat=&lon=  (or q=place)
 GET|POST /v1/construction/concrete-pour
 GET|POST /v1/construction/materials
+GET|POST /v1/go-no-go
 """
 from __future__ import annotations
 
@@ -75,10 +76,21 @@ def _materials(params: dict[str, Any]) -> dict[str, Any]:
                                 end=params.get("end"), hours=params.get("hours"))
 
 
+def _go_no_go(params: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.go_no_go import go_no_go
+
+    opts = {k: params.get(k) for k in ("cure_hours", "critical_hours", "mix", "protection", "concrete_temp_f", "search_days")}
+    return go_no_go(params.get("activity"), venue=params.get("venue") or params.get("field_id"), track_id=params.get("track_id"),
+                    location=_location(params), lat=params.get("lat"), lon=params.get("lon"), pick=params.get("pick"),
+                    time=params.get("time") or params.get("start") or params.get("game_time"),
+                    duration_hours=params.get("duration_hours"), options=opts)
+
+
 ROUTES: dict[str, tuple[Callable[[dict[str, Any]], dict[str, Any]], tuple[str, ...]]] = {
     "/v1/nowcast": (_nowcast, ("GET",)),
     "/v1/construction/concrete-pour": (_concrete, ("GET", "POST")),
     "/v1/construction/materials": (_materials, ("GET", "POST")),
+    "/v1/go-no-go": (_go_no_go, ("GET", "POST")),
 }
 
 
