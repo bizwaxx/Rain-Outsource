@@ -115,6 +115,28 @@ PLANS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Pay per call with x402 (USDC; Base Sepolia testnet only for now). No account or key.
+PAY_PER_CALL = {
+    "name": "Pay per call (x402)",
+    "price_usd_month": None,
+    "price_per_call_usdc": "0.02",
+    "requires_key": False,
+    "rate_per_minute": None,
+    "monthly_units": None,
+    "batch_max_items": 50,
+    "max_teams_per_call": 25,
+    "history_years": 10,
+    "decision_detail": "full",
+    "alert_watches": 0,
+    "sla": None,
+    "support": "GitHub issues",
+    "features": [
+        "POST /v1/premium/batch: up to 50 games or 25 teams per call for 0.02 USDC, paid with x402",
+        "No signup: any x402 v2 client with a wallet can pay (testnet only until launch)",
+    ],
+}
+PLANS["pay_per_call"] = PAY_PER_CALL
+
 KEY_PLANS = tuple(name for name, plan in PLANS.items() if plan["requires_key"])  # plans that use an API key
 PAID = tuple(name for name in KEY_PLANS if (PLANS[name]["price_usd_month"] or 0) > 0)  # Stripe subscriptions
 FREE_KEY = "free_key"

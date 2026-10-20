@@ -132,6 +132,10 @@
       "dest": "/api/status.py"
     },
     {
+      "src": "/v1/premium/batch/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/v1/keys/?",
       "dest": "/api/status.py"
     },

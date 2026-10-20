@@ -30,7 +30,8 @@ of 3) instead of being refused, so holding a key is never worse than not having 
   429 with `Retry-After`; the API still works without a key.
 
 Pay per call instead of subscribing: the x402 lane (USDC on Base; testnet only for now)
-sells single premium calls with no account. See docs/x402.md.
+sells single premium calls with no account: `POST /v1/premium/batch`, up to 50 games or
+25 teams for 0.02 USDC. See docs/x402.md.
 
 ## Using a key
 
