@@ -438,6 +438,12 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
     if handler is None:
         raise KeyError(name)
     try:
+        from rainout_agent import metrics
+
+        metrics.note_tool(name)  # counted with the /mcp request (no extra round trip)
+    except Exception:  # pragma: no cover - counting never breaks a tool call
+        pass
+    try:
         data = handler(args or {})
     except ToolError as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "isError": True}
