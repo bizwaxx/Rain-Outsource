@@ -21,7 +21,8 @@ def env():
 
 
 def test_checkout_request_is_valid_for_stripe(env):
-    session = billing.create_checkout("coach", email="coach@example.com", env=env)
+    session = billing.create_checkout("coach", email="coach@example.com", env=env,
+                                      from_key=api_keys.KeyInfo(key_id="ffree1", plan="free_key", mode="test"))
     assert session["checkout_url"].startswith("https://checkout.stripe.com/") and session["session_id"].startswith("cs_")
 
 

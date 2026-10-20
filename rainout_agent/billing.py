@@ -139,10 +139,14 @@ def public_url(env: dict[str, str] | None = None) -> str:
     return (_env(env).get("RAINOUT_PUBLIC_URL") or PUBLIC_URL).rstrip("/")
 
 
-def create_checkout(plan: str, email: str | None = None, env: dict[str, str] | None = None) -> dict[str, Any]:
+def create_checkout(plan: str, email: str | None = None, env: dict[str, str] | None = None,
+                    from_key: api_keys.KeyInfo | None = None) -> dict[str, Any]:
     mode(env)
     price = price_for(plan, env)
     base = public_url(env)
+    meta = {"plan": plan, "product": "rainout-source"}
+    if from_key:
+        meta["from_key_id"] = from_key.key_id
     session = stripe("POST", "/v1/checkout/sessions", {
         "mode": "subscription",
         "line_items": [{"price": price, "quantity": 1}],
@@ -150,9 +154,11 @@ def create_checkout(plan: str, email: str | None = None, env: dict[str, str] | N
         "cancel_url": f"{base}/v1/billing/checkout?canceled=1",
         "allow_promotion_codes": True,
         "billing_address_collection": "auto",
-        "customer_email": email or None,
-        "metadata": {"plan": plan, "product": "rainout-source"},
-        "subscription_data": {"metadata": {"plan": plan, "product": "rainout-source"}},
+        "customer_email": None if (from_key and from_key.customer) else (email or None),  # Stripe allows one of the two
+        "client_reference_id": from_key.key_id if from_key else None,
+        "customer": from_key.customer if from_key and from_key.customer else None,
+        "metadata": meta,
+        "subscription_data": {"metadata": meta},
     }, env)
     return {"checkout_url": session.get("url"), "session_id": session.get("id"), "plan": plan, "mode": mode(env)}
 
@@ -189,7 +195,8 @@ def checkout_success(session_id: str, env: dict[str, str] | None = None) -> dict
     api_keys.set_subscription_state(sub["id"], status, plan)
     key = key_for_subscription(sub["id"], session.get("customer") or sub.get("customer"), plan, env)
     return {"api_key": key, "plan": plan, "subscription_status": status, "mode": mode(env),
-            "how_to_use": "Send it as the X-API-Key header on /v1/batch and other paid endpoints. Keep it secret.",
+            "how_to_use": "Send it as the X-API-Key header on /v1/batch and other key endpoints. Keep it secret. "
+                          "Your free key keeps working at the free-key level.",
             "dashboard": f"{public_url(env)}/v1/account", "manage_billing": f"{public_url(env)}/v1/billing/portal"}
 
 

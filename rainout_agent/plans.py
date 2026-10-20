@@ -1,7 +1,8 @@
 """Plans for the hosted API: the free public tier plus paid API-key plans.
 
-The free tier is exactly today's public API: every existing endpoint stays
-open with no key and no new limits. Paid plans add capability on new endpoints
+The anonymous tier is exactly today's public API: every existing endpoint stays
+open with no key and no new limits. A free self-serve key (no card) adds a
+dashboard and bigger batches; paid plans add capability on new endpoints
 (batch checks, a whole league in one call, richer decisions, a usage dashboard,
 an SLA) and per-key limits that only apply to those paid features.
 
@@ -31,6 +32,27 @@ PLANS: dict[str, dict[str, Any]] = {
             "Every existing endpoint (status, rain, fields, teams, tracks, reports, MCP) with no key and no new limits",
             "Batch checks of up to 3 games per call",
             "should_we_cancel: play / delay / cancel recommendation",
+        ],
+    },
+    "free_key": {
+        "name": "Free key",
+        "price_usd_month": 0,
+        "requires_key": True,
+        "self_serve": True,
+        "rate_per_minute": 30,
+        "monthly_units": 3_000,
+        "batch_max_items": 10,
+        "max_teams_per_call": 3,
+        "history_years": 10,
+        "decision_detail": "basic",
+        "alert_watches": 0,
+        "sla": None,
+        "support": "GitHub issues",
+        "features": [
+            "Instant, no card: POST /v1/keys (email optional)",
+            "Batch checks of up to 10 games or 3 teams per call (anonymous: 3 games / 1 team)",
+            "Usage dashboard (GET /v1/account)",
+            "Upgrade to a paid plan any time from the dashboard",
         ],
     },
     "coach": {
@@ -115,7 +137,9 @@ PAY_PER_CALL = {
 }
 PLANS["pay_per_call"] = PAY_PER_CALL
 
-PAID = tuple(name for name, plan in PLANS.items() if plan["requires_key"])
+KEY_PLANS = tuple(name for name, plan in PLANS.items() if plan["requires_key"])  # plans that use an API key
+PAID = tuple(name for name in KEY_PLANS if (PLANS[name]["price_usd_month"] or 0) > 0)  # Stripe subscriptions
+FREE_KEY = "free_key"
 
 
 def get_plan(name: str | None) -> dict[str, Any]:

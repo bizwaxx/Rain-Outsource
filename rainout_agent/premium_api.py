@@ -1,5 +1,6 @@
 """HTTP layer for the paid-tier endpoints (served by the api/status.py function).
 
+* ``GET/POST /v1/keys`` free self-serve API key (no card); GET is a signup page.
 * ``GET  /v1/plans``    public plan list (free vs paid limits and features).
 * ``GET  /v1/account``  usage dashboard for the key holder (needs a key).
 * ``/v1/billing/*``      Stripe Checkout, success page (shows the key), portal, webhook.
@@ -15,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 from urllib.parse import parse_qs
 
-from rainout_agent import api_keys, billing, plans, usage, x402
+from rainout_agent import api_keys, billing, plans, signup, usage, x402
 
 MAX_BODY = 512_000  # Stripe webhooks can be large; batch bodies are capped at BATCH_MAX_BODY
 BATCH_MAX_BODY = 64_000
@@ -32,7 +33,7 @@ GAME_KEYS = ("game_id", "opponent", "start", "when_spoken", "venue", "league_sta
              "at_risk", "reason")
 
 Response = tuple[int, dict[str, str], bytes]
-PREMIUM_PATHS = {"/v1/plans", "/v1/account", "/v1/batch"}
+PREMIUM_PATHS = {"/v1/plans", "/v1/account", "/v1/batch", "/v1/keys"}
 PREMIUM_PREFIXES = ("/v1/billing/", "/v1/premium/")
 
 
@@ -112,8 +113,8 @@ def handle_premium_request(method: str, path: str, query: str, body: bytes, head
     if path == "/v1/plans":
         return _json(200, {"plans": plans.public_plans(),
                            "free_tier": "Every existing endpoint stays free and open with no key and no new limits.",
-                           "how_to_use_a_key": "Send X-API-Key: <key> (or Authorization: Bearer <key>). No key = free tier.",
-                           "signup": "https://rainout-agent-source.vercel.app/v1/billing/checkout?plan=coach",
+                           "how_to_use_a_key": "Send X-API-Key: <key> (or Authorization: Bearer <key>). No key = anonymous tier.",
+                           "signup": "https://rainout-agent-source.vercel.app/v1/keys (free key, no card); upgrade from /v1/account later",
                            "units": "1 unit = 1 game or 1 team checked in a paid call."})
     if path == "/v1/account":
         info, err = api_keys.resolve_request(headers)
@@ -121,7 +122,15 @@ def handle_premium_request(method: str, path: str, query: str, body: bytes, head
             return _key_error(err)
         if not info:
             return _error(401, "api_key_required", "Send X-API-Key to see usage for your key. The free tier needs no key.")
-        return _json(200, {"key": info.public(), "usage": usage.summary(info), "plan": plans.get_plan(info.plan)})
+        out = {"key": info.public(), "usage": usage.summary(info), "plan": plans.get_plan(info.plan)}
+        if info.plan == plans.FREE_KEY:
+            out["upgrade"] = {"why": "Paid plans raise batch sizes (25-250), rate limits and monthly units, and add richer decisions.",
+                              "plans": [{"id": pid, "name": plans.PLANS[pid]["name"], "price_usd_month": plans.PLANS[pid]["price_usd_month"],
+                                         "batch_max_items": plans.PLANS[pid]["batch_max_items"]} for pid in plans.PAID],
+                              "how": "Upgrade with your free key at /v1/billing/checkout (once billing is enabled)."}
+        return _json(200, out)
+    if path == "/v1/keys":
+        return _keys(method, body, headers, kw)
     if path == "/v1/batch":
         return _batch(method, body, headers, kw)
     if path == "/v1/premium/batch":
@@ -161,11 +170,17 @@ def _batch(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[st
     if info:
         try:
             use = usage.check_and_count(info, len(items), "batch")
+            extra.update(usage.rate_headers(use))
         except usage.LimitExceeded as exc:
-            return _error(429, exc.code, exc.message, {"Retry-After": str(exc.retry_after), "X-Rainout-Plan": plan_id},
-                          retry_after_seconds=exc.retry_after, usage=exc.usage,
-                          free_tier="Existing single-game endpoints stay free; drop the key to use them.")
-        extra.update(usage.rate_headers(use))
+            anon = plans.get_plan(plans.FREE)
+            if len(items) <= anon["batch_max_items"] and teams_n <= anon["max_teams_per_call"]:
+                # A key never leaves you worse off than no key: serve it at the anonymous allowance.
+                info, plan_id, use = None, plans.FREE, None
+                extra = {"X-Rainout-Plan": "free", "X-Rainout-Fallback": exc.code}
+            else:
+                return _error(429, exc.code, exc.message, {"Retry-After": str(exc.retry_after), "X-Rainout-Plan": plan_id},
+                              retry_after_seconds=exc.retry_after, usage=exc.usage,
+                              anonymous_allowance=f"Batches of up to {anon['batch_max_items']} still work at the anonymous level.")
     results = batch(items, plan_id, **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
     at_risk = [r["index"] for r in results if r.get("ok") and _at_risk(r["result"])]
     payload = {"plan": plan_id, "count": len(results), "ok": sum(1 for r in results if r.get("ok")),
@@ -193,11 +208,14 @@ def _checkout_page(canceled: bool) -> Response:
         f'<form method="post" action="/v1/billing/checkout"><input type="hidden" name="plan" value="{pid}">'
         f'<h2>{p["name"]} &mdash; ${p["price_usd_month"]}/month</h2><ul>{"".join(f"<li>{f}</li>" for f in p["features"])}</ul>'
         f'<button type="submit">Subscribe to {p["name"]}</button></form>'
-        for pid, p in plans.PLANS.items() if p["requires_key"])
+        for pid, p in plans.PLANS.items() if pid in plans.PAID)
+    rows = rows.replace('<input type="hidden" name="plan"',
+                        '<input type="password" name="api_key" placeholder="Your API key (rk_...)" required> <input type="hidden" name="plan"')
     note = "<p>Checkout was canceled; nothing was charged.</p>" if canceled else ""
-    return _html(200, "<!doctype html><meta charset=utf-8><title>Rainout Source plans</title>"
-                      "<h1>Rainout Source paid plans</h1>" + note +
-                      "<p>The free public API stays free with no key. Paid plans add batch checks, whole-league calls and more.</p>"
+    return _html(200, "<!doctype html><meta charset=utf-8><title>Upgrade Rainout Source</title>"
+                      "<h1>Upgrade your Rainout Source key</h1>" + note +
+                      "<p>Step 1: <a href=/v1/keys>get a free key</a> (no card). Step 2: paste it below and pick a plan. "
+                      "The API stays free without a key; paid plans add bigger batches, whole-league calls and more.</p>"
                       + rows)
 
 
@@ -219,7 +237,17 @@ def _billing(method: str, path: str, query: str, body: bytes, headers: dict[str,
         form = {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()} \
             if "form" in (h.get("content-type") or "") else (json.loads(body or b"{}") if body.strip() else {})
         plan = (form.get("plan") or params.get("plan") or "").strip().lower()
-        session = billing.create_checkout(plan, email=form.get("email") or None)
+        # Free signup first: upgrades start from an existing key (free or paid).
+        key_headers = dict(headers or {})
+        if form.get("api_key") and not api_keys.key_from_headers(key_headers):
+            key_headers["X-API-Key"] = str(form["api_key"])
+        info, err = api_keys.resolve_request(key_headers)
+        if err:
+            return _key_error(err)
+        if not info:
+            return _error(401, "free_key_required", "Create a free key first (POST /v1/keys or /v1/keys, no card), then upgrade with it.",
+                          signup="/v1/keys")
+        session = billing.create_checkout(plan, email=form.get("email") or None, from_key=info)
         if "form" in (h.get("content-type") or ""):
             return 303, {"Location": session["checkout_url"], "Cache-Control": "no-store", **CORS_HEADERS}, b""
         return _json(200, session)
@@ -268,3 +296,49 @@ def _premium_batch(method: str, body: bytes, headers: dict[str, str] | None, kw:
     return x402.paywall(headers, f"{billing.public_url()}/v1/premium/batch",
                         f"Batch rainout check: up to {plan['batch_max_items']} games or {plan['max_teams_per_call']} teams", run,
                         env=kw.get("env"), now=kw.get("now"))
+
+
+SIGNUP_PAGE = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>Free Rainout Source API key</title>
+<h1>Get a free API key</h1>
+<p>No card. Email is optional. The API keeps working without a key; a key adds a usage dashboard and
+bigger batch checks (10 games or 3 teams per call). Paid plans are available later from your dashboard.</p>
+<form method=post action="/v1/keys">
+<label>Name or project (optional) <input name=label maxlength=60></label><br>
+<label>Email (optional, for upgrade and service notices only) <input name=email type=email maxlength=254></label><br>
+<input name=website tabindex=-1 autocomplete=off style="position:absolute;left:-5000px" aria-hidden=true>
+<button type=submit>Create my free key</button>
+</form>"""
+
+
+def _keys(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str, Any]) -> Response:
+    if method == "GET":
+        return _html(200, SIGNUP_PAGE)
+    if method != "POST":
+        return _error(405, "method_not_allowed", "POST /v1/keys (JSON or form) to create a free key.")
+    if len(body) > 4096:
+        return _error(413, "body_too_large", "Body must be under 4096 bytes.")
+    from rainout_agent.reports import client_from_headers
+
+    h = {k.lower(): v for k, v in (headers or {}).items()}
+    is_form = "form" in (h.get("content-type") or "")
+    try:
+        data = {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()} if is_form \
+            else (json.loads(body) if body.strip() else {})
+    except ValueError:
+        return _error(400, "invalid_json", "Body must be JSON (email and label are optional).")
+    if not isinstance(data, dict):
+        return _error(400, "invalid_json", "Body must be a JSON object.")
+    try:
+        result = signup.issue_free_key(data, client_from_headers(headers or {}, kw.get("client")), now=kw.get("now"))
+    except signup.SignupError as exc:
+        extra = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+        if is_form:
+            return _html(exc.status, f"<!doctype html><meta charset=utf-8><p>{exc.message}</p><p><a href=/v1/keys>Back</a></p>")
+        return _error(exc.status, exc.code, exc.message, extra)
+    if is_form:
+        return _html(201, "<!doctype html><meta charset=utf-8><title>Your free key</title><h1>Your free API key</h1>"
+                          f"<p><code style='word-break:break-all'>{result['api_key']}</code></p>"
+                          "<p>Copy it now; it is shown only once. Send it as the <code>X-API-Key</code> header. "
+                          "See usage at <code>GET /v1/account</code>.</p>")
+    return _json(201, result)
