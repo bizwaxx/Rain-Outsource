@@ -376,6 +376,10 @@ def notice_replay(fx: dict[str, Any], track: dict[str, Any], wp_payload: Any) ->
                 "detail": f"post is dated after the event ({posted.date()}), so it could not help on race day (parser: '{st['status']}')"}
     st = mx.official_status(track, ev, notices, max(ws - timedelta(hours=2), posted or ws))
     status = st["status"]
+    if fx.get("outcome") == "played":
+        # A race that ran: the parser must NOT turn its posts (results, live broadcasts) into a cancellation.
+        ok = status not in ("cancelled", "postponed")
+        return {"check": "mx_notice_parser", "ok": ok, "detail": f"race ran; parser says '{status}'"}
     ok = status in ("cancelled", "postponed", "uncertain")
     detail = f"parser says '{status}'" + (" (flagged as uncertain, odds capped at 50%)" if status == "uncertain" else "")
     if not ok:
