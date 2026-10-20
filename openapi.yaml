@@ -804,11 +804,13 @@ components:
   schemas:
     GoNoGoResult:
       type: object
-      required: [activity, decision, reason, recheck_at, sources, routed_to]
+      required: [activity, decision, reason, event_confirmed, weather_decision, recheck_at, sources, routed_to]
       properties:
         activity: {type: string}
-        decision: {type: string, enum: [go, wait, no_go]}
-        probability_percent: {type: integer, nullable: true, description: Chance the game is played or the work goes ahead as planned.}
+        decision: {type: string, enum: [go, wait, no_go, no_event_found], description: "no_event_found means a schedule lookup ran (motocross with track_id) and nothing is listed at that time; never read it as go."}
+        event_confirmed: {type: boolean, nullable: true, description: "true if a listed event was found, false if looked and none is listed, null if no schedule lookup ran (venue or location checks, construction)."}
+        weather_decision: {type: string, enum: [go, wait, no_go], description: "The weather/status-only decision, also given when decision is no_event_found."}
+        probability_percent: {type: integer, nullable: true, description: "Chance the game is played or the work goes ahead as planned (weather-only odds when decision is no_event_found)."}
         reason: {type: string}
         recheck_at: {type: string}
         sources: {type: array, items: {type: object}}

@@ -1,7 +1,12 @@
 """Unified go / wait / no-go for outdoor events and work (GET|POST /v1/go-no-go, MCP go_no_go).
 
 One call, one answer shape for every activity:
-``{activity, decision, probability_percent, reason, recheck_at, sources, routed_to, ...}``.
+``{activity, decision, probability_percent, reason, event_confirmed, weather_decision, recheck_at, sources, routed_to, ...}``.
+
+decision is go | wait | no_go, or no_event_found when a schedule lookup ran and found nothing
+at that time (motocross with track_id). event_confirmed: true (listed event found), false
+(looked, none listed) or null (no schedule lookup: venue/location checks and construction).
+weather_decision is always the weather/status-only go | wait | no_go.
 
 * softball, baseball, soccer with a ``venue`` -> the sports status model (official status,
   NWS forecast, NOAA history), exactly what /v1/status returns.
@@ -176,7 +181,7 @@ def go_no_go(activity: str | None, *, venue: str | None = None, track_id: str | 
         if r.get("ambiguous"):
             return r
         return {"activity": act, "decision": r["decision"], "probability_percent": r["probability_percent"], "reason": r["reason"],
-                "recheck_at": r["recheck_at"], "sources": r["sources"], "routed_to": "check_concrete_pour",
+                "event_confirmed": None, "weather_decision": r["decision"], "recheck_at": r["recheck_at"], "sources": r["sources"], "routed_to": "check_concrete_pour",
                 "time": {"start": r["pour"]["start"], "end": r["pour"]["end"]}, "location": r["location"],
                 "best_alternative": r["best_alternative"], "details": {"checks": r["checks"], "mix": r["mix"]},
                 "disclaimer": r["disclaimer"]}
@@ -197,7 +202,7 @@ def go_no_go(activity: str | None, *, venue: str | None = None, track_id: str | 
         hours = dur or cfg["go_no_go"]["activities"][act]["default_hours"]
         w = workability(act, rows, start, hours, cfg)
         return {"activity": act, "decision": w["decision"], "probability_percent": w["probability_percent"], "reason": w["reason"],
-                "recheck_at": _recheck(start, now, tz), "sources": wx["sources"], "routed_to": "workability",
+                "event_confirmed": None, "weather_decision": w["decision"], "recheck_at": _recheck(start, now, tz), "sources": wx["sources"], "routed_to": "workability",
                 "time": {"start": start.astimezone(tz).isoformat(), "end": w["window"][1].astimezone(tz).isoformat()},
                 "location": loc, "details": {"checks": w["checks"], "conditions": w["conditions"],
                                              "thresholds": {k: v for k, v in cfg["go_no_go"]["activities"][act].items() if k != "source"},
@@ -215,7 +220,8 @@ def go_no_go(activity: str | None, *, venue: str | None = None, track_id: str | 
     reason = (f"About {p}% chance the {act} {'race' if act == 'motocross' else 'game'} is played: {pop}% rain chance"
               f"{' with thunderstorms possible' if thunder else ''} at {sw.fmt_when(start, tz)}. No official status for a "
               "location without a venue; check the league or track before leaving.")
-    return {"activity": act, "decision": decision, "probability_percent": p, "reason": reason, "recheck_at": _recheck(start, now, tz),
+    return {"activity": act, "decision": decision, "probability_percent": p, "reason": reason,
+            "event_confirmed": None, "weather_decision": decision, "recheck_at": _recheck(start, now, tz),
             "sources": wx["sources"], "routed_to": "weather_only_play_odds",
             "time": {"start": start.astimezone(tz).isoformat(), "end": (start + timedelta(hours=hours)).astimezone(tz).isoformat()},
             "location": loc, "details": {"rain_chance_percent": pop, "thunderstorm_likely": thunder, "official_status": "unknown",
@@ -244,7 +250,7 @@ def _venue(act: str, venue: str, time: str | None, now: datetime, cfg: dict[str,
     if (r.get("historical_calibration") or {}).get("source"):
         sources.append({"name": r["historical_calibration"]["source"], "used_for": "NOAA rain history calibration"})
     return {"activity": act, "decision": decision, "probability_percent": p, "reason": r.get("reason") or r.get("spoken_answer"),
-            "spoken_answer": r.get("spoken_answer"), "recheck_at": _recheck(start, now, tz), "sources": sources, "routed_to": "get_venue_status",
+            "event_confirmed": None, "weather_decision": decision, "spoken_answer": r.get("spoken_answer"), "recheck_at": _recheck(start, now, tz), "sources": sources, "routed_to": "get_venue_status",
             "time": {"start": start.astimezone(tz).isoformat()}, "location": {"venue": r.get("field"), "field_id": fid, "address": r.get("address")},
             "details": {"official_status": status, "rain_chance_percent": r.get("rain_chance_percent"),
                         "thunderstorm_likely": r.get("thunderstorm_likely"), "recommendation": r.get("recommendation")}}
@@ -267,11 +273,22 @@ def _track(track_id: str, time: str | None, now: datetime, cfg: dict[str, Any], 
     cond = r.get("conditions_if_racing") or {}
     p = ev.get("play_probability") if r.get("found") else cond.get("play_probability")
     status = ev.get("official_status") or "unknown"
-    decision = "no_go" if status == "cancelled" else decision_from_percent(p, cfg)
+    found = bool(r.get("found"))
+    weather_decision = "no_go" if status == "cancelled" else decision_from_percent(p, cfg)
+    reason = r.get("answer")
+    if found:
+        decision = weather_decision
+    else:
+        # Never a bare "go" for a race nobody has listed.
+        decision = "no_event_found"
+        look = {"go": "looks fine", "wait": "looks iffy", "no_go": "looks bad"}[weather_decision]
+        odds = f" ({p}% weather-only odds)" if p is not None else ""
+        reason = f"No race is listed then; weather alone {look}{odds}. {reason}"
     sources = [{"name": s.get("name"), "url": s.get("url"), "used_for": "event listing"} for s in (ev.get("sources") or []) if isinstance(s, dict)]
     sources.append({"name": "National Weather Service / Open-Meteo", "used_for": "race-day rain odds"})
-    return {"activity": "motocross", "decision": decision, "probability_percent": p, "reason": r.get("answer"),
+    return {"activity": "motocross", "decision": decision, "probability_percent": p, "reason": reason,
+            "event_confirmed": found, "weather_decision": weather_decision,
             "recheck_at": _recheck(start, now, tz), "sources": sources, "routed_to": "check_race",
             "time": {"start": ev.get("start") or start.astimezone(tz).isoformat(), "end": ev.get("end")},
             "location": {"track": r["track"]["name"], "track_id": r["track"]["track_id"]},
-            "details": {"official_status": status, "event_found": bool(r.get("found")), "next_step": r.get("next_step")}}
+            "details": {"official_status": status, "event_found": found, "next_step": r.get("next_step")}}

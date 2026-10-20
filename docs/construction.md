@@ -162,7 +162,8 @@ POST /v1/go-no-go {"activity": "concrete_pour", "lat": 30.27, "lon": -97.74, "ti
 Every answer has the same core shape:
 
 ```json
-{"activity": "roofing", "decision": "go | wait | no_go", "probability_percent": 88,
+{"activity": "roofing", "decision": "go | wait | no_go | no_event_found", "probability_percent": 88,
+ "event_confirmed": null, "weather_decision": "go",
  "reason": "Go for roofing: 5% rain chance, 54-83°F, gusts to 12 mph.",
  "recheck_at": "2026-10-20T20:00:00-05:00", "sources": [...], "routed_to": "workability",
  "time": {...}, "location": {...}, "details": {...}}
@@ -177,6 +178,18 @@ Every answer has the same core shape:
 | roofing, painting, general_outdoor_work | lat/lon or town | `workability` | chance conditions stay workable |
 
 Sports decisions: official cancellation → `no_go`; otherwise ≥ 70% → `go`, 40-69% → `wait`, < 40% → `no_go`.
+
+**No listed event.** When a schedule lookup runs and finds nothing at that time (today: motocross with `track_id`,
+including OpenStreetMap tracks that have no calendar), `decision` is **`no_event_found`**, never `go`.
+`probability_percent` still carries the weather-only odds, `weather_decision` carries the weather-only
+go / wait / no_go, `event_confirmed` is `false`, and `reason` starts with
+"No race is listed then; weather alone looks fine (96% weather-only odds)." followed by the checker's answer and
+`details.next_step: ask_user_for_events_url`. A separate decision value was chosen over a flag so an agent that
+reads only `decision` can't mistake an unlisted race for a confirmed one.
+
+`event_confirmed` on every answer: `true` (listed event found), `false` (looked, none listed) or `null` (no schedule
+lookup ran: venue and location checks, which answer "if there's a game at that time", and all construction
+activities). To confirm a team's game first, use `find_team` / `get_games`.
 
 Workability rules (data/construction/thresholds.json → `go_no_go.activities`):
 

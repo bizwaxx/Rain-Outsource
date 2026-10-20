@@ -9,7 +9,7 @@ from rainout_agent.cache import MemoryCache, set_cache
 from rainout_agent.construction_api import handle_construction_request
 from tests.construction_fakes import NOW, SiteFake, local
 
-SHAPE = {"activity", "decision", "probability_percent", "reason", "recheck_at", "sources", "routed_to"}
+SHAPE = {"activity", "decision", "probability_percent", "reason", "recheck_at", "sources", "routed_to", "event_confirmed", "weather_decision"}
 T0, T1 = local("2026-10-22 08:00"), local("2026-10-22 16:00")
 
 
@@ -107,6 +107,7 @@ def test_motocross_with_track(monkeypatch):
     track = motocross.tracks()[0]["field_id"]
     r = gng.go_no_go("motocross", track_id=track, time="2026-10-24 09:00", now=NOW)
     assert r["routed_to"] == "check_race" and r["decision"] == "go" and r["probability_percent"] == 85 and r["reason"] == "Race is on, 85%."
+    assert r["event_confirmed"] is True and r["weather_decision"] == "go"
     with pytest.raises(rain.RainError, match="Unknown track_id"):
         gng.go_no_go("motocross", track_id="nope-track", now=NOW)
 
@@ -136,3 +137,36 @@ def test_rest_and_mcp(monkeypatch):
     res = mcp_server.call_tool("go_no_go", {"activity": "painting", "lat": 30.27, "lon": -97.74, "time": "2026-10-22 08:00"})
     assert res["isError"] is False and res["structuredContent"]["routed_to"] == "workability"
     assert mcp_server.call_tool("go_no_go", {"activity": "roofing"})["isError"] is True
+
+
+def _not_found(odds):
+    def fake(track_id, date_param=None, now=None, **kw):
+        return {"track": {"name": "Swan MX", "track_id": track_id}, "found": False, "event": None,
+                "answer": "I don't see a race at Swan MX on Sat Oct 24 in its public calendars.",
+                "conditions_if_racing": {"play_probability": odds, "reason": "dry"}, "next_step": "ask_user_for_events_url"}
+    return fake
+
+
+def test_motocross_without_a_listed_race_is_never_a_bare_go(monkeypatch):
+    from rainout_agent import motocross
+
+    track = motocross.tracks()[0]["field_id"]
+    monkeypatch.setattr(motocross, "check_race", _not_found(96))
+    r = gng.go_no_go("motocross", track_id=track, time="2026-10-24 09:00", now=NOW)
+    assert r["decision"] == "no_event_found" and r["event_confirmed"] is False and r["weather_decision"] == "go"
+    assert r["probability_percent"] == 96 and r["details"]["next_step"] == "ask_user_for_events_url"
+    assert r["reason"].startswith("No race is listed then; weather alone looks fine (96% weather-only odds).")
+    assert "public calendars" in r["reason"]
+    monkeypatch.setattr(motocross, "check_race", _not_found(30))
+    r = gng.go_no_go("motocross", track_id=track, time="2026-10-24 09:00", now=NOW)
+    assert r["decision"] == "no_event_found" and r["weather_decision"] == "no_go"
+    assert r["reason"].startswith("No race is listed then; weather alone looks bad")
+    monkeypatch.setattr(motocross, "check_race", _not_found(None))
+    r = gng.go_no_go("motocross", track_id=track, time="2026-10-24 09:00", now=NOW)
+    assert r["decision"] == "no_event_found" and r["probability_percent"] is None
+
+
+def test_event_confirmed_is_null_when_no_schedule_lookup_runs(monkeypatch):
+    for act in ("roofing", "concrete_pour", "soccer"):
+        r = run(monkeypatch, act)
+        assert r["event_confirmed"] is None and r["weather_decision"] == r["decision"]

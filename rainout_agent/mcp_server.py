@@ -364,8 +364,10 @@ TOOLS.append({
         "or general_outdoor_work. Sports with venue (field name or field_id) use official status + forecast + NOAA "
         "history; motocross with track_id uses the race checker; with only a location you get weather-only odds. "
         "Construction activities use job-site lat/lon and workability rules (rain during and after, thunder, gusts, "
-        "temperature, humidity/dew point, heat index). Always returns decision (go | wait | no_go), probability_percent, "
-        "reason (read aloud), recheck_at and sources. Construction answers are weather screening, not engineering advice."
+        "temperature, humidity/dew point, heat index). Always returns decision (go | wait | no_go | no_event_found), "
+        "probability_percent, reason (read aloud), event_confirmed, weather_decision, recheck_at and sources. "
+        "decision=no_event_found means no race is listed at that time (weather-only odds in probability_percent); tell "
+        "the user and ask for the event link, never say it's on. Construction answers are weather screening, not engineering advice."
     ),
     "inputSchema": {
         "type": "object",
