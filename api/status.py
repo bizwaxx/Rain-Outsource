@@ -2,6 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
+from rainout_agent import metrics
 from rainout_agent import http_cache
 from rainout_agent.reports_api import MAX_BODY, handle_reports_request
 from rainout_agent.status_api import build_status_result
@@ -80,3 +81,6 @@ class handler(BaseHTTPRequestHandler):
 def _first(params, name):
     values = params.get(name) or []
     return values[0] if values else ""
+
+
+metrics.instrument(handler)

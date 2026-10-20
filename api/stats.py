@@ -1,9 +1,13 @@
 from http.server import BaseHTTPRequestHandler
 import json
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
-# Simple in-memory stats (resets on cold start)
-# For production we would move this to Vercel KV or a database
+from rainout_agent import metrics
+from rainout_agent.admin_api import handle_admin_usage
+
+# Simple in-memory stats (resets on cold start). Persistent daily counters live in
+# rainout_agent.metrics and are read at /v1/admin/usage (admin token).
 STATS = {
     "total_calls": 0,
     "calls_today": 0,
@@ -20,6 +24,17 @@ def _reset_if_new_day():
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        parsed = urlparse(self.path)
+        if parsed.path.rstrip("/") == "/v1/admin/usage":
+            status, ctype, payload = handle_admin_usage(parsed.query, dict(self.headers.items()))
+            self.send_response(status)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         _reset_if_new_day()
         STATS["total_calls"] += 1
         STATS["calls_today"] += 1
@@ -37,3 +52,6 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(json.dumps(body, indent=2).encode("utf-8"))
+
+
+metrics.instrument(handler)

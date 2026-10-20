@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse
 
+from rainout_agent import metrics
 from rainout_agent import http_cache
 from rainout_agent.schedule_api import MAX_BODY_BYTES, handle_schedule_request
 
@@ -45,3 +46,6 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
+
+metrics.instrument(handler)

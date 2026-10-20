@@ -2,6 +2,7 @@ import json
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler
 
+from rainout_agent import metrics
 from rainout_agent import http_cache
 from rainout_agent.cache import get_cache
 from rainout_agent.site_pages import ROOT_CACHE, landing_html, wants_html
@@ -60,3 +61,6 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         if getattr(self, "_include_body", True):
             self.wfile.write(body)
+
+
+metrics.instrument(handler)

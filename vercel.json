@@ -132,6 +132,10 @@
       "dest": "/api/stats.py"
     },
     {
+      "src": "/v1/admin/usage/?",
+      "dest": "/api/stats.py"
+    },
+    {
       "src": "/api/status",
       "dest": "/api/status.py"
     },

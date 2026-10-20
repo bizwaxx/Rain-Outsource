@@ -46,6 +46,10 @@ class Cache:
     def set(self, key: str, value: Any, ttl: float) -> None:
         return None
 
+    def pipeline(self, commands: list[list[Any]]) -> list[Any]:
+        """Run raw Redis commands in one round trip (shared Redis backends only)."""
+        raise NotImplementedError(f"{self.name} has no pipeline")
+
     def describe(self) -> dict[str, Any]:
         return {"backend": self.name}
 
@@ -192,6 +196,21 @@ class UpstashCache(_RemoteCache):
             raise RuntimeError(str(payload["error"]))
         return payload.get("result") if isinstance(payload, dict) else None
 
+    def pipeline(self, commands: list[list[Any]]) -> list[Any]:
+        """POST /pipeline: one HTTP round trip; Upstash still bills each command. Keys are NOT prefixed here."""
+        if not self._available():
+            raise RuntimeError("upstash unavailable")
+        body = json.dumps([[str(a) for a in cmd] for cmd in commands]).encode("utf-8")
+        headers = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
+        try:
+            status, raw = self.transport("POST", self.url + "/pipeline", headers, body, REMOTE_TIMEOUT_S)
+            if status != 200:
+                raise RuntimeError(f"HTTP {status}")
+            return [item.get("result") if isinstance(item, dict) else None for item in json.loads(raw.decode("utf-8"))]
+        except Exception as exc:
+            self._fail("pipeline", exc)
+            raise
+
     def get(self, key: str) -> Any | None:
         if not self._available():
             return None
@@ -275,6 +294,9 @@ class TieredCache(Cache):
     def set(self, key: str, value: Any, ttl: float) -> None:
         self.memory.set(key, value, min(ttl, self.memory_ttl_cap))
         self.remote.set(key, value, ttl)
+
+    def pipeline(self, commands: list[list[Any]]) -> list[Any]:
+        return self.remote.pipeline(commands)
 
     def describe(self) -> dict[str, Any]:
         return {"backend": self.name, "remote": self.remote.describe()}
