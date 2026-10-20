@@ -1,0 +1,34 @@
+{
+  "version": "2026-10-20",
+  "note": "Rules of thumb for weather go/no-go screening. Not engineering advice; project specs, the supplier, the engineer of record and manufacturer instructions win. Override any value by pointing RAINOUT_CONSTRUCTION_THRESHOLDS at a JSON file with the same shape (deep-merged).",
+  "sources": {
+    "aci306": "ACI PRC-306-16 (306R-16) Guide to Cold Weather Concreting: cold weather is when air temperature has fallen to, or is expected to fall below, 40 F (4 C) during the protection period; protect concrete from freezing until it reaches about 500 psi (3.5 MPa).",
+    "aci305": "ACI PRC-305-20 (305R-20) Guide to Hot Weather Concreting: hot weather precautions; plastic-shrinkage risk when the evaporation rate approaches 0.2 lb/ft2/h (1.0 kg/m2/h), lower (about 0.1 lb/ft2/h, 0.5 kg/m2/h) for low w/cm and silica-fume mixes. Evaporation estimate from the ACI 305 nomograph equation (Uno 1998).",
+    "aci305_1": "ACI SPEC-305.1-14: default maximum concrete temperature at delivery 95 F (35 C) unless specified otherwise; many project specs and suppliers use 90 F (32 C).",
+    "ams_rain": "AMS Glossary of Meteorology, 'rain': light < 2.5 mm/h, moderate 2.5-7.6 mm/h, heavy > 7.6 mm/h.",
+    "noaa_lightning": "NOAA/NWS lightning safety ('When thunder roars, go indoors') and OSHA lightning fact sheet: stop outdoor work when thunderstorms are near.",
+    "field_practice": "Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting'): do not place or finish in rain; fresh surfaces are vulnerable until final set, typically 2-4 h at about 70 F and longer in cool weather or with slag/fly ash or retarders. Exact rain amounts are rules of thumb, not code values.",
+    "pump_wind": "Concrete pump boom wind limits come from the manufacturer's manual (commonly around 35-40 mph); 35 mph gusts is a conservative screening value."
+  },
+  "concrete": {
+    "defaults": {"duration_hours": 4, "cure_hours": 24, "mix": "standard", "search_days": 3, "earliest_start_hour": 5, "latest_start_hour": 14},
+    "rain": {
+      "pour_wait_pop": 30, "pour_no_go_pop": 60, "pour_wait_mm": 0.5, "pour_no_go_mm": 2.5,
+      "critical_wait_pop": 30, "critical_no_go_pop": 70, "critical_wait_mm": 0.5, "critical_no_go_mm": 2.5,
+      "cure_wait_total_mm": 6.4, "cure_wait_hourly_mm": 7.6,
+      "thunder_no_go": true,
+      "source": ["field_practice", "ams_rain", "noaa_lightning"]
+    },
+    "temperature_f": {"cold": 40, "freeze": 32, "hot": 90, "source": ["aci306", "aci305", "aci305_1"]},
+    "wind_mph": {"gust_wait": 35, "source": ["pump_wind"]},
+    "evaporation_kg_m2_h": {"wait": 1.0, "source": ["aci305"]},
+    "mixes": {
+      "standard": {"critical_hours": 4, "evaporation_wait": 1.0, "label": "standard mix"},
+      "high_early": {"critical_hours": 2, "evaporation_wait": 1.0, "label": "high-early-strength mix"},
+      "accelerated": {"critical_hours": 2, "evaporation_wait": 1.0, "label": "accelerated mix"},
+      "retarded": {"critical_hours": 6, "evaporation_wait": 1.0, "label": "retarded mix"},
+      "slag_or_fly_ash": {"critical_hours": 6, "evaporation_wait": 1.0, "label": "slag or fly-ash mix"},
+      "low_wc_or_silica_fume": {"critical_hours": 4, "evaporation_wait": 0.5, "label": "low w/cm or silica-fume mix"}
+    }
+  }
+}

@@ -54,5 +54,58 @@ unless that variable is set.
 - **NOAA MRMS** radar precipitation: free, but published as GRIB2 grids that need heavy decoding libraries,
   too large for this serverless function. A candidate for a future worker.
 
+## Concrete pour: `GET|POST /v1/construction/concrete-pour`, MCP `check_concrete_pour`
+
+```
+GET /v1/construction/concrete-pour?lat=30.27&lon=-97.74&pour_start=2026-10-21 07:00
+POST /v1/construction/concrete-pour  {"lat": 30.27, "lon": -97.74, "pour_start": "2026-10-21T07:00:00-05:00",
+                                      "duration_hours": 4, "cure_hours": 24, "mix": "standard", "protection": false}
+```
+
+| Input | Default | Meaning |
+|---|---|---|
+| `lat`, `lon` (or `location`) | required | Job site. Town names resolve to the town center. |
+| `pour_start` | required | Local time at the site (`2026-10-21 07:00`) or ISO 8601 with offset. |
+| `duration_hours` | 4 | Length of the pour (0.5-16). |
+| `cure_hours` | 24 | Cure window after the pour to check (2-72). |
+| `critical_hours` | by mix | Early-set window right after the pour that is most sensitive to rain (1-8). |
+| `mix` | `standard` | `standard` (4 h early set), `high_early` / `accelerated` (2 h), `retarded` / `slag_or_fly_ash` (6 h), `low_wc_or_silica_fume` (4 h, stricter evaporation limit 0.5 kg/m²/h). |
+| `protection` | false | Covers/blankets/heat ready on site: heavy rain later in the cure becomes OK and freeze becomes `wait` instead of `no_go`. |
+| `concrete_temp_f` | air temp | Concrete temperature at placement, for the evaporation estimate. |
+| `search_days` | 3 | Days to scan (starts 5 AM-2 PM local) for a better window (0-5). |
+
+Returns `decision` (`go` / `wait` / `no_go`), `probability_percent`, `rain_probability_percent`, a plain
+`reason`, every `check` with its value and threshold, `conditions` for the pour / early set / rest of cure,
+`best_alternative` (only when it beats the requested start), `best_window_per_day`, `recheck_at`, `sources`,
+`thresholds` (with references) and `disclaimer`.
+
+### Rules (data/construction/thresholds.json)
+
+| Check | Wait | No-go | Basis |
+|---|---|---|---|
+| Thunderstorms during the pour | | any | NOAA/NWS and OSHA lightning safety: stop outdoor work |
+| Rain during the pour | chance ≥ 30% or ≥ 0.5 mm (0.02 in) | chance ≥ 60%, or ≥ 2.5 mm (0.1 in) with chance ≥ 30% | field practice: don't place or finish in rain |
+| Rain in the early-set window | chance ≥ 30% or ≥ 0.5 mm | chance ≥ 70%, or ≥ 2.5 mm with chance ≥ 30% | fresh surface vulnerable until final set (≈2-4 h at 70 °F, longer when cool or retarded) |
+| Heavy rain later in the cure | ≥ 6.4 mm (0.25 in) total or ≥ 7.6 mm/h (AMS heavy), unless `protection` | | field practice; AMS rain-rate classes |
+| Freeze (≤ 32 °F, pour through cure) | with `protection` | without `protection` | ACI 306: protect from freezing until ≈500 psi |
+| Cold (< 40 °F) | needs a cold-weather plan | | ACI 306 definition of cold weather |
+| Heat (> 90 °F during the pour) | needs a hot-weather plan or earlier start | | ACI 305; many specs cap concrete at 90 °F (ACI 305.1 default 95 °F) |
+| Evaporation (pour + early set) | ≥ 1.0 kg/m²/h (0.2 lb/ft²/h), 0.5 for low w/cm or silica fume | | ACI 305 nomograph equation (Uno 1998) |
+| Wind gusts during the pour | ≥ 35 mph | | conservative pump-boom screen; check the manufacturer limit |
+
+The evaporation estimate uses the ACI 305 equation
+`E = 5·((Tc+18)^2.5 − r·(Ta+18)^2.5)·(V+4)·10⁻⁶` (kg/m²/h; °C, relative humidity as a fraction, wind in km/h),
+with concrete temperature = air temperature unless `concrete_temp_f` is given. It uses the forecast's 10 m wind,
+which is higher than wind at the slab, so it errs on the cautious side.
+
+`probability_percent` is a heuristic: 100 minus the highest hourly rain chance in the pour and early set, then
+× 0.85 for each other `wait` flag and × 0.3 for a non-rain `no_go` flag. Rain chance comes from NWS in the US
+(same as /v1/rain) and Open-Meteo elsewhere; temperature, humidity, wind and amounts come from Open-Meteo.
+
+`recheck_at`: 24 h before far-off pours, the evening before (12 h) for tomorrow's pour, then run
+`get_precipitation_nowcast` about 2 hours before the pour.
+
+Override any threshold with `RAINOUT_CONSTRUCTION_THRESHOLDS=/path/to/override.json` (deep-merged).
+
 Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0; free tier is non-commercial, under
 10,000 calls a day) and the U.S. National Weather Service.

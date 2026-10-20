@@ -193,7 +193,7 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, `get_precipitation_nowcast`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, `get_precipitation_nowcast`, `check_concrete_pour`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
 
 ## Motocross race checker
@@ -246,8 +246,18 @@ elsewhere and as the fallback, all free with no key. The same module powers the 
 `GET /v1/nowcast?lat=30.27&lon=-97.74` (or `q=Austin, TX`) gives precipitation for the next 2 hours in 15-minute
 steps: amount, intensity, rain chance, when rain starts and stops, and in the US what the nearest NWS station
 measured in the last hour. Free sources only: Open-Meteo `minutely_15` (NOAA HRRR over North America) and NWS
-gridpoints. MCP tool: `get_precipitation_nowcast`. It is the first piece of the v2 construction layer; see
-[docs/construction.md](docs/construction.md).
+gridpoints. MCP tool: `get_precipitation_nowcast`.
+
+## Construction layer (v2 beta)
+
+Weather screening for outdoor construction, built on the same free forecast plumbing. **Not engineering advice.**
+
+- Concrete pour: `GET|POST /v1/construction/concrete-pour?lat=&lon=&pour_start=2026-10-21 07:00` (MCP
+  `check_concrete_pour`) returns go / wait / no-go, a probability, a plain reason and the best alternative start in
+  the next few days. It checks rain during the pour and early set, thunderstorms, cold (ACI 306), freeze, heat
+  (ACI 305), wind and the ACI 305 evaporation rate. Thresholds and their sources: `data/construction/thresholds.json`.
+
+Details: [docs/construction.md](docs/construction.md).
 
 ## Weather caching and fallback
 

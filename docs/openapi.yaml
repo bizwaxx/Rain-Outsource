@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.14.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
+  version: 0.15.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). The v2 beta construction layer adds a concrete pour go/no-go (weather screening, not engineering advice). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -726,8 +726,63 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found (with suggestions), content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/construction/concrete-pour:
+    get:
+      operationId: checkConcretePour
+      summary: Concrete pour go / wait / no-go with the best alternative start (weather screening, not engineering advice).
+      description: >-
+        Checks rain and thunderstorms during the pour and the early-set window (2-6 h by mix), heavy rain later in the
+        cure window, cold (< 40 F, ACI 306), freeze, heat (> 90 F, ACI 305 / common specs), wind gusts and the ACI 305
+        evaporation rate. Thresholds and sources are in data/construction/thresholds.json. Also POST with the same
+        fields as a JSON body. Read reason aloud and say it is weather screening only.
+      parameters:
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}, example: 30.27}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}, example: -97.74}
+        - {in: query, name: location, required: false, schema: {type: string, maxLength: 120}, description: "Town name or 'lat,lon' (alias q)."}
+        - {in: query, name: pour_start, required: true, schema: {type: string}, description: "Local time at the site or ISO 8601 with offset.", example: "2026-10-21 07:00"}
+        - {in: query, name: duration_hours, required: false, schema: {type: number, minimum: 0.5, maximum: 16, default: 4}}
+        - {in: query, name: cure_hours, required: false, schema: {type: number, minimum: 2, maximum: 72, default: 24}}
+        - {in: query, name: critical_hours, required: false, schema: {type: number, minimum: 1, maximum: 8}, description: Early-set window most sensitive to rain (default by mix).}
+        - {in: query, name: mix, required: false, schema: {type: string, enum: [standard, high_early, accelerated, retarded, slag_or_fly_ash, low_wc_or_silica_fume], default: standard}}
+        - {in: query, name: protection, required: false, schema: {type: boolean, default: false}, description: Covers or blankets ready on site.}
+        - {in: query, name: concrete_temp_f, required: false, schema: {type: number}, description: Concrete temperature at placement (default air temperature).}
+        - {in: query, name: search_days, required: false, schema: {type: integer, minimum: 0, maximum: 5, default: 3}, description: Days to scan for a better start.}
+      responses:
+        "200": {description: Decision (or matches when the town name is ambiguous), content: {application/json: {schema: {$ref: "#/components/schemas/ConcretePourResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    ConcretePourResult:
+      type: object
+      properties:
+        activity: {type: string, example: concrete_pour}
+        decision: {type: string, enum: [go, wait, no_go]}
+        probability_percent: {type: integer, description: Heuristic chance the pour goes as planned (mostly 100 minus the rain chance in the pour and early set, reduced for other flags).}
+        rain_probability_percent: {type: integer}
+        reason: {type: string}
+        location: {type: object}
+        pour: {type: object, properties: {start: {type: string}, end: {type: string}, duration_hours: {type: number}}}
+        early_set_window: {type: object}
+        cure_window: {type: object}
+        mix: {type: object}
+        protection_on_site: {type: boolean}
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              check: {type: string, enum: [thunderstorms, rain_during_pour, rain_during_early_set, rain_later_in_cure, freeze, cold, heat, evaporation, wind]}
+              status: {type: string, enum: [ok, wait, no_go]}
+              detail: {type: string}
+        conditions: {type: object}
+        best_alternative: {type: object, nullable: true, properties: {start: {type: string}, start_spoken: {type: string}, decision: {type: string}, probability_percent: {type: integer}, reason: {type: string}}}
+        best_window_per_day: {type: array, items: {type: object}}
+        recheck_at: {type: string}
+        sources: {type: array, items: {type: object}}
+        thresholds: {type: object}
+        disclaimer: {type: string}
     NowcastResult:
       type: object
       properties:
