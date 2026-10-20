@@ -195,10 +195,12 @@ def test_rate_limited_batch_returns_429(monkeypatch):
 def test_existing_endpoints_ignore_keys_and_stay_unrouted():
     """The free public API is not touched: existing routes do not go through the paid layer."""
     cfg = json.load(open("vercel.json"))
-    premium_routes = {r["src"] for r in cfg["routes"] if r["dest"] == "/api/premium.py"}
-    assert {"/v1/plans/?", "/v1/account/?", "/v1/batch/?"} <= premium_routes
-    assert all(r.startswith(("/v1/plans", "/v1/account", "/v1/batch", "/v1/billing", "/v1/premium")) for r in premium_routes)
-    assert len(cfg["builds"]) <= 12  # Vercel Hobby function limit
+    assert not any("premium" in b["src"] for b in cfg["builds"])  # no extra Vercel function
+    premium_routes = {r["src"] for r in cfg["routes"] if r["src"].startswith(("/v1/plans", "/v1/account", "/v1/batch", "/v1/billing"))}
+    assert premium_routes == {"/v1/plans/?", "/v1/account/?", "/v1/batch/?", "/v1/billing/(checkout|success|portal|webhook)/?"}
+    assert all(r["dest"] == "/api/status.py" for r in cfg["routes"] if r["src"] in premium_routes)
+    for path in ("/v1/status", "/v1/reports", "/v1/fields", "/v1/rain", "/mcp"):
+        assert not premium_api.is_premium_path(path)
     status, _, _ = premium_api.handle_premium_request("GET", "/v1/status", "", b"", {})
     assert status == 404
 
@@ -212,3 +214,25 @@ def test_wsgi_routes_paid_paths():
     body = b"".join(application({"REQUEST_METHOD": "GET", "PATH_INFO": "/v1/plans", "QUERY_STRING": "", "wsgi.input": io.BytesIO()},
                                 lambda s, h: out.update(status=s)))
     assert out["status"].startswith("200") and json.loads(body)["plans"]
+
+
+def test_vercel_status_function_serves_paid_paths_and_status_unchanged():
+    import io
+
+    from api.status import handler
+
+    def call(path, method="GET", body=b""):
+        h = handler.__new__(handler)
+        h.path, h.wfile, h.rfile = path, io.BytesIO(), io.BytesIO(body)
+        out = {"headers": {}}
+        h.headers = {"Content-Length": str(len(body))}
+        h.send_response = lambda code, msg=None: out.update(code=code)
+        h.send_header = lambda k, v: out["headers"].update({k: v})
+        h.end_headers = lambda: None
+        getattr(h, f"do_{method}")()
+        return out["code"], json.loads(h.wfile.getvalue() or b"{}")
+
+    assert call("/v1/plans")[0] == 200
+    assert call("/v1/status")[1] == {"error": "missing_field_id"}  # existing behaviour untouched
+    status, data = call("/v1/batch", "POST", json.dumps({"items": [{"bogus": 1}]}).encode())
+    assert status == 200 and data["plan"] == "free" and data["results"][0]["error"] == "invalid_item"
