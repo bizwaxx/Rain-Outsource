@@ -27,7 +27,7 @@
       box.appendChild(line("", "Official: " + (off === "unknown" ? "not posted / couldn't read" : off) + ". Rain chance " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + " at " + when.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) + "."));
       var chk = d.official_status_check || {};
       if (chk.posted_at) box.appendChild(line("hint", "Official call posted " + ago(chk.posted_at) + "."));
-      if (d.official_status_last_checked) box.appendChild(line("hint", "Official source checked " + ago(d.official_status_last_checked) + "."));
+      if (d.official_status_last_checked && d.official_status_source_url) box.appendChild(line("hint", "Official source checked " + ago(d.official_status_last_checked) + "."));
       var r = (d.community_reports || {}).count;
       if (r) box.appendChild(line("hint", r + " player report(s) recently."));
       var a = document.createElement("a");

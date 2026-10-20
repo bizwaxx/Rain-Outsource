@@ -149,7 +149,7 @@
     var chk = d.official_status_check || {};
     var fresh = [];
     if (chk.posted_at) fresh.push("Official call posted " + ago(chk.posted_at));
-    if (d.official_status_last_checked) fresh.push("we checked the official source " + ago(d.official_status_last_checked));
+    if (d.official_status_last_checked && d.official_status_source_url) fresh.push("we checked the official source " + ago(d.official_status_last_checked));
     var src = d.official_status_source_url ? el("a", {href: d.official_status_source_url, target: "_blank", rel: "noopener", text: d.official_status_source_name || "official source"}) : null;
     var rep = d.community_reports || {}, by = rep.by_status || {};
     var repText = rep.count ? (rep.count + " player report(s) in the last " + (rep.window_hours || 12) + " h: " +
