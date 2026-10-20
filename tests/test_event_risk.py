@@ -38,3 +38,16 @@ def test_drainage_class_mapping():
     assert er.drainage_class(field_type="dirt_infield", maintained=True) == "medium"
     assert er.drainage_class({"sport": "softball", "surface": "unknown"}) == "slow"
     assert er.drainage_class({"sport": "soccer", "surface": "unknown"}) == "medium"
+
+
+def test_wetness_bucket_dries_with_et0_and_drainage():
+    from rainout_agent import event_risk as er
+    series = {"rain": [25.4] + [0.0] * 23, "et0": [0.0] * 24, "has_et0": True}
+    p = {**er.PARAMS, "wet_drain_mm_h": {"fast": 1.0, "medium": 0.1, "slow": 0.0, "mx": 0.0}, "wet_et_mult": 1.0}
+    assert er.wetness_in(series, "slow", p) == 1.0
+    assert er.wetness_in(series, "fast", p) < er.wetness_in(series, "medium", p) < 1.0
+    dry = {**series, "et0": [0.5] * 24}
+    assert er.wetness_in(dry, "slow", p) < 1.0
+    hyb = {**p, "soak_model": "hybrid", "wet_scale": 1.0}
+    feat = {"earlier_today_in": 0.0, "prior_24h_in": 0.0, "prior_48h_in": 0.0, "wetness_in": 1.0}
+    assert er.soak_index(feat, "slow", hyb)[0] == 1.0

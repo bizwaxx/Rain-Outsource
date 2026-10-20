@@ -463,6 +463,8 @@ def build_status_result(
         historical_calibration=calibration,
     )
 
+    model_info = _apply_event_risk(field, game_time, official_status_value, weather_data, probability)
+
     response = build_agent_status_response(
         field_name=field["field_name"],
         game_time=_display_game_time(game_time),
@@ -495,6 +497,7 @@ def build_status_result(
             "forecast_period_start": weather_data.get("forecast_period_start"),
             "historical_calibration": _public_calibration(calibration, probability),
             "verification_level": field.get("verification_level", "confirmed"),
+            "model": model_info,
         }
     )
     if field.get("verification_level") == "osm_only":
@@ -521,6 +524,48 @@ def build_status_result(
     except Exception:  # pragma: no cover - reports must never break a status answer
         pass
     return response
+
+
+EVENT_DURATION_H = {"softball": 2.5, "baseball": 3.0, "soccer": 2.0, "football": 3.0}
+
+
+def _event_duration_h(field: dict[str, Any]) -> float:
+    sport = str(field.get("sport") or "").lower()
+    return next((h for k, h in EVENT_DURATION_H.items() if k in sport), 2.5)
+
+
+def _apply_event_risk(field: dict[str, Any], game_time: str, official_status: str, weather_data: dict[str, Any],
+                      probability: dict[str, Any]) -> dict[str, Any]:
+    """v2 whole-event model (soak, storms over the game window, wind, cold) when nothing official is posted.
+
+    Mutates ``probability`` on success. Any failure keeps the v1 answer and says so in ``model``."""
+    if official_status != "unknown":
+        return {"version": "v1", "note": "official status is posted, so it decides"}
+    from rainout_agent import event_risk, event_weather
+
+    start = _parse_time(game_time)
+    coords = field.get("coordinates") or {}
+    if start is None or coords.get("lat") is None:
+        return {"version": "v1", "note": "no game time or coordinates for the event model"}
+    try:
+        v2 = event_weather.evaluate(coords["lat"], coords["lon"], start, _event_duration_h(field),
+                                    event_risk.drainage_class(field), thunder_forecast=bool(weather_data.get("thunderstorm_likely")))
+    except Exception:  # pragma: no cover - the event model must never break a status answer
+        v2 = None
+    if v2 is None:
+        return {"version": "v1", "note": "event weather (Open-Meteo) unavailable or disabled; game-hour model used"}
+    v1 = probability["play_probability_percent"]
+    probability["play_probability_percent"] = v2["play_probability_percent"]
+    if v2["reasons"]:
+        probability["reason"] = f"{probability['reason']} {' '.join(v2['reasons'])}"
+    pct = v2["play_probability_percent"]
+    if pct < 40:
+        probability["risk_level"], probability["recommendation"] = "high", "check again before leaving"
+    elif pct < 70 and probability.get("risk_level") == "low":
+        probability["risk_level"], probability["recommendation"] = "medium", "check again before leaving"
+    return {"version": "v2", "v1_play_probability_percent": v1, "drainage": v2["drainage"], "features": v2["features"],
+            "soak_penalty": v2["soak_penalty"], "storm_window": v2["storm_window"], "storm_day": v2["storm_day"],
+            "reasons": v2["reasons"], "source": v2["source"]}
 
 
 def _weather_label(weather_data: dict[str, Any]) -> str:
