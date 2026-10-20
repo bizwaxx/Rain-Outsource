@@ -169,3 +169,12 @@ def test_local_wsgi_app_serves_same_pages():
     assert status.startswith("200") and headers["Content-Type"].startswith("text/html")
     status, headers, body = _wsgi("/.well-known/mcp/server-card.json")
     assert json.loads(body)["serverInfo"]["version"] == SERVER_VERSION
+
+
+def test_site_pages_have_bounded_metrics_labels():
+    from rainout_agent import metrics
+
+    assert metrics.endpoint_for("/.well-known/mcp/server-card.json") == "server_card"
+    assert metrics.endpoint_for("/privacy") == "site.privacy"
+    assert metrics.endpoint_for("/icon.png") == "site.icon"
+    assert getattr(SiteHandler.do_GET, "__name__") == "do_GET"

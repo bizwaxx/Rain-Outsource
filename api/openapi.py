@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
+from rainout_agent import metrics
 from rainout_agent import http_cache
 
 
@@ -15,3 +16,6 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+
+metrics.instrument(handler)

@@ -1,5 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 
+from rainout_agent import metrics
+
 from rainout_agent.site_pages import lookup
 
 
@@ -25,3 +27,6 @@ class handler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         self._serve(False)
+
+
+metrics.instrument(handler)
