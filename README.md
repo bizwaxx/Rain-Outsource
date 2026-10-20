@@ -225,7 +225,7 @@ community map data and there's no official status source, so answers use the for
 station's 10-year monthly rain stats. Hand-verified venues stay `confirmed` and always win over OSM duplicates.
 
 ```text
-GET /v1/fields?q=Lamar%20Park&state=TX
+GET /v1/fields?q=Zilker&state=TX
 GET /v1/fields?near=30.27,-97.74&radius_km=10&sport=soccer
 GET /v1/status?field_id=osm-tx-...&game_time=2026-10-20T19:00:00-05:00
 GET /v1/tracks?state=CA           # confirmed + OSM motocross tracks

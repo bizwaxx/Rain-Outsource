@@ -124,14 +124,14 @@ TOOLS: list[dict[str, Any]] = [
         "title": "Find a field or venue nationwide",
         "description": (
             "Search ball fields, soccer complexes and motocross tracks across the US by name and/or location, e.g. "
-            "query='Lamar Park', state='TX' or near='30.27,-97.74'. Returns field_id, address, sport and verification_level "
+            "query='Zilker', state='TX' or near='30.27,-97.74'. Returns field_id, address, sport and verification_level "
             "('confirmed' = hand-verified with official sources; 'osm_only' = OpenStreetMap data, no official status). "
             "Confirm the venue with the user, then call get_venue_status with venue=field_id."
         ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "query": {"type": "string", "description": "Venue name, e.g. 'Lamar Park'."},
+                "query": {"type": "string", "description": "Venue name, e.g. 'Zilker Park'."},
                 "state": {"type": "string", "description": "Two-letter state, e.g. TX."},
                 "sport": {"type": "string", "description": "softball, baseball, soccer or motocross."},
                 "near": {"type": "string", "description": "lat,lon to search around."},

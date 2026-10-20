@@ -23,7 +23,7 @@ Rain history in `data/noaa/stations.json` is NOAA NCEI GHCN-Daily data (US gover
 ## Using it
 
 ```text
-GET /v1/fields?q=Lamar%20Park&state=TX          name search (confirmed + osm_only, best match first)
+GET /v1/fields?q=Zilker&state=TX          name search (confirmed + osm_only, best match first)
 GET /v1/fields?near=30.27,-97.74&radius_km=10     nearby venues, sorted by match then distance
 GET /v1/fields?state=FL&sport=soccer&verification=osm_only&limit=100&offset=0
 GET /v1/status?field_id=osm-tx-...&game_time=...  works with any OSM venue id
