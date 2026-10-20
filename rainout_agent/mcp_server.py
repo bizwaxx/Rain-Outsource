@@ -388,6 +388,35 @@ TOOLS.append({
         "required": ["activity"],
     },
 })
+TOOLS.append({
+    "name": "should_we_cancel",
+    "title": "Should we cancel? (organizer's call)",
+    "description": (
+        "For whoever runs the game, race or job: should we play, delay, cancel, or wait to decide? Built on go_no_go "
+        "(same odds, official status and sources), plus the timing logic an organizer needs: far out it says wait_until "
+        "a check time; close to the start it decides delay (with delay_to) or cancel. Pass team_id (find_team) with a "
+        "date or time, or venue (find_venue) / track_id (find_track) / location plus time. Returns recommendation "
+        "(play | delay | cancel | wait_until), play_probability_percent, reason (plain words, read aloud), check_again_at, "
+        "delay_to, wait_until. For players asking 'is it on?', use check_game or go_no_go instead."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "team_id": {"type": "string", "description": "Team from find_team; the game is picked by date/time."},
+            "venue": {"type": "string", "description": "Venue name or field_id (find_venue)."},
+            "track_id": {"type": "string", "description": "Motocross track_id (find_track)."},
+            "location": {"type": "string", "description": "Town or 'lat,lon' when there is no venue."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "time": {"type": "string", "description": "Start (local '2026-10-24 18:30', ISO 8601, or 'now'); with team_id a date like '2026-10-24' is enough."},
+            "activity": {"type": "string", "enum": ["softball", "baseball", "soccer", "motocross", "concrete_pour", "roofing",
+                                                    "painting", "general_outdoor_work"],
+                         "description": "Defaults to the team's sport, motocross for track_id, else softball."},
+            "duration_hours": {"type": "number", "minimum": 0.5, "maximum": 16},
+            "pick": {"type": "integer", "minimum": 1, "maximum": 5},
+        },
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
 _REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
@@ -555,6 +584,14 @@ def _go_no_go(args: dict[str, Any]) -> dict[str, Any]:
                        time=args.get("time"), duration_hours=args.get("duration_hours"), options=opts)
 
 
+def _should_we_cancel(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.should_we_cancel import should_we_cancel
+
+    return _place_call(should_we_cancel, args.get("activity"), venue=args.get("venue"), team_id=args.get("team_id"),
+                       track_id=args.get("track_id"), location=args.get("location"), lat=args.get("lat"), lon=args.get("lon"),
+                       pick=args.get("pick"), time=args.get("time") or args.get("date"), duration_hours=args.get("duration_hours"))
+
+
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -599,6 +636,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "check_concrete_pour": _check_concrete_pour,
     "check_materials_risk": _check_materials_risk,
     "go_no_go": _go_no_go,
+    "should_we_cancel": _should_we_cancel,
 }
 
 
