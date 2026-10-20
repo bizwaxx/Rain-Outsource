@@ -23,9 +23,11 @@
     "softball"
   ],
   "venue_type": "ball_field",
+  "status_source_type": "rainout_phone_line",
+  "poll_official_status": false,
   "rainout_phone": "512-978-2680",
-  "official_status_source_url": "https://www.austintexas.gov/department/athletics",
-  "official_status_source_name": "Austin Parks and Recreation Athletics page",
+  "official_status_source_url": "https://www.capitalcityathletics.com/pard-athletics",
+  "official_status_source_name": "Austin PARD Athletics (Capital City Athletics) Field/Park Conditions page and rainout line",
   "official_status_values": [
     "on",
     "cancelled",
@@ -50,7 +52,7 @@
     "Austin Krieg",
     "austin-tx-krieg-field-softball-complex"
   ],
-  "agent_rule": "Official rainout status wins. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers.",
+  "agent_rule": "Official rainout status wins, and for Krieg it is only on the rainout line (512-978-2680): tell the user to call it before leaving. Weather gives drive risk and game-time play probability. Use the word rain, not rainfall, for Dad-facing answers.",
   "operator": "City of Austin Parks and Recreation (Athletics)",
   "surface": "unknown",
   "drainage": "unknown",
@@ -63,5 +65,6 @@
       "name": "Softball Austin",
       "url": "https://www.softballaustin.org/"
     }
-  ]
+  ],
+  "official_status_note": "Checked 2026-10-20: Austin PARD announces rainouts on its rainout line (512-978-2680). Neither the austintexas.gov athletics page nor the Capital City Athletics 'Field/Park Conditions' page publishes a machine-readable field status, so this venue is link-only: we never guess its status from those pages."
 }

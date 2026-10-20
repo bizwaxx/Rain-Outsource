@@ -381,10 +381,16 @@ def test_unknown_status_scoring_matches_status_endpoint_model():
 
 
 def test_delayed_official_status_is_flagged_at_risk():
-    out = run([game("Krieg", NOW + timedelta(hours=5))], Providers(rain=5, official="delayed"))["games"][0]
+    out = run([game("NWLL", NOW + timedelta(hours=5))], Providers(rain=5, official="delayed"))["games"][0]
     assert out["play_probability_percent"] == 50 and out["at_risk"]
 
 
 def test_history_outlook_uses_same_baseline():
     out = run([game("Krieg", NOW + timedelta(days=10))])["games"][0]
     assert out["basis"] == "history_only" and out["play_probability_percent"] <= 96
+
+
+def test_link_only_venue_ignores_feed_and_keeps_weather_odds():
+    # Krieg is link-only (rainout line), so no official provider is consulted for it.
+    out = run([game("Krieg", NOW + timedelta(hours=5))], Providers(rain=5, official="delayed"))["games"][0]
+    assert out["play_probability_percent"] == 96
