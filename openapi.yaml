@@ -707,6 +707,70 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found (with suggestions), content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/plans:
+    get:
+      summary: Free and paid plans with limits and features.
+      description: The free tier is every existing endpoint with no key and no new limits. Paid keys add batch checks, whole-league calls, a usage dashboard and richer decisions.
+      responses:
+        '200': {description: Plan list.}
+  /v1/account:
+    get:
+      summary: Usage dashboard for an API key holder.
+      parameters:
+        - {name: X-API-Key, in: header, required: true, schema: {type: string}, description: Paid API key (rk_test_... or rk_live_...).}
+      responses:
+        '200': {description: Key, plan, limits and usage (this minute, this month, last 7 days, per endpoint).}
+        '401': {description: Missing or invalid key.}
+        '403': {description: Key expired, revoked, or subscription inactive.}
+  /v1/keys:
+    get:
+      summary: Free API key signup page (HTML, no card).
+      responses:
+        '200': {description: HTML form.}
+    post:
+      summary: Create a free API key instantly (no card; email optional).
+      description: Adds a usage dashboard and bigger batches (10 games / 3 teams). Limits 3 keys per IP per day, 2 per email per day, 500 per day overall. The API keeps working without a key.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {type: object, properties: {email: {type: string}, label: {type: string}}}
+      responses:
+        '201': {description: '{api_key, key_id, plan: free_key, limits, ...} (the key is shown once)'}
+        '400': {description: Invalid email.}
+        '429': {description: Signup limit reached; see Retry-After.}
+        '503': {description: Keys not enabled on this deployment (RAINOUT_API_KEY_SECRET unset).}
+  /v1/batch:
+    post:
+      summary: Check many games and/or teams in one call.
+      description: Free with no key for up to 3 items (1 team). Paid keys allow larger batches (Coach 25, League 100, Organization 250) and count 1 unit per item.
+      parameters:
+        - {name: X-API-Key, in: header, required: false, schema: {type: string}, description: Optional paid key. No key = free tier.}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      field_id: {type: string, description: Venue id or name (or use venue).}
+                      game_time: {type: string, description: ISO 8601 with offset.}
+                      team_id: {type: string, description: Team id from /v1/teams/search.}
+                      date: {type: string, description: 'For team items: today, tomorrow or YYYY-MM-DD.'}
+                      from: {type: string, description: 'For team items: range start YYYY-MM-DD (with to).'}
+                      to: {type: string, description: 'For team items: range end YYYY-MM-DD.'}
+            example: {items: [{field_id: Krieg, game_time: '2026-10-24T18:30:00-05:00'}, {team_id: tsl-340-744621-4306365, from: '2026-10-23', to: '2026-10-25'}]}
+      responses:
+        '200': {description: 'Per-item results with ok/error, at_risk_indexes and (with a key) usage.'}
+        '401': {description: Invalid key sent. Remove the header to use the free tier.}
+        '413': {description: Batch larger than the plan allows.}
+        '429': {description: Per-key rate limit or monthly quota reached; see Retry-After.}
 components:
   schemas:
     CancellationReport:

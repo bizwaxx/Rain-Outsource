@@ -116,6 +116,22 @@
       "dest": "/api/stats.py"
     },
     {
+      "src": "/v1/plans/?",
+      "dest": "/api/status.py"
+    },
+    {
+      "src": "/v1/account/?",
+      "dest": "/api/status.py"
+    },
+    {
+      "src": "/v1/batch/?",
+      "dest": "/api/status.py"
+    },
+    {
+      "src": "/v1/keys/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/api/status",
       "dest": "/api/status.py"
     },

@@ -46,6 +46,18 @@ class Cache:
     def set(self, key: str, value: Any, ttl: float) -> None:
         return None
 
+    def incr(self, key: str, amount: int, ttl: float) -> int:
+        """Add ``amount`` to an integer counter (created with ``ttl``) and return the new value.
+
+        Not atomic here; MemoryCache and UpstashCache override it with atomic versions."""
+        value = int(self.get(key) or 0) + int(amount)
+        self.set(key, value, ttl)
+        return value
+
+    def get_fresh(self, key: str) -> Any | None:
+        """Read the authoritative copy (skips the per-instance memory tier); for counters."""
+        return self.get(key)
+
     def describe(self) -> dict[str, Any]:
         return {"backend": self.name}
 
@@ -85,6 +97,21 @@ class MemoryCache(Cache):
             self._data.move_to_end(key)
             while len(self._data) > self.max_entries:
                 self._data.popitem(last=False)
+
+    def incr(self, key: str, amount: int, ttl: float) -> int:
+        with self._lock:
+            item = self._data.get(key)
+            now = self.clock()
+            if item is None or item[0] <= now:
+                expires, value = now + ttl, 0
+            else:
+                expires, value = item
+            value = int(value) + int(amount)
+            self._data[key] = (expires, value)
+            self._data.move_to_end(key)
+            while len(self._data) > self.max_entries:
+                self._data.popitem(last=False)
+            return value
 
     def clear(self) -> None:
         with self._lock:
@@ -210,6 +237,19 @@ class UpstashCache(_RemoteCache):
         except Exception as exc:
             self._fail("set", exc)
 
+    def incr(self, key: str, amount: int, ttl: float) -> int:
+        """Atomic INCRBY; the TTL is set when the counter is created."""
+        if not self._available():
+            raise RuntimeError("upstash unavailable")
+        try:
+            value = int(self._command("INCRBY", KEY_PREFIX + key, int(amount)))
+            if value == int(amount):
+                self._command("EXPIRE", KEY_PREFIX + key, max(1, int(ttl)))
+            return value
+        except Exception as exc:
+            self._fail("incr", exc)
+            raise
+
 
 class SupabaseCache(_RemoteCache):
     """Supabase Postgres table via PostgREST: key text primary key, value jsonb, expires_at timestamptz."""
@@ -275,6 +315,17 @@ class TieredCache(Cache):
     def set(self, key: str, value: Any, ttl: float) -> None:
         self.memory.set(key, value, min(ttl, self.memory_ttl_cap))
         self.remote.set(key, value, ttl)
+
+    def incr(self, key: str, amount: int, ttl: float) -> int:
+        """Counters live in the shared backend (atomic there); memory only if it is down."""
+        try:
+            return self.remote.incr(key, amount, ttl)
+        except Exception:
+            return self.memory.incr(key, amount, ttl)
+
+    def get_fresh(self, key: str) -> Any | None:
+        value = self.remote.get(key)
+        return self.memory.get(key) if value is None else value
 
     def describe(self) -> dict[str, Any]:
         return {"backend": self.name, "remote": self.remote.describe()}
