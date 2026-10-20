@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.15.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). The v2 beta construction layer adds a concrete pour go/no-go (weather screening, not engineering advice). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
+  version: 0.16.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). The v2 beta construction layer adds a concrete pour go/no-go and materials rain-damage risk (weather screening, not engineering advice). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -752,8 +752,57 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/construction/materials:
+    get:
+      operationId: checkMaterialsRisk
+      summary: Rain damage risk per job-site material over a time window, with protective actions (not engineering advice).
+      description: >-
+        Rates the window's rain as none, possible, likely or heavy (rain chance, total, hourly intensity) and maps it to
+        low, moderate, high or severe per material. Covered materials drop one step unless gusts reach 25 mph. Also POST
+        with a JSON body, where materials may be objects with material and covered. Read summary aloud.
+      parameters:
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}, example: 30.27}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}, example: -97.74}
+        - {in: query, name: location, required: false, schema: {type: string, maxLength: 120}, description: "Town name or 'lat,lon' (alias q)."}
+        - {in: query, name: materials, required: true, schema: {type: string}, description: "Comma-separated. Known: drywall, insulation, lumber, osb, cement_bags, open_roof_deck, electrical, flooring, masonry_units, windows_doors, rebar, open_excavation (aliases such as plywood, cement, brick are accepted).", example: "drywall,lumber,cement_bags"}
+        - {in: query, name: covered, required: false, schema: {type: boolean, default: false}}
+        - {in: query, name: start, required: false, schema: {type: string}, description: Local time at the site (default now).}
+        - {in: query, name: end, required: false, schema: {type: string}}
+        - {in: query, name: hours, required: false, schema: {type: number, minimum: 1, maximum: 168, default: 24}}
+      responses:
+        "200": {description: Risk per material, content: {application/json: {schema: {$ref: "#/components/schemas/MaterialsRiskResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    MaterialsRiskResult:
+      type: object
+      properties:
+        activity: {type: string, example: materials_protection}
+        overall_risk: {type: string, enum: [low, moderate, high, severe]}
+        summary: {type: string}
+        materials:
+          type: array
+          items:
+            type: object
+            properties:
+              material: {type: string}
+              label: {type: string}
+              covered: {type: boolean}
+              risk: {type: string, enum: [low, moderate, high, severe]}
+              reason: {type: string}
+              actions: {type: array, items: {type: string}}
+              reference: {type: string}
+        rain: {type: object, properties: {level: {type: string, enum: [none, possible, likely, heavy]}, max_probability_percent: {type: integer}, total_mm: {type: number}, total_in: {type: number}, max_hourly_mm: {type: number}, peak_intensity: {type: string}, wettest_hour: {type: string, nullable: true}}}
+        wind: {type: object, properties: {max_gust_mph: {type: number}, covers_at_risk: {type: boolean}}}
+        humid_hours: {type: integer}
+        window: {type: object}
+        location: {type: object}
+        recheck_at: {type: string}
+        sources: {type: array, items: {type: object}}
+        thresholds: {type: object}
+        disclaimer: {type: string}
     ConcretePourResult:
       type: object
       properties:
