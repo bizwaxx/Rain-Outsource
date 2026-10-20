@@ -44,12 +44,28 @@
     {
       "src": "api/llms.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/site.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/",
       "dest": "/api/index.py"
+    },
+    {
+      "src": "/(icon\\.svg|icon\\.png|icon-400\\.png|favicon\\.ico|favicon\\.svg|apple-touch-icon\\.png|robots\\.txt|sitemap\\.xml)",
+      "dest": "/api/site.py"
+    },
+    {
+      "src": "/(privacy|terms)(\\.html)?/?",
+      "dest": "/api/site.py"
+    },
+    {
+      "src": "/\\.well-known/mcp/server-card(\\.json)?",
+      "dest": "/api/site.py"
     },
     {
       "src": "/health",
