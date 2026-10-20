@@ -301,8 +301,10 @@ def check_status_venues(t: Target, fields: list[dict[str, Any]], mode: str, work
               f"{host}: {g['venues']} venue(s), parser(s) {sorted(str(p) for p in g['parsers'])}, outcomes {g['outcomes']}"
               + (f"; e.g. {g['examples'][0]}" if g["examples"] else ""),
               owner="Parsers (official_sources.py)",
-              fix=("Page fetch timed out or was blocked: lower the timeout, retry once, and keep serving the last good result."
-                   if any(k in ("unavailable", "blocked") for k in bad) else
+              fix=("The site refuses automated requests (403): mark it link-only (poll_official_status: false) so agents get the "
+                   "phone/URL fallback cleanly, or ask the operator for a feed." if "blocked" in bad else
+                   "Page fetch timed out: lower the timeout, retry once, and keep serving the last good result."
+                   if "unavailable" in bad else
                    "Page layout changed or isn't supported: add/adjust the adapter and a fixture test."),
               # The same upstream page is checked on every target; count it once (production), list it elsewhere.
               severity="blocker" if host != "(no official page)" and t.kind == "production" else "info", data={"outcomes": g["outcomes"]})

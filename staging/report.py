@@ -34,8 +34,11 @@ def backtest_items(bt: dict[str, Any] | None) -> list[dict[str, Any]]:
         items.append({"id": "backtest:mx_notice_parser", "target": "Backtest (offline, production parser code)", "status": "fail", "severity": "should_fix",
                       "detail": "real cancellation posts the motocross notice parser would miss: " + "; ".join(f"{i}: {b['detail']}" for i, b in parser),
                       "owner": "Parsers (motocross.official_status)",
-                      "fix": "Ignore the dateline date at the top of a post ('November 1, 2013 (Wortham, Texas) -') when matching the event date, "
-                             "and count practice-only notices when the event itself is a practice."})
+                      "fix": "motocross.official_status only looks at the FIRST date in a post, so a dateline ('November 1, 2013 "
+                             "(Wortham, Texas) -') or a reschedule date ('make-up on July 8') hides the race date. Check every date in "
+                             "the post, ignore dates after 'rescheduled to/for' or 'make-up', and count practice notices when the event is "
+                             "a practice. Simply stripping the dateline was tried and broke a real 'Tonight's race rained out' post, so "
+                             "this needs its own PR with the real posts as fixtures."})
     if other:
         items.append({"id": "backtest:behaviour", "target": "Backtest", "status": "fail", "severity": "blocker",
                       "detail": "; ".join(f"{i}: {b['check']} {b['detail']}" for i, b in other), "owner": "Model", "fix": "Fix status/report precedence."})
@@ -93,7 +96,8 @@ def render(meta: dict[str, Any], check_rows: list[dict[str, Any]], bt: dict[str,
             continue
         L += [f"### {target['label']} ({target['kind']}) `{target['base']}`", "", "| Status | Check | Detail |", "|---|---|---|"]
         for c in rows:
-            L.append(f"| {c['status'].upper()} | {_cell(c['id'])} | {_cell(c['detail'])[:500]} |")
+            sev = f" ({c['severity']})" if c["status"] in ("fail", "warn") and c["severity"] else ""
+            L.append(f"| {c['status'].upper()}{sev} | {_cell(c['id'])} | {_cell(c['detail'])[:500]} |")
         L.append("")
     other = [c for c in check_rows if c["target"] not in {t["label"] for t in meta["targets"]}]
     if other:
