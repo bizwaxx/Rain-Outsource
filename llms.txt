@@ -8,10 +8,11 @@ Base URL: https://rainout-agent-source.vercel.app
 
 - Rules: confirm the team match with the user; read the one-sentence `reason` aloud with the play odds; official status beats odds; **always ask the user before adding a game to their calendar**. Rainout Source never writes to calendars. It gives you a Google Calendar event body (`calendar_event`, with a stable `iCalUID`) and ICS text.
 - If team search returns `next_step: ask_user_for_schedule_url`, ask for the league's schedule link (ICS/webcal feed or schedule page) and search again with `schedule_url`.
-- MCP (Streamable HTTP, stateless): `https://rainout-agent-source.vercel.app/mcp`. Tools: find_team, get_games, check_game, get_venue_status, check_schedule, find_venue, find_track, get_track_events, check_race, get_track_history, get_rain_chance, get_precipitation_nowcast, report_cancellation. All are read-only except report_cancellation. find_venue searches OpenStreetMap venues nationwide (labeled osm_only).
+- MCP (Streamable HTTP, stateless): `https://rainout-agent-source.vercel.app/mcp`. Tools: find_team, get_games, check_game, get_venue_status, check_schedule, find_venue, find_track, get_track_events, check_race, get_track_history, get_rain_chance, get_precipitation_nowcast, check_concrete_pour, report_cancellation. All are read-only except report_cancellation. find_venue searches OpenStreetMap venues nationwide (labeled osm_only).
 - Motocross: find_track, then confirm the track with the user. For "what are the chances the race at Swan MX on Saturday happens?" call check_race and read `answer`. Events come only from public track and series calendars and are never invented; if none are found (`next_step: ask_user_for_events_url`), ask for the event or series link and pass `events_url`.
 - Rain anywhere: get_rain_chance (or `GET /v1/rain`) with a place name or lat/lon gives hourly/daily rain chance and amounts; read `summary`. If `ambiguous` is true, ask which of `matches` the user means.
 - Next 2 hours: get_precipitation_nowcast (or `GET /v1/nowcast?lat=&lon=`) gives rain in 15-minute steps (amount, intensity, chance) with `rain_starts_at` and a `summary` to read aloud. Use lat/lon for job sites; town names resolve to the town center.
+- Construction (v2 beta, weather screening only, not engineering advice; say so): check_concrete_pour (or `GET|POST /v1/construction/concrete-pour`) with lat/lon and pour_start (local time) returns decision go | wait | no_go, probability_percent, a plain `reason`, per-check details (rain in pour and early set, thunder, cold <40F, freeze, heat >90F, wind, ACI 305 evaporation) and `best_alternative`.
 - Official status: when `official_status` is unknown, read `official_status_check.message` (why the official page couldn't be used, e.g. blocked, stale or not posted yet, and where to check instead).
 - Cancellation reports: if the user says their game was rained out, delayed, the field is closed or they're playing, offer to share it with report_cancellation (or `POST /v1/reports`). Reports are anonymous, unverified and expire in 24 h; they adjust the odds in /v1/status (`community_reports`) only while the official status is unknown.
 - OpenAPI (GPT Actions friendly operationIds): https://rainout-agent-source.vercel.app/openapi.yaml
@@ -33,11 +34,12 @@ Base URL: https://rainout-agent-source.vercel.app
 - [Track history](https://rainout-agent-source.vercel.app/v1/tracks/freestone/history): `GET /v1/tracks/{track_id}/history` monthly NOAA rain stats plus documented past rain cancellations with sources and coverage gaps
 - `GET /v1/tracks/{track_id}/calendar.ics`: subscribable race feed with odds
 - [Nowcast](https://rainout-agent-source.vercel.app/v1/nowcast?lat=30.27&lon=-97.74): `GET /v1/nowcast?lat=&lon=|q=` next 2 hours of precipitation in 15-minute steps (Open-Meteo minutely_15 + NWS gridpoints)
+- `GET|POST /v1/construction/concrete-pour?lat=&lon=&pour_start=2026-10-21 07:00&duration_hours=&cure_hours=&mix=&protection=`: concrete pour go | wait | no_go with the best alternative window
 
 ## Docs
 
 - [Teams API](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/teams.md)
-- [Construction layer (v2 beta): nowcast](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/construction.md)
+- [Construction layer (v2 beta): nowcast, concrete pour](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/construction.md)
 - [Rain chance API and box CLI](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/rain.md)
 - [Motocross race checker](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/motocross.md)
 - [MCP server](https://github.com/bizwaxx/Rain-Outsource/blob/main/docs/mcp.md)

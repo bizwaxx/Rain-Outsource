@@ -112,6 +112,10 @@
       "dest": "/api/construction.py"
     },
     {
+      "src": "/v1/construction/([^/]+)/?",
+      "dest": "/api/construction.py"
+    },
+    {
       "src": "/mcp/?",
       "dest": "/api/mcp.py"
     },

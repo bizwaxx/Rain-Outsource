@@ -1,6 +1,7 @@
 """HTTP layer for the v2 construction endpoints (shared by the Vercel handler and the WSGI app).
 
 GET /v1/nowcast?lat=&lon=  (or q=place)
+GET|POST /v1/construction/concrete-pour
 """
 from __future__ import annotations
 
@@ -54,8 +55,20 @@ def _nowcast(params: dict[str, Any]) -> dict[str, Any]:
     return get_precipitation_nowcast(_location(params), lat=params.get("lat"), lon=params.get("lon"), pick=params.get("pick"))
 
 
+def _concrete(params: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.concrete import check_concrete_pour
+
+    return check_concrete_pour(_location(params), lat=params.get("lat"), lon=params.get("lon"), pick=params.get("pick"),
+                               pour_start=params.get("pour_start") or params.get("start"),
+                               duration_hours=params.get("duration_hours"), cure_hours=params.get("cure_hours"),
+                               critical_hours=params.get("critical_hours"), mix=params.get("mix"),
+                               protection=params.get("protection"), concrete_temp_f=params.get("concrete_temp_f"),
+                               search_days=params.get("search_days"))
+
+
 ROUTES: dict[str, tuple[Callable[[dict[str, Any]], dict[str, Any]], tuple[str, ...]]] = {
     "/v1/nowcast": (_nowcast, ("GET",)),
+    "/v1/construction/concrete-pour": (_concrete, ("GET", "POST")),
 }
 
 
