@@ -30,10 +30,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-20, 61 fixtures, 207,360 grid points incl. the 7-day wetness and hybrid
-    # families). In-sample: 72% directional, 2 confident wrong. Leave-one-out (honest): 69% directional, 4 confident
-    # wrong. The wetness bucket alone scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so "window" stays.
-    "drainage": {"fast": 0.15, "medium": 0.6, "slow": 1.6},
+    # Chosen by staging/calibrate.py (2026-10-20 18:08 CT, 61 fixtures, 82,944 grid points, venue maintenance
+    # profile). In-sample: 74% directional, 2 confident wrong. Leave-one-out (honest): 70% directional, 3 confident
+    # wrong. Before the maintenance profile: 72% / 2 in-sample, 69% / 4 held out. The 7-day wetness bucket alone
+    # scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so the "window" soak stays.
+    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.6},
     "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
     "turf_rain_factor": 0.7,
@@ -51,7 +52,7 @@ PARAMS: dict[str, Any] = {
     "wet_scale": 1.0,
     # Venue maintenance (rainout_agent.venue_profile): soak at maintained venues (tarp or grounds crew, college/pro)
     # is multiplied by this. None = the older rule (maintained dirt infields count as "medium" drainage).
-    "maint_soak_factor": None,
+    "maint_soak_factor": 0.35,
 }
 WET_CAP_MM = 75.0
 WET_DAYS = 7
