@@ -60,7 +60,15 @@
       "dest": "/api/site.py"
     },
     {
-      "src": "/(privacy|terms)(\\.html)?/?",
+      "src": "/(privacy|terms|switch)(\\.html)?/?",
+      "dest": "/api/site.py"
+    },
+    {
+      "src": "/switch/embed/?",
+      "dest": "/api/site.py"
+    },
+    {
+      "src": "/(switch\\.js|switch-embed\\.js)",
       "dest": "/api/site.py"
     },
     {

@@ -1,0 +1,39 @@
+/* One-field widget for league websites: /switch/embed?field_id=...&time=HH:MM (viewer's time zone, default next hour). */
+(function () {
+  "use strict";
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function iso(d) {
+    var off = -d.getTimezoneOffset(), a = Math.abs(off);
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":00" +
+      (off >= 0 ? "+" : "-") + pad(Math.floor(a / 60)) + ":" + pad(a % 60);
+  }
+  function ago(s) { var m = (Date.now() - new Date(s).getTime()) / 60000; return m < 90 ? Math.max(1, Math.round(m)) + " min ago" : Math.round(m / 60) + " h ago"; }
+  function line(cls, text) { var d = document.createElement("div"); if (cls) d.className = cls; d.textContent = text; return d; }
+  var box = document.getElementById("box");
+  var q = new URLSearchParams(location.search), id = q.get("field_id");
+  if (!id) { box.textContent = "Add ?field_id=… to the embed link."; return; }
+  var when = new Date();
+  if (q.get("time") && /^\d{1,2}:\d{2}$/.test(q.get("time"))) { var t = q.get("time").split(":"); when.setHours(+t[0], +t[1], 0, 0); }
+  else { when.setMinutes(0, 0, 0); when.setHours(when.getHours() + 1); }
+  fetch("/v1/status?field_id=" + encodeURIComponent(id) + "&game_time=" + encodeURIComponent(iso(when)), {headers: {Accept: "application/json"}})
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      box.textContent = "";
+      if (d.error) { box.appendChild(line("", d.message || d.error)); return; }
+      var p = d.game_time_play_probability_percent, off = String(d.official_status || "unknown");
+      var cls = /cancel|closed|postpon/.test(off) ? "stop" : p == null ? "unk" : p >= 75 ? "go" : p >= 45 ? "warn" : "stop";
+      box.appendChild(line("name", d.field || id));
+      box.appendChild(line("pct " + cls, (p == null ? "?" : p + "%") + " chance of play"));
+      box.appendChild(line("", "Official: " + (off === "unknown" ? "not posted / couldn't read" : off) + ". Rain chance " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + " at " + when.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) + "."));
+      var chk = d.official_status_check || {};
+      if (chk.posted_at) box.appendChild(line("hint", "Official call posted " + ago(chk.posted_at) + "."));
+      if (d.official_status_last_checked) box.appendChild(line("hint", "Official source checked " + ago(d.official_status_last_checked) + "."));
+      var r = (d.community_reports || {}).count;
+      if (r) box.appendChild(line("hint", r + " player report(s) recently."));
+      var a = document.createElement("a");
+      a.href = "/switch?fields=" + encodeURIComponent(d.field_id || id); a.target = "_blank"; a.rel = "noopener";
+      a.textContent = "Details and free alerts · Rain-Outsource";
+      var f = line("hint", ""); f.appendChild(a); box.appendChild(f);
+    })
+    .catch(function () { box.textContent = "Couldn't reach Rain-Outsource right now."; });
+})();
