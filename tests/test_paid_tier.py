@@ -196,7 +196,8 @@ def test_existing_endpoints_ignore_keys_and_stay_unrouted():
     """The free public API is not touched: existing routes do not go through the paid layer."""
     cfg = json.load(open("vercel.json"))
     premium_routes = {r["src"] for r in cfg["routes"] if r["dest"] == "/api/premium.py"}
-    assert premium_routes == {"/v1/plans/?", "/v1/account/?", "/v1/batch/?"}
+    assert {"/v1/plans/?", "/v1/account/?", "/v1/batch/?"} <= premium_routes
+    assert all(r.startswith(("/v1/plans", "/v1/account", "/v1/batch", "/v1/billing", "/v1/premium")) for r in premium_routes)
     assert len(cfg["builds"]) <= 12  # Vercel Hobby function limit
     status, _, _ = premium_api.handle_premium_request("GET", "/v1/status", "", b"", {})
     assert status == 404

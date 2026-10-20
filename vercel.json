@@ -132,6 +132,10 @@
       "dest": "/api/premium.py"
     },
     {
+      "src": "/v1/billing/(checkout|success|portal|webhook)/?",
+      "dest": "/api/premium.py"
+    },
+    {
       "src": "/api/status",
       "dest": "/api/status.py"
     },
