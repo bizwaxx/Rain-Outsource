@@ -61,7 +61,9 @@ def application(environ, start_response):
         start_response(f"{status} {HTTPStatus(status).phrase}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
         return [payload]
 
-    if path.rstrip("/") in {"/v1/plans", "/v1/account", "/v1/batch"} or path.startswith("/v1/billing/") or path.startswith("/v1/premium/"):
+    from rainout_agent.premium_api import is_premium_path
+
+    if is_premium_path(path):
         from http import HTTPStatus
 
         from rainout_agent.premium_api import MAX_BODY as PREMIUM_MAX, handle_premium_request
@@ -72,7 +74,8 @@ def application(environ, start_response):
             length = 0
         body = environ["wsgi.input"].read(min(length, PREMIUM_MAX + 1)) if length > 0 else b""
         headers = {k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")}
-        status, out_headers, payload = handle_premium_request(method, path, environ.get("QUERY_STRING", ""), body, headers)
+        status, out_headers, payload = handle_premium_request(method, path, environ.get("QUERY_STRING", ""), body, headers,
+                                                              client=environ.get("REMOTE_ADDR"))
         start_response(f"{status} {HTTPStatus(status).phrase}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
         return [payload]
 

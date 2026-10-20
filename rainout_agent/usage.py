@@ -1,9 +1,9 @@
 """Per-key rate limits, monthly quotas and usage counters for paid features.
 
-Counters live in the cache layer (memory by default). With memory only, each
-serverless instance counts on its own, so limits are approximate and generous;
-configure the optional shared cache (Upstash/KV) for exact global counts.
-Free-tier traffic is never counted or limited here.
+Counters live in the cache layer. With the shared Upstash/KV backend (production and
+preview), they use atomic INCRBY and are exact across all instances. With memory only,
+each serverless instance counts on its own (approximate, generous).
+Anonymous (no-key) traffic is never counted or limited here.
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def _keys(kid: str, now_s: float) -> dict[str, str]:
 
 
 def _get(key: str) -> int:
-    return int(store().get(key) or 0)
+    return int(store().get_fresh(key) or 0)
 
 
 def _month_reset(now_s: float) -> datetime:
@@ -44,21 +44,22 @@ def check_and_count(info: KeyInfo, units: int, endpoint: str, now_s: float | Non
     now_s = time.time() if now_s is None else now_s
     plan = plans.get_plan(info.plan)
     keys = _keys(info.key_id, now_s)
-    minute, month = _get(keys["minute"]), _get(keys["month"])
-    if plan["rate_per_minute"] and minute + 1 > plan["rate_per_minute"]:
-        raise LimitExceeded("rate_limited", f"{plan['name']} allows {plan['rate_per_minute']} requests per minute.",
-                            60 - int(now_s % 60), summary(info, now_s))
-    if plan["monthly_units"] and month + units > plan["monthly_units"]:
+    s = store()
+    if plan["monthly_units"] and _get(keys["month"]) + units > plan["monthly_units"]:
         retry = int((_month_reset(now_s).timestamp() - now_s))
         raise LimitExceeded("quota_exceeded", f"{plan['name']} includes {plan['monthly_units']} units per month; this request needs {units}.",
                             retry, summary(info, now_s))
-    s = store()
-    s.set(keys["minute"], minute + 1, 120)
-    s.set(keys["day"], _get(keys["day"]) + units, DAY_TTL)
-    s.set(keys["month"], month + units, MONTH_TTL)
-    ep_key = f"{keys['month']}:ep:{endpoint}"
-    s.set(ep_key, _get(ep_key) + units, MONTH_TTL)
-    endpoints = set(s.get(f"{keys['month']}:eps") or [])
+    if plan["rate_per_minute"]:
+        minute = s.incr(keys["minute"], 1, 120)  # atomic on Upstash; rejected requests count toward the minute
+        if minute > plan["rate_per_minute"]:
+            raise LimitExceeded("rate_limited", f"{plan['name']} allows {plan['rate_per_minute']} requests per minute.",
+                                60 - int(now_s % 60), summary(info, now_s))
+    else:
+        s.incr(keys["minute"], 1, 120)
+    s.incr(keys["day"], units, DAY_TTL)
+    s.incr(keys["month"], units, MONTH_TTL)
+    s.incr(f"{keys['month']}:ep:{endpoint}", units, MONTH_TTL)
+    endpoints = set(s.get_fresh(f"{keys['month']}:eps") or [])
     if endpoint not in endpoints:
         s.set(f"{keys['month']}:eps", sorted(endpoints | {endpoint}), MONTH_TTL)
     return summary(info, now_s)
@@ -73,7 +74,7 @@ def summary(info: KeyInfo, now_s: float | None = None) -> dict[str, Any]:
     for back in range(6, -1, -1):
         t = now_s - back * 86400
         days.append({"date": datetime.fromtimestamp(t, timezone.utc).date().isoformat(), "units": _get(_keys(info.key_id, t)["day"])})
-    eps = store().get(f"{keys['month']}:eps") or []
+    eps = store().get_fresh(f"{keys['month']}:eps") or []
     return {
         "plan": info.plan,
         "plan_name": plan["name"],
@@ -84,7 +85,7 @@ def summary(info: KeyInfo, now_s: float | None = None) -> dict[str, Any]:
                        "resets_at": _month_reset(now_s).isoformat()},
         "last_7_days": days,
         "by_endpoint_this_month": {ep: _get(f"{keys['month']}:ep:{ep}") for ep in eps},
-        "counting": "per-instance (in-memory cache); approximate" if store().name == "memory" else f"shared ({store().name})",
+        "counting": "per-instance (in-memory cache); approximate" if store().name == "memory" else f"exact, shared ({store().name})",
     }
 
 

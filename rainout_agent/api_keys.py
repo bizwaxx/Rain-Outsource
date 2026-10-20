@@ -16,7 +16,8 @@ With memory only, a revocation reaches other instances when their cached
 subscription state expires (``SUBSCRIPTION_TTL_S``) and is re-read from the
 billing resolver (Stripe in test mode, see billing.py).
 
-No key means the free tier. Existing endpoints never require a key.
+No key means the anonymous tier. Existing endpoints never require a key.
+Free keys (plan ``free_key``) are self-serve via POST /v1/keys; paid keys come from Stripe.
 """
 from __future__ import annotations
 
@@ -99,8 +100,8 @@ def mint_key(plan: str, *, mode: str = "test", subscription: str | None = None, 
     secret = _secret(env)
     if secret is None:
         raise KeyError_("keys_not_configured", "Set RAINOUT_API_KEY_SECRET (32+ characters) to issue keys.")
-    if plan not in plans.PAID:
-        raise KeyError_("invalid_plan", f"Unknown paid plan {plan!r}.")
+    if plan not in plans.KEY_PLANS:
+        raise KeyError_("invalid_plan", f"Unknown key plan {plan!r}.")
     if mode not in MODES:
         raise KeyError_("invalid_mode", "mode must be test or live.")
     payload = {"v": 1, "kid": key_id or secrets.token_hex(8), "plan": plan}
@@ -181,7 +182,7 @@ def verify_key(token: str, *, env: dict[str, str] | None = None, now: float | No
         raise KeyError_("invalid_api_key", "API key payload is unreadable.") from exc
     info = KeyInfo(key_id=str(payload["kid"]), plan=str(payload.get("plan")), mode=mode,
                    subscription=payload.get("sub"), customer=payload.get("cus"), expires_at=payload.get("exp"))
-    if info.plan not in plans.PAID:
+    if info.plan not in plans.KEY_PLANS:
         raise KeyError_("invalid_api_key", "API key plan is unknown.")
     if info.expires_at and (now or time.time()) >= info.expires_at:
         raise KeyError_("expired_api_key", "This API key has expired.")

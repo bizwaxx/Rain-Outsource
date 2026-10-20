@@ -128,6 +128,10 @@
       "dest": "/api/status.py"
     },
     {
+      "src": "/v1/keys/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/api/status",
       "dest": "/api/status.py"
     },
