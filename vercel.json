@@ -128,6 +128,10 @@
       "dest": "/api/status.py"
     },
     {
+      "src": "/v1/billing/(checkout|success|portal|webhook)/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/v1/keys/?",
       "dest": "/api/status.py"
     },
