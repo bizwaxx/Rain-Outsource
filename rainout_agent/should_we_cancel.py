@@ -149,7 +149,8 @@ def should_we_cancel(activity: str | None = None, *, venue: str | None = None, t
         reason = f"I can't find this {what} listed, so I won't say it's on. Confirm with the organizer or track first. {facts}"
     elif decision == "go":
         rec = "play"
-        reason = f"Play: about {p}% chance the {what} goes ahead. {facts}"
+        verb = "Play" if what in ("game", "race") else "Go ahead"
+        reason = f"{verb}: about {p}% chance the {what} goes ahead. {facts}"
         check_again = recheck if hours_out > LAST_CALL_HOURS else None
     elif decision == "no_go":
         if hours_out <= NEAR_HOURS:
