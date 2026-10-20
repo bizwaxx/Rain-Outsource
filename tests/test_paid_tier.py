@@ -129,8 +129,10 @@ def test_plans_endpoint_lists_free_and_paid():
     data = json.loads(body)
     ids = [p["id"] for p in data["plans"]]
     assert status == 200 and ids[0] == "free" and {"coach", "league", "org"} <= set(ids)
-    prices = [p["price_usd_month"] for p in data["plans"] if p["requires_key"]]
-    assert all(9 <= p <= 99 for p in prices)
+    prices = [p["price_usd_month"] for p in data["plans"] if p["id"] in plans.PAID]
+    assert all(9 <= p <= 99 for p in prices) and len(prices) == 3
+    free_key = next(p for p in data["plans"] if p["id"] == "free_key")
+    assert free_key["price_usd_month"] == 0 and "/v1/keys" in data["signup"]
     free = data["plans"][0]
     assert free["rate_per_minute"] is None and free["monthly_units"] is None
     for paid in data["plans"][1:]:  # paid plans always give more than free
@@ -187,9 +189,19 @@ def test_bad_key_is_rejected_on_paid_endpoints_only(monkeypatch):
 def test_rate_limited_batch_returns_429(monkeypatch):
     monkeypatch.setitem(plans.PLANS["coach"], "rate_per_minute", 1)
     key = api_keys.mint_key("coach")
-    assert post(games(1), key)[0] == 200
-    status, headers, data = post(games(1), key)
+    assert post(games(5), key)[0] == 200
+    status, headers, data = post(games(5), key)
     assert status == 429 and data["error"] == "rate_limited" and int(headers["Retry-After"]) > 0
+
+
+def test_key_over_limit_falls_back_to_anonymous_allowance(monkeypatch):
+    """Holding a key is never worse than no key."""
+    monkeypatch.setitem(plans.PLANS["free_key"], "monthly_units", 2)
+    key = api_keys.mint_key("free_key")
+    assert post(games(2), key)[2]["plan"] == "free_key"
+    status, headers, data = post(games(3), key)
+    assert status == 200 and data["plan"] == "free" and headers["X-Rainout-Fallback"] == "quota_exceeded"
+    assert post(games(4), key)[0] == 429
 
 
 def test_existing_endpoints_ignore_keys_and_stay_unrouted():

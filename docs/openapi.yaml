@@ -722,6 +722,24 @@ paths:
         '200': {description: Key, plan, limits and usage (this minute, this month, last 7 days, per endpoint).}
         '401': {description: Missing or invalid key.}
         '403': {description: Key expired, revoked, or subscription inactive.}
+  /v1/keys:
+    get:
+      summary: Free API key signup page (HTML, no card).
+      responses:
+        '200': {description: HTML form.}
+    post:
+      summary: Create a free API key instantly (no card; email optional).
+      description: Adds a usage dashboard and bigger batches (10 games / 3 teams). Limits 3 keys per IP per day, 2 per email per day, 500 per day overall. The API keeps working without a key.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: {type: object, properties: {email: {type: string}, label: {type: string}}}
+      responses:
+        '201': {description: '{api_key, key_id, plan: free_key, limits, ...} (the key is shown once)'}
+        '400': {description: Invalid email.}
+        '429': {description: Signup limit reached; see Retry-After.}
+        '503': {description: Keys not enabled on this deployment (RAINOUT_API_KEY_SECRET unset).}
   /v1/batch:
     post:
       summary: Check many games and/or teams in one call.

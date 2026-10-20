@@ -18,7 +18,8 @@ class handler(BaseHTTPRequestHandler):
         except ValueError:
             length = 0
         body = self.rfile.read(min(length, PREMIUM_MAX + 1)) if length > 0 else b""
-        status, headers, payload = handle_premium_request(method, parsed.path, parsed.query, body, dict(self.headers.items()))
+        status, headers, payload = handle_premium_request(method, parsed.path, parsed.query, body, dict(self.headers.items()),
+                                                          client=(getattr(self, "client_address", None) or [None])[0])
         self.send_response(status)
         for key, value in headers.items():
             self.send_header(key, value)
@@ -38,7 +39,7 @@ class handler(BaseHTTPRequestHandler):
         body = self.rfile.read(min(length, MAX_BODY + 1)) if length > 0 else b""
         status, headers, payload = handle_reports_request(
             method, parsed.query, body, self.headers.get("Content-Type") or "", dict(self.headers.items()),
-            client=(self.client_address or [None])[0])
+            client=(getattr(self, "client_address", None) or [None])[0])
         self.send_response(status)
         self.send_header("Access-Control-Allow-Origin", "*")
         for key, value in headers.items():
