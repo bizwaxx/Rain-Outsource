@@ -79,29 +79,15 @@ def fixture_inputs(fx: dict[str, Any], fetch: Callable[[str], dict], tracks: dic
 
     if fx["field_type"] == "construction":
         return None
-    if fx["field_type"] == "motocross":
-        track = tracks[fx["track"]]
+    track = tracks.get(fx.get("track")) if fx["field_type"] == "motocross" else None
+    if track:
         loc = mx._field(track)["coordinates"]
-        lat, lon, tz = loc["lat"], loc["lon"], ZoneInfo("America/Chicago")
-        start = datetime.fromisoformat(fx["start"]).replace(tzinfo=tz)
-        duration = (datetime.fromisoformat(fx["end"]).replace(tzinfo=tz) - start).total_seconds() / 3600
-        soil = mx.SOIL_FACTORS.get(track.get("soil") or "unknown", 1.0)
+        lat, lon = loc["lat"], loc["lon"]
     else:
-        lat, lon, tz = fx["lat"], fx["lon"], ZoneInfo(fx["tz"])
-        start = datetime.fromisoformat(fx["start"]).replace(tzinfo=tz)
-        duration, soil = float(fx.get("duration_h", 3)), 1.0
-    day = start.date()
+        lat, lon = fx["lat"], fx["lon"]
+    day = datetime.fromisoformat(fx["start"]).date()
     wx = bt.fetch_weather(lat, lon, day - timedelta(days=4), day + timedelta(days=2), fetch)
-    rows, grade = bt.pick_rows(wx, start - timedelta(hours=2), start + timedelta(hours=duration))
-    if not rows:
-        return None
-    feat = er.features(wx.get("observed") or {}, rows, start, duration)
-    for k in ("earlier_today_in", "prior_24h_in", "prior_48h_in"):
-        if feat.get(k) is not None:
-            feat[k] = round(feat[k] / soil, 3)   # sandy motocross soil drains faster
-    drainage = er.drainage_class(field_type=fx["field_type"], maintained=bool(fx.get("maintained")))
-    return {"id": fx["id"], "field_type": fx["field_type"], "outcome": fx["outcome"], "grade": grade, "features": feat,
-            "drainage": drainage, "ball_sport": fx["field_type"] != "motocross"}
+    return bt.event_inputs(fx, wx, track)
 
 
 def params_from(point: dict[str, Any]) -> dict[str, Any]:
@@ -114,8 +100,7 @@ def params_from(point: dict[str, Any]) -> dict[str, Any]:
 
 
 def predict(inp: dict[str, Any], params: dict[str, Any]) -> int:
-    base = er.base_percent(inp["features"].get("window_pop") or 0, inp["drainage"], params)
-    return er.adjust(base, inp["features"], inp["drainage"], params, inp["ball_sport"])["play_probability_percent"]
+    return bt.score_event_risk(inp, params)["p"]
 
 
 def loss(outcome: str, p: int) -> int:
@@ -123,11 +108,21 @@ def loss(outcome: str, p: int) -> int:
     return 3 * int(g["confident_wrong"]) + int(g["directional_ok"] is False)
 
 
-def score(inputs: list[dict[str, Any]], preds: list[int]) -> dict[str, Any]:
+def score(inputs: list[dict[str, Any]], preds: list[int], split: bool = True) -> dict[str, Any]:
+    out = _score(inputs, preds)
+    if split:
+        types = sorted({i["field_type"] for i in inputs})
+        out["by_field_type"] = {t: _score([i for i in inputs if i["field_type"] == t],
+                                          [p for i, p in zip(inputs, preds) if i["field_type"] == t]) for t in types}
+    return out
+
+
+def _score(inputs: list[dict[str, Any]], preds: list[int]) -> dict[str, Any]:
     gs = [bt.grade(i["outcome"], p) for i, p in zip(inputs, preds)]
     dirs = [g for g in gs if g["directional_ok"] is not None]
     return {"n": len(gs), "directional_accuracy": round(100 * sum(g["directional_ok"] for g in dirs) / len(dirs)) if dirs else None,
             "confident_wrong": sum(g["confident_wrong"] for g in gs),
+            "confident_wrong_ids": [i["id"] for i, g in zip(inputs, gs) if g["confident_wrong"]],
             "band_accuracy": round(100 * sum(g["result"] == "correct" for g in gs) / len(gs)) if gs else None}
 
 

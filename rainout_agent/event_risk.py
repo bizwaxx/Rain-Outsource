@@ -30,16 +30,18 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.2},
+    # Chosen by staging/calibrate.py (2026-10-20, 61 fixtures, 20,736 grid points). In-sample: 72% directional,
+    # 2 confident wrong. Leave-one-out (honest): 69% directional, 4 confident wrong.
+    "drainage": {"fast": 0.15, "medium": 0.6, "slow": 1.6},
     "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
-    "turf_rain_factor": 1.0,
-    "storm_cape": 2500,                     # None = only explicit thunder forecasts
+    "turf_rain_factor": 0.7,
+    "storm_cape": 1500,                     # None = only explicit thunder forecasts
     "gust_mph": 45,                         # None = off
     "cold_f": 35,                           # None = off
     "humble_cap": 79,                       # None = off
-    "humble_soak_in": 0.25,                 # raw weighted rain that counts as a risk signal for the humility cap
-    "turf_floor": None,                     # turf without storms never drops below this (None = off)
+    "humble_soak_in": 0.15,                 # raw weighted rain that counts as a risk signal for the humility cap
+    "turf_floor": None,                     # turf without storms never drops below this (None = off; not chosen)
 }
 SOAK_PENALTY = ((0.0, 0), (0.1, 0), (0.3, 12), (0.6, 30), (1.0, 45), (2.0, 65), (3.0, 75))
 STORM_WINDOW_CAP, STORM_WINDOW_DROP, STORM_DAY_DROP = 45, 10, 10
