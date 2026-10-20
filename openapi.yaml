@@ -744,8 +744,10 @@ paths:
                       field_id: {type: string, description: Venue id or name (or use venue).}
                       game_time: {type: string, description: ISO 8601 with offset.}
                       team_id: {type: string, description: Team id from /v1/teams/search.}
-                      date: {type: string, description: For team items, e.g. today, this weekend, 2026-10-24.}
-            example: {items: [{field_id: Krieg, game_time: '2026-10-24T18:30:00-05:00'}, {team_id: tsl-340-744621-4306365, date: this week}]}
+                      date: {type: string, description: 'For team items: today, tomorrow or YYYY-MM-DD.'}
+                      from: {type: string, description: 'For team items: range start YYYY-MM-DD (with to).'}
+                      to: {type: string, description: 'For team items: range end YYYY-MM-DD.'}
+            example: {items: [{field_id: Krieg, game_time: '2026-10-24T18:30:00-05:00'}, {team_id: tsl-340-744621-4306365, from: '2026-10-23', to: '2026-10-25'}]}
       responses:
         '200': {description: 'Per-item results with ok/error, at_risk_indexes and (with a key) usage.'}
         '401': {description: Invalid key sent. Remove the header to use the free tier.}

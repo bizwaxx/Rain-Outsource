@@ -236,3 +236,19 @@ def test_vercel_status_function_serves_paid_paths_and_status_unchanged():
     assert call("/v1/status")[1] == {"error": "missing_field_id"}  # existing behaviour untouched
     status, data = call("/v1/batch", "POST", json.dumps({"items": [{"bogus": 1}]}).encode())
     assert status == 200 and data["plan"] == "free" and data["results"][0]["error"] == "invalid_item"
+
+
+def test_documented_batch_example_items_are_valid():
+    import re
+    from pathlib import Path
+
+    import yaml
+
+    spec = yaml.safe_load(Path("openapi.yaml").read_text())
+    example = spec["paths"]["/v1/batch"]["post"]["requestBody"]["content"]["application/json"]["example"]
+    doc_items = json.loads(re.search(r"-d '(\{.*?\})'", Path("docs/pricing.md").read_text()).group(1))["items"]
+    for item in example["items"] + doc_items:
+        norm = premium_api._normalize(item)
+        if norm["kind"] == "team":  # team date params must be ones teams.resolve_range accepts
+            assert set(norm) - {"kind", "team_id"} <= {"date", "from", "to"}
+            assert all(re.fullmatch(r"today|tomorrow|\d{4}-\d{2}-\d{2}", str(v)) for k, v in norm.items() if k in {"date", "from", "to"})

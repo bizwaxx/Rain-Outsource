@@ -24,7 +24,7 @@ sells single premium calls with no account. See docs/x402.md.
 ```
 curl -X POST https://rainout-agent-source.vercel.app/v1/batch \
   -H 'X-API-Key: rk_test_...' -H 'Content-Type: application/json' \
-  -d '{"items":[{"field_id":"Krieg","game_time":"2026-10-24T18:30:00-05:00"},{"team_id":"tsl-340-744621-4306365","date":"this week"}]}'
+  -d '{"items":[{"field_id":"Krieg","game_time":"2026-10-24T18:30:00-05:00"},{"team_id":"tsl-340-744621-4306365","from":"2026-10-23","to":"2026-10-25"}]}'
 curl https://rainout-agent-source.vercel.app/v1/account -H 'X-API-Key: rk_test_...'
 ```
 
