@@ -17,7 +17,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.14.0"
+SERVER_VERSION = "0.15.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -37,7 +37,8 @@ INSTRUCTIONS = (
     "If the user says their game was rained out, delayed, the field is closed or they are playing, offer to share it with "
     "report_cancellation (unverified, expires in 24 h, nudges the odds others see while the official status is unknown). "
     "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts, and "
-    "get_precipitation_nowcast for the next 2 hours in 15-minute steps."
+    "get_precipitation_nowcast for the next 2 hours in 15-minute steps. "
+    "Construction (v2 beta, weather screening, not engineering advice): check_concrete_pour."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -296,6 +297,35 @@ TOOLS.append({
         },
     },
 })
+TOOLS.append({
+    "name": "check_concrete_pour",
+    "title": "Concrete pour go / wait / no-go",
+    "description": (
+        "Weather go/wait/no-go for a concrete pour at a job site: rain and thunderstorms during the pour and the early-set "
+        "window (2-4 h after, by mix), heavy rain later in the cure window, cold (<40F, ACI 306), freeze, heat (>90F, ACI 305), "
+        "wind gusts and the ACI 305 evaporation rate. Returns decision, probability_percent, a plain `reason` to read aloud, "
+        "per-check details, best_alternative start in the next few days and recheck_at. Pass lat/lon for the site (or "
+        "location with a town name) and pour_start in local time. Weather screening only, not engineering advice; say so."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "description": "Town name ('Austin, TX') or 'lat,lon' when lat/lon aren't given."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "pour_start": {"type": "string", "description": "Local time at the site, e.g. '2026-10-21 07:00', or ISO 8601 with offset."},
+            "duration_hours": {"type": "number", "minimum": 0.5, "maximum": 16, "description": "Pour length (default 4)."},
+            "cure_hours": {"type": "number", "minimum": 2, "maximum": 72, "description": "Cure window to protect after the pour (default 24)."},
+            "critical_hours": {"type": "number", "minimum": 1, "maximum": 8, "description": "Early-set window most sensitive to rain (default by mix, 2-6)."},
+            "mix": {"type": "string", "enum": ["standard", "high_early", "accelerated", "retarded", "slag_or_fly_ash", "low_wc_or_silica_fume"]},
+            "protection": {"type": "boolean", "description": "Covers/blankets ready on site (softens later-cure rain and freeze to wait)."},
+            "concrete_temp_f": {"type": "number", "description": "Concrete temperature at placement if known (default: air temperature)."},
+            "search_days": {"type": "integer", "minimum": 0, "maximum": 5, "description": "Days to scan for a better start (default 3)."},
+            "pick": {"type": "integer", "minimum": 1, "maximum": 5},
+        },
+        "required": ["pour_start"],
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
 _REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
@@ -429,6 +459,16 @@ def _get_precipitation_nowcast(args: dict[str, Any]) -> dict[str, Any]:
     return _place_call(get_precipitation_nowcast, args.get("query"), lat=args.get("lat"), lon=args.get("lon"), pick=args.get("pick"))
 
 
+def _check_concrete_pour(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.concrete import check_concrete_pour
+
+    if not args.get("location") and (args.get("lat") is None or args.get("lon") is None):
+        raise ToolError("Pass lat and lon for the job site, or location (town name or 'lat,lon').")
+    kw = {k: args.get(k) for k in ("pour_start", "duration_hours", "cure_hours", "critical_hours", "mix", "protection",
+                                   "concrete_temp_f", "search_days", "pick")}
+    return _place_call(check_concrete_pour, args.get("location"), lat=args.get("lat"), lon=args.get("lon"), **kw)
+
+
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -470,6 +510,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "get_rain_chance": _get_rain_chance,
     "report_cancellation": _report_cancellation,
     "get_precipitation_nowcast": _get_precipitation_nowcast,
+    "check_concrete_pour": _check_concrete_pour,
 }
 
 
