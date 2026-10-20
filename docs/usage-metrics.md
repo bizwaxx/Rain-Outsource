@@ -9,10 +9,32 @@ Redis (the same store as the weather cache). It does not store any request logs.
 |---|---|---|
 | Requests per endpoint, per caller class | `HINCRBY rainout:v1:metrics:<day> req\|<endpoint>\|<class>` | Endpoint labels are fixed names (`status`, `teams.games`, `mcp`, ...); ids never appear |
 | MCP tool calls per tool, per class | `HINCRBY … tool\|<tool>\|<class>` | Counted inside the `/mcp` request's pipeline |
-| Free keys signed up | `HINCRBY … event\|free_key_signup\|<class>` | Hooked in when the free-key PR lands |
+| Free keys signed up | `HINCRBY … event\|free_key_signup\|<class>` | Counted by the free-key PR (#25) through `metrics.event()` |
+| Accepted reports | `HINCRBY … event\|report\|<class>` | `POST /v1/reports` with a 2xx answer, or a successful MCP `report_cancellation` |
 | Unique clients per class | `PFADD rainout:v1:metrics:<day>:clients:<class> <hash>` | HyperLogLog, about 0.8% error; not tracked for internal traffic |
 
 Every key has a TTL of **400 days**.
+
+## First outside event
+
+`rainout:v1:metrics:first_outside` records the very first **external**-class event, ever. It is
+written with `SET … NX` and no TTL, so it is never overwritten. The value is JSON:
+
+```json
+{"at": "2026-10-20T18:42:07Z", "kind": "request", "where": "mcp:check_game", "client_family": "Claude", "country": "DE"}
+```
+
+- `kind`: `request`, `report` (an accepted cancellation report) or `signup` (a free key).
+- `where`: the endpoint label, or `mcp:<tool>` for MCP tool calls.
+- `client_family`: a coarse family derived from the User-Agent, for example `Claude`,
+  `OpenAI`, `Cursor`, `python-requests`, `python-httpx`, `curl`, `node`, `browser`, `other` or
+  `none`. The User-Agent itself is never stored.
+- `country`: Vercel's `x-vercel-ip-country` header, when present. No IP is stored.
+
+Writing it costs one extra command, but only until the marker exists. Each instance keeps a
+flag and stops trying once it has written or read the marker; a failed write clears the flag
+so a later request tries again. `/v1/admin/usage` returns the marker as `first_outside`, and
+it is the first line of the text format.
 
 ## Caller classes
 
@@ -53,6 +75,7 @@ bills every command inside a pipeline, so the counts per request are:
 | Typical request from a client this instance already saw today | 1 (`HINCRBY`) |
 | First request from a client on this instance today | 2 (`+ PFADD`) |
 | MCP `tools/call` | +1 per tool called |
+| Outside request on an instance that hasn't seen the first-outside marker yet | +1 `SET NX` (stops for good once the marker exists) |
 | First write to a day key on each instance | +1 `EXPIRE` (a few per day in total) |
 | Internal (our smoke tests) | 1 |
 
@@ -72,11 +95,13 @@ Authorization: Bearer <RAINOUT_ADMIN_TOKEN>      (or X-Admin-Token)
 
 Responses: 503 if `RAINOUT_ADMIN_TOKEN` is not set (it must be 16+ characters), 401 for a
 wrong token, and 502 if the store cannot be read. Each read costs `days × 4` commands
-(one HGETALL and three PFCOUNTs per day).
+(one HGETALL and three PFCOUNTs per day), plus one GET for `first_outside`.
 
 Sample text output:
 
 ```
+First outside event: 2026-10-20T18:42:07Z request mcp:check_game via Claude from DE
+
 Rainout Source usage 2026-10-19 (America/Chicago)
 Requests: 1,284 outside | 96 ours | 288 monitors | 41 bots
 Unique outside clients: 57 (monitors 3, bots 9)

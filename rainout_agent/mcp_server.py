@@ -445,6 +445,13 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
         pass
     try:
         data = handler(args or {})
+        if name == "report_cancellation":
+            try:
+                from rainout_agent import metrics
+
+                metrics.note_event("report")  # a real, accepted report
+            except Exception:  # pragma: no cover
+                pass
     except ToolError as exc:
         return {"content": [{"type": "text", "text": str(exc)}], "isError": True}
     except team_sources.SourceError as exc:

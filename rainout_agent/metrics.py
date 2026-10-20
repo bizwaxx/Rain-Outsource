@@ -34,12 +34,13 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
 import os
 import re
 import secrets
 import threading
 from collections import OrderedDict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
 
@@ -121,6 +122,52 @@ def client_from(headers: dict[str, str] | None, fallback: str | None = None) -> 
     return fwd or (h.get("x-real-ip") or "").strip() or fallback
 
 
+FIRST_KEY = f"{KEY_PREFIX}metrics:first_outside"
+_FAMILIES = (
+    (("claude", "anthropic"), "Claude"), (("chatgpt", "openai", "gptbot"), "OpenAI"), (("cursor",), "Cursor"),
+    (("perplexity",), "Perplexity"), (("gemini", "google-extended"), "Gemini"), (("mcp",), "mcp-client"),
+    (("python-requests",), "python-requests"), (("python-httpx", "httpx"), "python-httpx"), (("aiohttp",), "python-aiohttp"),
+    (("python-urllib", "python/"), "python-urllib"), (("curl/",), "curl"), (("wget",), "wget"), (("postman",), "postman"),
+    (("insomnia",), "insomnia"), (("node", "undici", "axios", "got/"), "node"), (("go-http-client",), "go"),
+    (("okhttp", "java/", "apache-httpclient"), "java"), (("deno",), "deno"), (("bun/",), "bun"),
+    (("mozilla/",), "browser"),
+)
+
+
+def client_family(user_agent: str | None) -> str:
+    """Coarse client family from a User-Agent (never stores the UA itself)."""
+    ua = (user_agent or "").strip().lower()
+    if not ua:
+        return "none"
+    for needles, family in _FAMILIES:
+        if any(n in ua for n in needles):
+            return family
+    return "other"
+
+
+def country(headers: dict[str, str] | None) -> str | None:
+    h = {k.lower(): v for k, v in (headers or {}).items()}
+    c = (h.get("x-vercel-ip-country") or "").strip().upper()
+    return c if re.fullmatch(r"[A-Z]{2}", c) else None
+
+
+_first_known = False  # per-instance flag: once the marker exists, never send SET NX again
+
+
+def first_outside_command(kind: str, where: str, headers: dict[str, str] | None, now: datetime | None = None) -> list[Any] | None:
+    """SET NX (no TTL) for the very first outside event; None once this instance knows it exists."""
+    global _first_known
+    with _state_lock:
+        if _first_known:
+            return None
+        _first_known = True  # optimistic; reset if the write fails
+    h = {k.lower(): v for k, v in (headers or {}).items()}
+    value = json.dumps({"at": (now or datetime.now(TZ)).astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+                        "kind": kind, "where": where, "client_family": client_family(h.get("user-agent")),
+                        "country": country(headers)}, separators=(",", ":"))
+    return ["SET", FIRST_KEY, value, "NX"]
+
+
 class _LocalStore:
     """In-process stand-in for Redis (no Upstash configured: local dev and tests)."""
 
@@ -128,6 +175,7 @@ class _LocalStore:
         self.lock = threading.Lock()
         self.hashes: dict[str, dict[str, int]] = {}
         self.sets: dict[str, set[str]] = {}
+        self.strings: dict[str, str] = {}
 
     def run(self, commands: list[list[Any]]) -> list[Any]:
         out: list[Any] = []
@@ -148,6 +196,15 @@ class _LocalStore:
                     for k, v in self.hashes.get(key, {}).items():
                         flat += [k, str(v)]
                     out.append(flat)
+                elif op == "SET":
+                    exists = key in self.strings
+                    if "NX" in cmd[3:] and exists:
+                        out.append(None)
+                    else:
+                        self.strings[key] = cmd[2]
+                        out.append("OK")
+                elif op == "GET":
+                    out.append(self.strings.get(key))
                 elif op == "PFCOUNT":
                     out.append(len(self.sets.get(key, set())))
                 else:  # EXPIRE etc.
@@ -192,24 +249,45 @@ def build_commands(day: str, fields: Iterable[str], cls: str, client: str | None
     return cmds
 
 
+def _kind(endpoint: str, tools: Iterable[str], events: Iterable[str]) -> tuple[str, str]:
+    events, tools = list(events), list(tools)
+    if "free_key_signup" in events:
+        return "signup", endpoint
+    if "report" in events:
+        return "report", "report_cancellation" if "report_cancellation" in tools else endpoint
+    return "request", (f"{endpoint}:{tools[0]}" if tools else endpoint)
+
+
 def record(endpoint: str, headers: dict[str, str] | None = None, client: str | None = None,
            tools: Iterable[str] = (), events: Iterable[str] = (), now: datetime | None = None,
            background: bool = True) -> threading.Thread | None:
     """Count one request. Never raises; by default runs the Redis call in a daemon thread."""
+    global _first_known
     try:
         if not enabled():
             return None
+        tools, events = list(tools), list(events)
         cls = classify(headers)
         day = today(now)
-        fields = [f"req|{endpoint}|{cls}"] + [f"tool|{t}|{cls}" for t in tools] + [f"event|{e}|{cls}" for e in events]
-        cmds = build_commands(day, fields, cls, client_from(headers, client))
+        fields = ([] if endpoint == "event" else [f"req|{endpoint}|{cls}"]) + [f"tool|{t}|{cls}" for t in tools] \
+            + [f"event|{e}|{cls}" for e in events]
+        cmds = build_commands(day, fields, cls, None if endpoint == "event" else client_from(headers, client))
+        first = None
+        if cls == "external":
+            kind, where = _kind(endpoint, tools, events)
+            first = first_outside_command(kind, where, headers, now)
+            if first:
+                cmds.append(first)
         LAST_COMMANDS[:] = cmds
 
         def send():
+            global _first_known
             try:
                 _run(cmds)
             except Exception:
-                pass  # counting must never break or slow a request
+                if first:
+                    _first_known = False  # try again on a later outside request
+                # counting must never break or slow a request
 
         if not background:
             send()
@@ -222,13 +300,15 @@ def record(endpoint: str, headers: dict[str, str] | None = None, client: str | N
 
 
 def event(name: str, headers: dict[str, str] | None = None, client: str | None = None) -> None:
-    """Count a non-request event (e.g. free_key_signup) without a request field."""
+    """Count an event (free_key_signup, report). Inside an instrumented request it rides on that
+    request's pipeline (no extra round trip); otherwise it is written on its own."""
     try:
         if not enabled():
             return
-        cls = classify(headers)
-        cmds = build_commands(today(), [f"event|{name}|{cls}"], "internal", None)
-        threading.Thread(target=lambda: _safe_run(cmds), daemon=True).start()
+        if getattr(_ctx, "events", None) is not None:
+            note_event(name)
+            return
+        record("event", headers, client, events=[name])
     except Exception:
         pass
 
@@ -246,6 +326,19 @@ _ctx = threading.local()
 
 def start_request() -> None:
     _ctx.tools = []
+    _ctx.events = []
+
+
+def note_event(name: str) -> None:
+    events = getattr(_ctx, "events", None)
+    if events is not None and len(events) < 20:
+        events.append(re.sub(r"[^a-z0-9_]", "", str(name).lower())[:40] or "unknown")
+
+
+def take_events() -> list[str]:
+    events = getattr(_ctx, "events", None) or []
+    _ctx.events = None
+    return events
 
 
 def note_tool(name: str) -> None:
@@ -267,15 +360,31 @@ def instrument(handler_cls: type) -> type:
         if original is None:
             continue
 
-        def wrapped(self, _orig=original):
+        def wrapped(self, _orig=original, name=name):
             start_request()
+            self._rk_status = 0
+            try:
+                _send = self.send_response
+
+                def capture(code, *a, **k):
+                    self._rk_status = int(code)
+                    return _send(code, *a, **k)
+
+                self.send_response = capture
+            except Exception:
+                pass
             try:
                 return _orig(self)
             finally:
                 try:
                     headers = dict(self.headers.items()) if getattr(self, "headers", None) is not None else {}
-                    record(endpoint_for(getattr(self, "path", "/")), headers,
-                           (getattr(self, "client_address", None) or [None])[0], tools=take_tools())
+                    endpoint = endpoint_for(getattr(self, "path", "/"))
+                    events = take_events()
+                    status = getattr(self, "_rk_status", 0)
+                    if endpoint == "reports" and name == "do_POST" and 200 <= status < 300 and "report" not in events:
+                        events.append("report")  # an accepted REST report
+                    record(endpoint, headers, (getattr(self, "client_address", None) or [None])[0],
+                           tools=take_tools(), events=events)
                 except Exception:
                     pass
 
@@ -304,6 +413,18 @@ def read_days(days: int, end: date | None = None) -> list[dict[str, Any]]:
                 i += 1
         out.append(summarize_day(d, _pairs(flat), uniques))
     return out
+
+
+def read_first_outside() -> dict[str, Any] | None:
+    global _first_known
+    raw = _run([["GET", FIRST_KEY]])[0]
+    if not raw:
+        return None
+    _first_known = True
+    try:
+        return json.loads(raw)
+    except (TypeError, ValueError):
+        return {"raw": str(raw)[:200]}
 
 
 def _pairs(flat: Any) -> dict[str, int]:

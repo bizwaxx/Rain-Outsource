@@ -15,6 +15,7 @@ def fresh(monkeypatch):
     metrics.LOCAL.__init__()
     metrics._seen.clear()
     metrics._expired.clear()
+    metrics._first_known = False
     monkeypatch.setenv("RAINOUT_INTERNAL_TOKEN", "internal-secret-123")
     monkeypatch.setenv("RAINOUT_METRICS_SALT", "salt-xyz")
     monkeypatch.setenv("RAINOUT_ADMIN_TOKEN", ADMIN)
@@ -158,3 +159,94 @@ def test_instrumented_handler_counts_and_captures_tools():
     f.headers = H(f.headers)
     f.do_POST()
     assert ["HINCRBY", f"{cache.KEY_PREFIX}metrics:{metrics.today()}", "req|mcp|external", 1] in metrics.LAST_COMMANDS
+
+
+def test_first_outside_marker_set_once_without_ip():
+    h = {"User-Agent": "Claude-User/1.0 (+https://anthropic.com)", "X-Forwarded-For": "203.0.113.9", "x-vercel-ip-country": "de"}
+    metrics.record("health", {"User-Agent": "rainout-smoke/1.0"}, background=False)  # ours: no marker
+    metrics.record("health", {"User-Agent": "UptimeRobot/2.0"}, background=False)  # monitor: no marker
+    assert metrics.LOCAL.strings == {}
+    metrics.record("mcp", h, tools=["check_game"], background=False)
+    assert metrics.LAST_COMMANDS[-1][0] == "SET" and metrics.LAST_COMMANDS[-1][-1] == "NX"
+    first = json.loads(metrics.LOCAL.strings[metrics.FIRST_KEY])
+    assert first["kind"] == "request" and first["where"] == "mcp:check_game"
+    assert first["client_family"] == "Claude" and first["country"] == "DE" and first["at"].endswith("Z")
+    assert "203.0.113.9" not in json.dumps(first)
+    metrics.record("status", {"User-Agent": "curl/8"}, background=False)
+    assert "SET" not in [c[0] for c in metrics.LAST_COMMANDS]  # per-instance flag: no extra command
+    metrics._first_known = False  # another instance: NX keeps the original
+    metrics.record("status", {"User-Agent": "curl/8"}, background=False)
+    assert json.loads(metrics.LOCAL.strings[metrics.FIRST_KEY])["client_family"] == "Claude"
+
+
+def test_first_outside_retried_after_failed_write(monkeypatch):
+    monkeypatch.setattr(metrics, "_run", lambda cmds: 1 / 0)
+    metrics.record("status", {"User-Agent": "curl/8"}, background=False)
+    assert metrics._first_known is False
+
+
+def test_client_family():
+    f = metrics.client_family
+    assert f("python-requests/2.32") == "python-requests" and f("curl/8.5.0") == "curl"
+    assert f("Mozilla/5.0 (Macintosh) AppleWebKit Chrome/129 Safari/537.36") == "browser"
+    assert f("ChatGPT-User/1.0") == "OpenAI" and f("") == "none" and f("weird") == "other"
+
+
+def test_signup_and_report_events_are_outside_kinds():
+    metrics.start_request()
+    metrics.event("free_key_signup", {"User-Agent": "python-httpx/0.27"})  # rides on the request
+    events = metrics.take_events()
+    metrics.take_tools()
+    metrics.record("keys", {"User-Agent": "python-httpx/0.27"}, events=events, background=False)
+    first = json.loads(metrics.LOCAL.strings[metrics.FIRST_KEY])
+    assert first["kind"] == "signup" and first["where"] == "keys"
+    metrics.record("mcp", {"User-Agent": "x"}, tools=["report_cancellation"], events=["report"], background=False)
+    status, _, body = handle_admin_usage("days=1", {"X-Admin-Token": ADMIN})
+    data = json.loads(body)
+    assert data["first_outside"]["kind"] == "signup"
+    day = data["daily"][0]
+    assert day["events"]["external"] == {"free_key_signup": 1, "report": 1} and day["free_keys_signed_up"] == 1
+    text = handle_admin_usage("days=1&format=text", {"X-Admin-Token": ADMIN})[2].decode()
+    assert text.startswith("First outside event: ") and " signup keys via python-httpx" in text
+
+
+def test_event_outside_request_writes_alone():
+    metrics.event("free_key_signup", {"User-Agent": "curl/8"})
+    import time
+    for _ in range(50):
+        if metrics.LOCAL.hashes:
+            break
+        time.sleep(0.01)
+    fields = next(iter(metrics.LOCAL.hashes.values()))
+    assert fields == {"event|free_key_signup|external": 1}
+
+
+def test_rest_report_counted_only_when_accepted():
+    from http.server import BaseHTTPRequestHandler
+
+    class H(BaseHTTPRequestHandler):
+        code = 201
+
+        def __init__(self):
+            self.path = "/v1/reports"
+            self.headers = {"User-Agent": "python-requests/2.32"}
+            self.client_address = ("192.0.2.9", 1)
+            self.wfile = io.BytesIO()
+            self.request_version = "HTTP/1.1"
+            self.requestline = "POST /v1/reports HTTP/1.1"
+            self.command = "POST"
+
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            self.send_response(self.code)
+            self.end_headers()
+
+    metrics.instrument(H)
+    bad = H()
+    bad.code = 400
+    bad.do_POST()
+    assert not any(c[2] == "event|report|external" for c in metrics.LAST_COMMANDS if c[0] == "HINCRBY")
+    H().do_POST()
+    assert ["HINCRBY", f"{cache.KEY_PREFIX}metrics:{metrics.today()}", "event|report|external", 1] in metrics.LAST_COMMANDS

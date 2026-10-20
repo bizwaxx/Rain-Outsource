@@ -37,14 +37,18 @@ def handle_admin_usage(query: str, headers: dict[str, str] | None) -> tuple[int,
         return err(400, "invalid_days", f"days must be 1-{MAX_DAYS}.")
     try:
         data = metrics.read_days(days)
+        first = metrics.read_first_outside()
     except Exception as exc:  # store unreachable
         return err(502, "metrics_unavailable", f"Could not read counters ({exc.__class__.__name__}).")
     if (params.get("format") or "").lower() == "text":
-        text = "\n\n".join(metrics.text_summary(d) for d in data) + "\n"
+        head = (f"First outside event: {first['at']} {first['kind']} {first['where']} via {first['client_family']}"
+                f"{' from ' + first['country'] if first.get('country') else ''}\n\n") if first and first.get("at") else \
+            "First outside event: none yet\n\n"
+        text = head + "\n\n".join(metrics.text_summary(d) for d in data) + "\n"
         return 200, "text/plain; charset=utf-8", text.encode()
     totals: dict[str, Any] = {c: sum(d["requests_total"][c] for d in data) for c in metrics.CLASSES}
     return 200, "application/json", json.dumps({
-        "days": days, "timezone": "America/Chicago", "totals": totals,
+        "days": days, "timezone": "America/Chicago", "first_outside": first, "totals": totals,
         "free_keys_signed_up": sum(d["free_keys_signed_up"] for d in data),
         "unique_clients_note": "Per-day HyperLogLog estimates of daily-salted IP hashes; days cannot be summed into uniques.",
         "daily": data}).encode()
