@@ -49,6 +49,28 @@ GRID: dict[str, tuple] = {
 }
 
 
+# Ground-wetness family (7-day bucket minus FAO-56 ET0, by surface, motocross dry-out curve). The window
+# family above stays in the search, so the wetness model has to beat it to be chosen.
+COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor")
+GRID_WET: dict[str, tuple] = {
+    **{k: GRID[k] for k in COMMON},
+    "d_fast": (1.0, 0.5, 2.0),
+    "d_medium": (0.1, 0.05, 0.2),
+    "d_slow": (0.05, 0.02, 0.1),
+    "d_mx": (0.08, 0.03, 0.15),
+    "et_mult": (1.0, 0.6),
+    "wet_scale": (1.0, 0.6, 1.5),
+}
+
+
+def grid_points() -> list[dict[str, Any]]:
+    win = [{"soak_model": "window", **dict(zip(GRID, v))} for v in itertools.product(*GRID.values())]
+    wet = [{"soak_model": "wetness", **dict(zip(GRID_WET, v))} for v in itertools.product(*GRID_WET.values())]
+    # Hybrid: the larger of the chosen window soak (fixed at its calibrated drainage) and the wetness bucket.
+    hyb = [{**pt, "soak_model": "hybrid", "fast": 0.15, "medium": 0.6, "slow": 1.6, "w24": 0.6, "w48": 0.3} for pt in wet]
+    return win + wet + hyb
+
+
 def caching_fetch(cache_dir: str | None) -> Callable[[str], dict]:
     if not cache_dir:
         return bt.http_json
@@ -92,14 +114,30 @@ def fixture_inputs(fx: dict[str, Any], fetch: Callable[[str], dict], tracks: dic
 
 def params_from(point: dict[str, Any]) -> dict[str, Any]:
     p = json.loads(json.dumps(er.PARAMS))
-    p["drainage"] = {"fast": point["fast"], "medium": point["medium"], "slow": point["slow"]}
-    p["soak_weights"] = (1.0, point["w24"], point["w48"])
-    for k in ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor"):
+    p["soak_model"] = point.get("soak_model", "window")
+    if p["soak_model"] in ("wetness", "hybrid"):
+        p["wet_drain_mm_h"] = {"fast": point["d_fast"], "medium": point["d_medium"], "slow": point["d_slow"], "mx": point["d_mx"]}
+        p["wet_et_mult"], p["wet_scale"] = point["et_mult"], point["wet_scale"]
+    if p["soak_model"] in ("window", "hybrid"):
+        p["drainage"] = {"fast": point["fast"], "medium": point["medium"], "slow": point["slow"]}
+        p["soak_weights"] = (1.0, point["w24"], point["w48"])
+    for k in COMMON:
         p[k] = point[k]
     return p
 
 
+_WET_MEMO: dict[tuple, float | None] = {}
+
+
 def predict(inp: dict[str, Any], params: dict[str, Any]) -> int:
+    if params.get("soak_model") in ("wetness", "hybrid"):
+        surface = inp["drainage"] if inp["ball_sport"] else "mx"
+        key = (inp["id"], surface, params["wet_drain_mm_h"][surface], params["wet_et_mult"])
+        if key not in _WET_MEMO:
+            _WET_MEMO[key] = er.wetness_in(inp.get("series"), surface, params)
+        feat = {**inp["features"], "wetness_in": _WET_MEMO[key]}
+        base = er.base_percent(feat.get("window_pop") or 0, inp["drainage"], params)
+        return er.adjust(base, feat, inp["drainage"], params, inp["ball_sport"])["play_probability_percent"]
     return bt.score_event_risk(inp, params)["p"]
 
 
@@ -127,9 +165,8 @@ def _score(inputs: list[dict[str, Any]], preds: list[int]) -> dict[str, Any]:
 
 
 def calibrate(inputs: list[dict[str, Any]]) -> dict[str, Any]:
-    keys = list(GRID)
-    points = [dict(zip(keys, vals)) for vals in itertools.product(*GRID.values())]
-    preds = [[predict(i, params_from(pt)) for i in inputs] for pt in points]
+    points = grid_points()
+    preds = [[predict(i, prm) for i in inputs] for prm in (params_from(pt) for pt in points)]
     losses = [[loss(i["outcome"], p) for i, p in zip(inputs, row)] for row in preds]
     totals = [sum(row) for row in losses]
     best = min(range(len(points)), key=lambda k: (totals[k], k))
@@ -139,12 +176,19 @@ def calibrate(inputs: list[dict[str, Any]]) -> dict[str, Any]:
         loo_preds.append(preds[k][j])
         loo_choice.append(k)
     default = params_from({**{k: v[0] for k, v in GRID.items()}})
+    fam = lambda name: [k for k, pt in enumerate(points) if pt["soak_model"] == name]
+
+    def family_loo(idx: list[int]) -> dict[str, Any]:
+        best_f = min(idx, key=lambda k: (totals[k], k))
+        lp = [preds[min(idx, key=lambda k: (totals[k] - losses[k][j], k))][j] for j in range(len(inputs))]
+        return {"chosen": points[best_f], "in_sample": score(inputs, preds[best_f], split=False), "leave_one_out": score(inputs, lp)}
     return {"chosen": points[best], "chosen_params": params_from(points[best]),
             "in_sample": score(inputs, preds[best]), "leave_one_out": score(inputs, loo_preds),
             "loo_distinct_choices": len(set(loo_choice)),
             "per_fixture": [{"id": i["id"], "outcome": i["outcome"], "grade": i["grade"], "p_in_sample": preds[best][n],
                              "p_leave_one_out": loo_preds[n], "drainage": i["drainage"]} for n, i in enumerate(inputs)],
-            "grid_points": len(points), "simplest_point_in_sample": score(inputs, [predict(i, default) for i in inputs])}
+            "grid_points": len(points), "simplest_point_in_sample": score(inputs, [predict(i, default) for i in inputs]),
+            "families": {f: family_loo(fam(f)) for f in ("window", "wetness", "hybrid")}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -161,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         Path(args.json).write_text(json.dumps(res, indent=1, default=str))
     print(json.dumps({k: res[k] for k in ("chosen", "in_sample", "leave_one_out", "loo_distinct_choices", "grid_points",
-                                          "simplest_point_in_sample")}, indent=1, default=str))
+                                          "simplest_point_in_sample", "families")}, indent=1, default=str))
     return 0
 
 

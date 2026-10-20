@@ -148,7 +148,23 @@ def fetch_weather(lat: float, lon: float, d0: date, d1: date, fetch: Fetch = htt
         out["sources"].append(url)
     except Exception as exc:
         out["observed_error"] = str(exc)[:200]
+    try:
+        # Ground-wetness inputs: ERA5 rain and FAO-56 reference evapotranspiration for the week before.
+        url = _om_url(ARCHIVE, lat, lon, d0 - timedelta(days=4), d1, "precipitation,et0_fao_evapotranspiration")
+        out["wet"] = wet_rows(fetch(url))
+        out["sources"].append(url)
+    except Exception as exc:
+        out["wet_error"] = str(exc)[:200]
     return out
+
+
+def wet_rows(payload: dict) -> dict[datetime, dict[str, Any]]:
+    """{utc hour start: {mm, et0}}; both Open-Meteo sums are for the hour before the timestamp."""
+    h = payload.get("hourly") or {}
+    times = h.get("time") or []
+    pr = h.get("precipitation") or [None] * len(times)
+    et = h.get("et0_fao_evapotranspiration") or [None] * len(times)
+    return {datetime.fromtimestamp(int(ts), timezone.utc) - timedelta(hours=1): {"mm": pr[i], "et0": et[i]} for i, ts in enumerate(times)}
 
 
 def _hours(start: datetime, end: datetime) -> list[datetime]:
@@ -277,17 +293,23 @@ def event_inputs(fx: dict[str, Any], wx: dict[str, Any], track: dict[str, Any] |
     for k in ("earlier_today_in", "prior_24h_in", "prior_48h_in"):
         if feat.get(k) is not None:
             feat[k] = round(feat[k] / soil, 3)   # sandy motocross soil drains faster
+    drainage = er.drainage_class(field_type=fx["field_type"], maintained=bool(fx.get("maintained")))
+    ball = fx["field_type"] != "motocross"
+    series = er.wet_series(wx.get("wet") or {}, start, soil)
+    er.add_wetness(feat, series, drainage, ball)
     return {"id": fx["id"], "field_type": fx["field_type"], "outcome": fx["outcome"], "grade": wgrade, "features": feat,
-            "drainage": er.drainage_class(field_type=fx["field_type"], maintained=bool(fx.get("maintained"))),
-            "ball_sport": fx["field_type"] != "motocross"}
+            "drainage": drainage, "ball_sport": ball, "series": series}
 
 
 def score_event_risk(inp: dict[str, Any], params: dict[str, Any] | None = None) -> dict[str, Any]:
     from rainout_agent import event_risk as er
 
-    base = er.base_percent(inp["features"].get("window_pop") or 0, inp["drainage"], params)
-    out = er.adjust(base, inp["features"], inp["drainage"], params, inp["ball_sport"])
-    return {"p": out["play_probability_percent"], "base_percent": base, "features": inp["features"], "drainage": inp["drainage"],
+    feat = inp["features"]
+    if params is not None and inp.get("series") is not None and params.get("soak_model") == "wetness":
+        feat = {**feat, "wetness_in": er.wetness_in(inp["series"], inp["drainage"] if inp["ball_sport"] else "mx", params)}
+    base = er.base_percent(feat.get("window_pop") or 0, inp["drainage"], params)
+    out = er.adjust(base, feat, inp["drainage"], params, inp["ball_sport"])
+    return {"p": out["play_probability_percent"], "base_percent": base, "features": feat, "drainage": inp["drainage"],
             "reasons": out["reasons"], "model": "event_risk v2 (window rain, soak by drainage, storms, wind, cold, humility cap)"}
 
 

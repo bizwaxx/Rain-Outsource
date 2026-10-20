@@ -12,12 +12,13 @@ START = datetime(2026, 6, 8, 0, tzinfo=timezone.utc)
 WX = {"rain_chance_percent": 10, "thunderstorm_likely": False, "source": "NWS test", "last_checked": "2026-06-07T12:00:00-05:00"}
 
 
-def payload(rain_mm_per_hour=0.0, wet_hours=(), pop=10, cape=0, gust=10, temp=80):
-    t0 = START - timedelta(hours=48)
-    times = [int((t0 + timedelta(hours=i)).timestamp()) for i in range(96)]
-    precip = [rain_mm_per_hour if (t0 + timedelta(hours=i - 1)) in wet_hours else 0.0 for i in range(96)]
-    n = len(times)
+def payload(rain_mm_per_hour=0.0, wet_hours=(), pop=10, cape=0, gust=10, temp=80, et0=0.1):
+    t0 = START - timedelta(hours=7 * 24)
+    n = 7 * 24 + 48
+    times = [int((t0 + timedelta(hours=i)).timestamp()) for i in range(n)]
+    precip = [rain_mm_per_hour if (t0 + timedelta(hours=i - 1)) in wet_hours else 0.0 for i in range(n)]
     return {"hourly": {"time": times, "precipitation": precip, "precipitation_probability": [pop] * n,
+                       "et0_fao_evapotranspiration": [et0] * n,
                        "weather_code": [3] * n, "cape": [cape] * n, "wind_gusts_10m": [gust] * n, "temperature_2m": [temp] * n}}
 
 
@@ -46,7 +47,7 @@ def test_dry_ground_uses_v2_and_requests_past_two_days(live):
     calls = live(payload())
     r = status()
     assert r["model"]["version"] == "v2"
-    assert "past_days=2" in calls[0] and "cape" in calls[0] and "wind_gusts_10m" in calls[0]
+    assert "past_days=7" in calls[0] and "et0_fao_evapotranspiration" in calls[0] and "cape" in calls[0] and "wind_gusts_10m" in calls[0]
     assert r["game_time_play_probability_percent"] >= 70
 
 
@@ -115,3 +116,11 @@ def test_motocross_race_day_uses_v2_and_falls_back(monkeypatch):
     monkeypatch.setattr(weather, "_http_get_json", boom)
     mx._apply_event_risk(track, entry, ws, we, {"thunderstorm_likely": False}, "clay")
     assert entry["model"]["version"] == "v1" and entry["play_probability"] == 80
+
+
+def test_wetness_totals_are_reported(live):
+    wet = {START - timedelta(hours=h) for h in range(10, 20)}          # 50 mm last night
+    live(payload(rain_mm_per_hour=5.0, wet_hours=wet))
+    f = status()["model"]["features"]
+    assert f["rain_72h_in"] == f["rain_7d_in"] == round(50 / 25.4, 2)
+    assert f["et0_7d_in"] is not None and f["wetness_in"] is not None and f["wetness_in"] > 0
