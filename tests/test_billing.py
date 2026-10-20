@@ -57,6 +57,11 @@ def stripe_env(monkeypatch):
     api_keys.SUBSCRIPTION_RESOLVER = None
 
 
+def free_key():
+    from rainout_agent import plans
+    return api_keys.mint_key(plans.FREE_KEY, key_id="ffree1")
+
+
 def req(method, path, body=b"", headers=None, query=""):
     status, h, payload = premium_api.handle_premium_request(method, path, query, body, headers or {})
     try:
@@ -89,39 +94,53 @@ def test_live_key_blocks_every_billing_endpoint(stripe_env, monkeypatch):
     monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_nope")
     for method, path in (("GET", "/v1/billing/checkout"), ("POST", "/v1/billing/checkout"),
                          ("GET", "/v1/billing/success"), ("POST", "/v1/billing/webhook")):
-        status, _, data = req(method, path, b'{"plan":"coach"}')
+        status, _, data = req(method, path, b'{"plan":"coach"}', {"X-API-Key": free_key()})
         assert status == 503 and data["error"] == "live_key_refused", path
     assert stripe_env.calls == []  # never talked to Stripe
 
 
 def test_billing_off_without_key(monkeypatch):
     monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
-    status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"coach"}')
+    monkeypatch.setenv("RAINOUT_API_KEY_SECRET", "k" * 40)
+    status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"coach"}', {"X-API-Key": free_key()})
     assert status == 503 and data["error"] == "billing_not_configured"
 
 
 # ------------------------------------------------------------ checkout
-def test_checkout_creates_subscription_session(stripe_env):
+def test_checkout_requires_a_key_first(stripe_env):
     status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"league"}', {"Content-Type": "application/json"})
+    assert status == 401 and data["error"] == "free_key_required" and data["signup"] == "/v1/keys"
+    assert stripe_env.calls == []
+    assert req("POST", "/v1/billing/checkout", b'{"plan":"league"}', {"X-API-Key": "rk_test_bad.sig"})[0] == 401
+
+
+def test_checkout_creates_subscription_session(stripe_env):
+    status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"league"}',
+                          {"Content-Type": "application/json", "X-API-Key": free_key()})
     assert status == 200 and data["checkout_url"].startswith("https://checkout.stripe.com/") and data["mode"] == "test"
     method, path, form, _ = stripe_env.calls[0]
     assert (method, path) == ("POST", "/v1/checkout/sessions")
     assert form["mode"] == ["subscription"] and form["line_items[0][price]"] == ["price_league"]
     assert form["subscription_data[metadata][plan]"] == ["league"]
     assert "{CHECKOUT_SESSION_ID}" in form["success_url"][0]
+    assert form["client_reference_id"] == ["ffree1"] and form["metadata[from_key_id]"] == ["ffree1"]
 
 
 def test_checkout_form_redirects_and_page_lists_plans(stripe_env):
-    status, headers, _ = req("POST", "/v1/billing/checkout", b"plan=coach", {"Content-Type": "application/x-www-form-urlencoded"})
+    form = f"plan=coach&api_key={free_key()}".encode()
+    status, headers, _ = req("POST", "/v1/billing/checkout", form, {"Content-Type": "application/x-www-form-urlencoded"})
     assert status == 303 and headers["Location"].startswith("https://checkout.stripe.com/")
     status, _, html = req("GET", "/v1/billing/checkout")
     assert status == 200 and "Coach" in html and "League" in html and 'action="/v1/billing/checkout"' in html
+    assert "/v1/keys" in html and 'name="api_key"' in html and "Free key" not in html  # free key is not sold
 
 
 def test_checkout_rejects_unknown_plan_and_missing_price(stripe_env, monkeypatch):
-    assert req("POST", "/v1/billing/checkout", b'{"plan":"free"}')[0] == 400
+    k = {"X-API-Key": free_key()}
+    assert req("POST", "/v1/billing/checkout", b'{"plan":"free"}', k)[0] == 400
+    assert req("POST", "/v1/billing/checkout", b'{"plan":"free_key"}', k)[0] == 400
     monkeypatch.delenv("STRIPE_PRICE_ORG")
-    status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"org"}')
+    status, _, data = req("POST", "/v1/billing/checkout", b'{"plan":"org"}', k)
     assert status == 503 and data["error"] == "price_not_configured"
 
 

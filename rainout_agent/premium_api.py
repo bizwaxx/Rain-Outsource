@@ -206,11 +206,14 @@ def _checkout_page(canceled: bool) -> Response:
         f'<form method="post" action="/v1/billing/checkout"><input type="hidden" name="plan" value="{pid}">'
         f'<h2>{p["name"]} &mdash; ${p["price_usd_month"]}/month</h2><ul>{"".join(f"<li>{f}</li>" for f in p["features"])}</ul>'
         f'<button type="submit">Subscribe to {p["name"]}</button></form>'
-        for pid, p in plans.PLANS.items() if p["requires_key"])
+        for pid, p in plans.PLANS.items() if pid in plans.PAID)
+    rows = rows.replace('<input type="hidden" name="plan"',
+                        '<input type="password" name="api_key" placeholder="Your API key (rk_...)" required> <input type="hidden" name="plan"')
     note = "<p>Checkout was canceled; nothing was charged.</p>" if canceled else ""
-    return _html(200, "<!doctype html><meta charset=utf-8><title>Rainout Source plans</title>"
-                      "<h1>Rainout Source paid plans</h1>" + note +
-                      "<p>The free public API stays free with no key. Paid plans add batch checks, whole-league calls and more.</p>"
+    return _html(200, "<!doctype html><meta charset=utf-8><title>Upgrade Rainout Source</title>"
+                      "<h1>Upgrade your Rainout Source key</h1>" + note +
+                      "<p>Step 1: <a href=/v1/keys>get a free key</a> (no card). Step 2: paste it below and pick a plan. "
+                      "The API stays free without a key; paid plans add bigger batches, whole-league calls and more.</p>"
                       + rows)
 
 
@@ -232,7 +235,17 @@ def _billing(method: str, path: str, query: str, body: bytes, headers: dict[str,
         form = {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()} \
             if "form" in (h.get("content-type") or "") else (json.loads(body or b"{}") if body.strip() else {})
         plan = (form.get("plan") or params.get("plan") or "").strip().lower()
-        session = billing.create_checkout(plan, email=form.get("email") or None)
+        # Free signup first: upgrades start from an existing key (free or paid).
+        key_headers = dict(headers or {})
+        if form.get("api_key") and not api_keys.key_from_headers(key_headers):
+            key_headers["X-API-Key"] = str(form["api_key"])
+        info, err = api_keys.resolve_request(key_headers)
+        if err:
+            return _key_error(err)
+        if not info:
+            return _error(401, "free_key_required", "Create a free key first (POST /v1/keys or /v1/keys, no card), then upgrade with it.",
+                          signup="/v1/keys")
+        session = billing.create_checkout(plan, email=form.get("email") or None, from_key=info)
         if "form" in (h.get("content-type") or ""):
             return 303, {"Location": session["checkout_url"], "Cache-Control": "no-store", **CORS_HEADERS}, b""
         return _json(200, session)
