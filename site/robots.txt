@@ -1,0 +1,6 @@
+# Rain-Outsource: humans and AI agents are welcome.
+User-agent: *
+Allow: /
+Disallow: /v1/reports
+
+Sitemap: https://rainout-agent-source.vercel.app/sitemap.xml
