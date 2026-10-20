@@ -8,27 +8,354 @@
     "ams_rain": "AMS Glossary of Meteorology, 'rain': light < 2.5 mm/h, moderate 2.5-7.6 mm/h, heavy > 7.6 mm/h.",
     "noaa_lightning": "NOAA/NWS lightning safety ('When thunder roars, go indoors') and OSHA lightning fact sheet: stop outdoor work when thunderstorms are near.",
     "field_practice": "Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting'): do not place or finish in rain; fresh surfaces are vulnerable until final set, typically 2-4 h at about 70 F and longer in cool weather or with slag/fly ash or retarders. Exact rain amounts are rules of thumb, not code values.",
-    "pump_wind": "Concrete pump boom wind limits come from the manufacturer's manual (commonly around 35-40 mph); 35 mph gusts is a conservative screening value."
+    "pump_wind": "Concrete pump boom wind limits come from the manufacturer's manual (commonly around 35-40 mph); 35 mph gusts is a conservative screening value.",
+    "gypsum_ga801": "Gypsum Association GA-801, Handling and Storage of Gypsum Panel Products: store inside, off the ground, protected from weather; wet panels can lose strength and grow mold.",
+    "apa_e30": "APA Engineered Wood Construction Guide (Form E30): Exposure 1 panels tolerate normal construction delays, but prolonged wetting causes edge swelling; cover stacks and let panels dry before closing in.",
+    "awc_lumber": "American Wood Council / WWPA lumber storage guidance: store off the ground, covered and ventilated; framing should be at or below 19% moisture content before it is enclosed.",
+    "pca_cement": "Portland Cement Association: bagged cement hydrates with any moisture; store bags off the ground on pallets, tightly covered or indoors.",
+    "nec_110_11": "NFPA 70 (NEC) 110.11 Deteriorating Agents: equipment not identified for outdoor use must be protected against permanent damage from the weather during building construction.",
+    "nwfa": "National Wood Flooring Association installation guidelines: deliver and store flooring only in an enclosed, dry, climate-controlled building.",
+    "bia_tn": "Brick Industry Association Technical Notes (e.g. 7A, 23A): cover stockpiles and wall tops during construction to limit saturation and efflorescence.",
+    "epa_swppp": "EPA construction stormwater (SWPPP) guidance: stabilize open excavations and stockpiles before rain; inspect controls after 0.25 in or more.",
+    "tarp_wind": "Rule of thumb: loose tarps and poly start to lift around 25 mph gusts unless tied down and weighted."
   },
   "concrete": {
-    "defaults": {"duration_hours": 4, "cure_hours": 24, "mix": "standard", "search_days": 3, "earliest_start_hour": 5, "latest_start_hour": 14},
-    "rain": {
-      "pour_wait_pop": 30, "pour_no_go_pop": 60, "pour_wait_mm": 0.5, "pour_no_go_mm": 2.5,
-      "critical_wait_pop": 30, "critical_no_go_pop": 70, "critical_wait_mm": 0.5, "critical_no_go_mm": 2.5,
-      "cure_wait_total_mm": 6.4, "cure_wait_hourly_mm": 7.6,
-      "thunder_no_go": true,
-      "source": ["field_practice", "ams_rain", "noaa_lightning"]
+    "defaults": {
+      "duration_hours": 4,
+      "cure_hours": 24,
+      "mix": "standard",
+      "search_days": 3,
+      "earliest_start_hour": 5,
+      "latest_start_hour": 14
     },
-    "temperature_f": {"cold": 40, "freeze": 32, "hot": 90, "source": ["aci306", "aci305", "aci305_1"]},
-    "wind_mph": {"gust_wait": 35, "source": ["pump_wind"]},
-    "evaporation_kg_m2_h": {"wait": 1.0, "source": ["aci305"]},
+    "rain": {
+      "pour_wait_pop": 30,
+      "pour_no_go_pop": 60,
+      "pour_wait_mm": 0.5,
+      "pour_no_go_mm": 2.5,
+      "critical_wait_pop": 30,
+      "critical_no_go_pop": 70,
+      "critical_wait_mm": 0.5,
+      "critical_no_go_mm": 2.5,
+      "cure_wait_total_mm": 6.4,
+      "cure_wait_hourly_mm": 7.6,
+      "thunder_no_go": true,
+      "source": [
+        "field_practice",
+        "ams_rain",
+        "noaa_lightning"
+      ]
+    },
+    "temperature_f": {
+      "cold": 40,
+      "freeze": 32,
+      "hot": 90,
+      "source": [
+        "aci306",
+        "aci305",
+        "aci305_1"
+      ]
+    },
+    "wind_mph": {
+      "gust_wait": 35,
+      "source": [
+        "pump_wind"
+      ]
+    },
+    "evaporation_kg_m2_h": {
+      "wait": 1.0,
+      "source": [
+        "aci305"
+      ]
+    },
     "mixes": {
-      "standard": {"critical_hours": 4, "evaporation_wait": 1.0, "label": "standard mix"},
-      "high_early": {"critical_hours": 2, "evaporation_wait": 1.0, "label": "high-early-strength mix"},
-      "accelerated": {"critical_hours": 2, "evaporation_wait": 1.0, "label": "accelerated mix"},
-      "retarded": {"critical_hours": 6, "evaporation_wait": 1.0, "label": "retarded mix"},
-      "slag_or_fly_ash": {"critical_hours": 6, "evaporation_wait": 1.0, "label": "slag or fly-ash mix"},
-      "low_wc_or_silica_fume": {"critical_hours": 4, "evaporation_wait": 0.5, "label": "low w/cm or silica-fume mix"}
+      "standard": {
+        "critical_hours": 4,
+        "evaporation_wait": 1.0,
+        "label": "standard mix"
+      },
+      "high_early": {
+        "critical_hours": 2,
+        "evaporation_wait": 1.0,
+        "label": "high-early-strength mix"
+      },
+      "accelerated": {
+        "critical_hours": 2,
+        "evaporation_wait": 1.0,
+        "label": "accelerated mix"
+      },
+      "retarded": {
+        "critical_hours": 6,
+        "evaporation_wait": 1.0,
+        "label": "retarded mix"
+      },
+      "slag_or_fly_ash": {
+        "critical_hours": 6,
+        "evaporation_wait": 1.0,
+        "label": "slag or fly-ash mix"
+      },
+      "low_wc_or_silica_fume": {
+        "critical_hours": 4,
+        "evaporation_wait": 0.5,
+        "label": "low w/cm or silica-fume mix"
+      }
+    }
+  },
+  "materials": {
+    "levels": [
+      "none",
+      "possible",
+      "likely",
+      "heavy"
+    ],
+    "rain_level": {
+      "none_max_pop": 15,
+      "none_max_mm": 0.25,
+      "likely_pop": 50,
+      "likely_mm": 2.5,
+      "heavy_total_mm": 12.7,
+      "heavy_hourly_mm": 7.6,
+      "heavy_min_pop": 40,
+      "source": [
+        "ams_rain",
+        "field_practice"
+      ]
+    },
+    "cover_wind_gust_mph": 25,
+    "humid_rh": 90,
+    "risk_order": [
+      "low",
+      "moderate",
+      "high",
+      "severe"
+    ],
+    "items": {
+      "drywall": {
+        "label": "drywall (gypsum board)",
+        "risk": [
+          "low",
+          "high",
+          "severe",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "humidity_sensitive": true,
+        "actions": [
+          "Move it inside a dried-in space or onto pallets off the ground",
+          "Cover fully with tarps tied down on all sides",
+          "Replace any board that gets soaked"
+        ],
+        "source": "gypsum_ga801"
+      },
+      "insulation": {
+        "label": "insulation (batts, rolls, loose fill)",
+        "risk": [
+          "low",
+          "high",
+          "severe",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "humidity_sensitive": true,
+        "actions": [
+          "Keep it inside or in a closed trailer",
+          "Don't install until the building is dried in",
+          "Discard insulation that gets soaked"
+        ],
+        "source": "field_practice"
+      },
+      "lumber": {
+        "label": "framing lumber",
+        "risk": [
+          "low",
+          "low",
+          "moderate",
+          "high"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Stack on stickers off the ground",
+          "Cover the top, leave the sides open to breathe",
+          "Let framing dry before closing in walls"
+        ],
+        "source": "awc_lumber"
+      },
+      "osb": {
+        "label": "OSB or plywood sheathing",
+        "risk": [
+          "low",
+          "low",
+          "moderate",
+          "high"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Cover stacks and keep them off the ground",
+          "Install roof underlayment soon after the decking",
+          "Check for swollen edges before roofing or siding"
+        ],
+        "source": "apa_e30"
+      },
+      "cement_bags": {
+        "label": "bagged cement, mortar or grout",
+        "risk": [
+          "low",
+          "high",
+          "severe",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "humidity_sensitive": true,
+        "actions": [
+          "Store on pallets under a roof or in a container",
+          "Wrap pallets in plastic and tie down",
+          "Don't use bags that have hardened lumps"
+        ],
+        "source": "pca_cement"
+      },
+      "open_roof_deck": {
+        "label": "open roof deck (no underlayment)",
+        "risk": [
+          "low",
+          "moderate",
+          "high",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Dry in with underlayment or roof tarps before the rain",
+          "Batten down tarp edges",
+          "Protect openings and interior finishes below"
+        ],
+        "source": "field_practice"
+      },
+      "electrical": {
+        "label": "electrical equipment and rough-in",
+        "risk": [
+          "low",
+          "high",
+          "severe",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Keep panels, devices and wire spools inside",
+          "Cap open boxes and conduit ends",
+          "Have equipment inspected if it got wet"
+        ],
+        "source": "nec_110_11"
+      },
+      "flooring": {
+        "label": "wood or laminate flooring",
+        "risk": [
+          "low",
+          "high",
+          "severe",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "humidity_sensitive": true,
+        "actions": [
+          "Deliver only into a dry, enclosed building",
+          "Leave it boxed and off slab or ground",
+          "Reschedule delivery if the building isn't dried in"
+        ],
+        "source": "nwfa"
+      },
+      "masonry_units": {
+        "label": "brick or block",
+        "risk": [
+          "low",
+          "low",
+          "low",
+          "moderate"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Cover stockpiles and the tops of new walls"
+        ],
+        "source": "bia_tn"
+      },
+      "windows_doors": {
+        "label": "windows and doors not yet installed",
+        "risk": [
+          "low",
+          "low",
+          "moderate",
+          "high"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Store upright, inside or under cover",
+          "Keep factory wrap on"
+        ],
+        "source": "field_practice"
+      },
+      "rebar": {
+        "label": "rebar and structural steel",
+        "risk": [
+          "low",
+          "low",
+          "low",
+          "low"
+        ],
+        "cover_reduction": 0,
+        "actions": [
+          "Light surface rust is normal; keep it off the ground and clear of mud"
+        ],
+        "source": "field_practice"
+      },
+      "open_excavation": {
+        "label": "open excavation or trench",
+        "risk": [
+          "low",
+          "moderate",
+          "high",
+          "severe"
+        ],
+        "cover_reduction": 1,
+        "actions": [
+          "Stabilize or cover spoil piles",
+          "Check silt fence and pumps",
+          "Inspect trench walls before re-entering after rain"
+        ],
+        "source": "epa_swppp"
+      }
+    },
+    "aliases": {
+      "gypsum": "drywall",
+      "sheetrock": "drywall",
+      "gypsum_board": "drywall",
+      "batts": "insulation",
+      "fiberglass": "insulation",
+      "cellulose": "insulation",
+      "framing": "lumber",
+      "wood": "lumber",
+      "plywood": "osb",
+      "sheathing": "osb",
+      "osb_sheathing": "osb",
+      "cement": "cement_bags",
+      "mortar": "cement_bags",
+      "grout": "cement_bags",
+      "concrete_bags": "cement_bags",
+      "stucco": "cement_bags",
+      "roof_deck": "open_roof_deck",
+      "roof": "open_roof_deck",
+      "open_roof": "open_roof_deck",
+      "electric": "electrical",
+      "panels": "electrical",
+      "wire": "electrical",
+      "hardwood": "flooring",
+      "laminate": "flooring",
+      "brick": "masonry_units",
+      "block": "masonry_units",
+      "cmu": "masonry_units",
+      "masonry": "masonry_units",
+      "windows": "windows_doors",
+      "doors": "windows_doors",
+      "steel": "rebar",
+      "trench": "open_excavation",
+      "excavation": "open_excavation"
     }
   }
 }
