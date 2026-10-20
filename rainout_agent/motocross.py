@@ -644,6 +644,8 @@ def score_event(track: dict[str, Any], ev: dict[str, Any], status: dict[str, Any
                 "prior_rain_by_day_in": stats.get("prior_rain_by_day_in"), "soak_index_in": stats.get("soak_index_in"),
                 "rain_chance_source": stats.get("pop_source"), "rain_amount_source": (amounts or {}).get("source"),
             }, model={k: v for k, v in odds.items() if k != "play_probability"})
+            if status["status"] == "unknown":
+                _apply_event_risk(track, entry, ws, we, stats, soil)
         else:
             clim = climate_odds(track, day)
             if clim:
@@ -655,6 +657,27 @@ def score_event(track: dict[str, Any], ev: dict[str, Any], status: dict[str, Any
                 entry.update(play_probability=None, basis="unavailable")
         out.append(entry)
     return out
+
+
+def _apply_event_risk(track: dict[str, Any], entry: dict[str, Any], ws: datetime, we: datetime, stats: dict[str, Any],
+                      soil: str) -> None:
+    """v2 whole-event model for a race day with nothing official posted; keeps v1 if the weather fetch fails."""
+    from rainout_agent import event_weather
+
+    entry["model"]["version"] = "v1"
+    try:
+        loc = _field(track)["coordinates"]
+        v2 = event_weather.evaluate(loc["lat"], loc["lon"], ws, max(1.0, (we - ws).total_seconds() / 3600), "slow",
+                                    thunder_forecast=bool(stats.get("thunderstorm_likely")), ball_sport=False,
+                                    soil_factor=SOIL_FACTORS.get(soil, 1.0))
+    except Exception:  # pragma: no cover - never break a race answer
+        v2 = None
+    if v2 is None:
+        entry["model"]["note"] = "event weather (Open-Meteo) unavailable or disabled; v1 race model used"
+        return
+    entry["model"].update(version="v2", v1_play_probability=entry["play_probability"], reasons=v2["reasons"],
+                          soak_penalty=v2["soak_penalty"], storm_window=v2["storm_window"], features=v2["features"])
+    entry["play_probability"] = max(MIN_ODDS, min(MAX_ODDS, v2["play_probability_percent"]))
 
 
 def _spoken_day(day: date, now: datetime, tz: ZoneInfo) -> str:
