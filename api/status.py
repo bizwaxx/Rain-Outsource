@@ -3,11 +3,30 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from rainout_agent import http_cache
+from rainout_agent.premium_api import MAX_BODY as PREMIUM_MAX, handle_premium_request, is_premium_path
 from rainout_agent.reports_api import MAX_BODY, handle_reports_request
 from rainout_agent.status_api import build_status_result
 
 
 class handler(BaseHTTPRequestHandler):
+    # Paid-tier paths (/v1/plans, /v1/account, /v1/batch, /v1/billing/*) share this function so the
+    # project needs no extra Vercel function. Existing paths never reach the paid layer.
+    def _premium(self, method):
+        parsed = urlparse(self.path)
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        body = self.rfile.read(min(length, PREMIUM_MAX + 1)) if length > 0 else b""
+        status, headers, payload = handle_premium_request(method, parsed.path, parsed.query, body, dict(self.headers.items()))
+        self.send_response(status)
+        for key, value in headers.items():
+            self.send_header(key, value)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if payload:
+            self.wfile.write(payload)
+
     # /v1/reports is served by this function so that, with the default in-memory cache,
     # reports land on the same instances that answer /v1/status.
     def _reports(self, method):
@@ -30,15 +49,21 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(payload)
 
     def do_POST(self):
+        if is_premium_path(urlparse(self.path).path):
+            return self._premium("POST")
         if urlparse(self.path).path.rstrip("/") == "/v1/reports":
             return self._reports("POST")
         return self._send_json(405, {"error": "method_not_allowed"})
 
     def do_OPTIONS(self):
+        if is_premium_path(urlparse(self.path).path):
+            return self._premium("OPTIONS")
         return self._reports("OPTIONS")
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        if is_premium_path(parsed.path):
+            return self._premium("GET")
         if parsed.path.rstrip("/") == "/v1/reports":
             return self._reports("GET")
         params = parse_qs(parsed.query, keep_blank_values=True)

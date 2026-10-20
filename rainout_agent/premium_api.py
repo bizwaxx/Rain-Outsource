@@ -1,4 +1,4 @@
-"""HTTP layer for the paid-tier endpoints (one Vercel function: api/premium.py).
+"""HTTP layer for the paid-tier endpoints (served by the api/status.py function).
 
 * ``GET  /v1/plans``    public plan list (free vs paid limits and features).
 * ``GET  /v1/account``  usage dashboard for the key holder (needs a key).
@@ -30,6 +30,13 @@ GAME_KEYS = ("game_id", "opponent", "start", "when_spoken", "venue", "league_sta
              "at_risk", "reason")
 
 Response = tuple[int, dict[str, str], bytes]
+PREMIUM_PATHS = {"/v1/plans", "/v1/account", "/v1/batch"}
+PREMIUM_PREFIXES = ("/v1/billing/", "/v1/premium/")
+
+
+def is_premium_path(path: str) -> bool:
+    p = path.rstrip("/")
+    return p in PREMIUM_PATHS or p.startswith(PREMIUM_PREFIXES)
 
 
 def _json(status: int, payload: dict[str, Any], extra: dict[str, str] | None = None) -> Response:

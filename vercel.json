@@ -44,10 +44,6 @@
     {
       "src": "api/llms.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "api/premium.py",
-      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -121,15 +117,15 @@
     },
     {
       "src": "/v1/plans/?",
-      "dest": "/api/premium.py"
+      "dest": "/api/status.py"
     },
     {
       "src": "/v1/account/?",
-      "dest": "/api/premium.py"
+      "dest": "/api/status.py"
     },
     {
       "src": "/v1/batch/?",
-      "dest": "/api/premium.py"
+      "dest": "/api/status.py"
     },
     {
       "src": "/api/status",
