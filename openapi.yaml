@@ -787,6 +787,17 @@ paths:
       responses:
         '200': {description: '{received, type, action}'}
         '400': {description: Bad or stale Stripe-Signature.}
+  /v1/premium/batch:
+    post:
+      summary: Batch check paid per call with x402 v2 (Base Sepolia testnet USDC), or with an API key.
+      description: Up to 50 games or 25 teams. Without X-API-Key, the first call returns 402 with a PAYMENT-REQUIRED header (base64 x402 v2 PaymentRequired, scheme exact, network eip155:84532, USDC 0x036CbD53842c5426634e7929541eC2318f3dCF7e). Retry with PAYMENT-SIGNATURE; success returns PAYMENT-RESPONSE. See docs/x402.md.
+      parameters:
+        - {name: PAYMENT-SIGNATURE, in: header, required: false, schema: {type: string}, description: Base64 x402 v2 PaymentPayload.}
+        - {name: X-API-Key, in: header, required: false, schema: {type: string}}
+      responses:
+        '200': {description: Batch results; PAYMENT-RESPONSE header holds the settlement.}
+        '402': {description: Payment required, invalid, or settlement failed (see PAYMENT-REQUIRED / PAYMENT-RESPONSE).}
+        '503': {description: x402 lane not configured, or a non-testnet network was configured.}
 components:
   schemas:
     CancellationReport:

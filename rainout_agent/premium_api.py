@@ -15,15 +15,15 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 from urllib.parse import parse_qs
 
-from rainout_agent import api_keys, billing, plans, usage
+from rainout_agent import api_keys, billing, plans, usage, x402
 
 MAX_BODY = 512_000  # Stripe webhooks can be large; batch bodies are capped at BATCH_MAX_BODY
 BATCH_MAX_BODY = 64_000
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-API-Key, Authorization",
-    "Access-Control-Expose-Headers": "X-Rainout-Plan, X-RateLimit-Limit, X-RateLimit-Remaining, X-Quota-Remaining, Retry-After",
+    "Access-Control-Allow-Headers": "Content-Type, X-API-Key, Authorization, PAYMENT-SIGNATURE",
+    "Access-Control-Expose-Headers": "X-Rainout-Plan, X-RateLimit-Limit, X-RateLimit-Remaining, X-Quota-Remaining, Retry-After, PAYMENT-REQUIRED, PAYMENT-RESPONSE",
 }
 STATUS_KEYS = ("field_id", "field", "game_time", "official_status", "game_time_play_probability_percent", "rain_chance_percent",
                "thunderstorm_likely", "risk_level", "recommendation", "reason", "spoken_answer",
@@ -124,6 +124,8 @@ def handle_premium_request(method: str, path: str, query: str, body: bytes, head
         return _json(200, {"key": info.public(), "usage": usage.summary(info), "plan": plans.get_plan(info.plan)})
     if path == "/v1/batch":
         return _batch(method, body, headers, kw)
+    if path == "/v1/premium/batch":
+        return _premium_batch(method, body, headers, kw)
     if path.startswith("/v1/billing/"):
         try:
             return _billing(method, path, query, body, headers)
@@ -232,3 +234,37 @@ def _billing(method: str, path: str, query: str, body: bytes, headers: dict[str,
             return _error(401, "api_key_required", "Send X-API-Key to open the billing portal for your subscription.")
         return _json(200, billing.create_portal(info))
     return _error(404, "not_found", "Billing paths: checkout, success, portal, webhook.")
+
+
+def _premium_batch(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str, Any]) -> Response:
+    """Same as /v1/batch, but callers without a key can pay per call with x402 (testnet)."""
+    if api_keys.key_from_headers(headers):
+        return _batch(method, body, headers, kw)
+    if method != "POST":
+        return _error(405, "method_not_allowed", 'POST {"items": [...]} with a PAYMENT-SIGNATURE header (x402 v2).')
+    if len(body) > BATCH_MAX_BODY:
+        return _error(413, "body_too_large", f"Body must be under {BATCH_MAX_BODY} bytes.")
+    plan = plans.PAY_PER_CALL
+    try:
+        data = json.loads(body or b"{}")
+    except ValueError:
+        return _error(400, "invalid_json", "Body must be JSON.")
+    items = data.get("items") if isinstance(data, dict) else None
+    if not isinstance(items, list) or not items:
+        return _error(400, "missing_items", "Pass items: a non-empty list of {field_id, game_time} or {team_id, date?}.")
+    teams_n = sum(1 for i in items if isinstance(i, dict) and i.get("team_id"))
+    if len(items) > plan["batch_max_items"] or teams_n > plan["max_teams_per_call"]:
+        return _error(413, "batch_too_large", f"Pay-per-call allows {plan['batch_max_items']} items and {plan['max_teams_per_call']} teams.")
+
+    def run() -> Response:
+        results = batch(items, "pay_per_call", **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
+        if not any(r.get("ok") for r in results):
+            return _error(502, "no_results", "Every item failed, so no payment was taken. Check the items and retry.",
+                          results=results)
+        at_risk = [r["index"] for r in results if r.get("ok") and _at_risk(r["result"])]
+        return _json(200, {"plan": "pay_per_call", "count": len(results), "ok": sum(1 for r in results if r.get("ok")),
+                           "at_risk_indexes": at_risk, "results": results}, {"X-Rainout-Plan": "pay_per_call"})
+
+    return x402.paywall(headers, f"{billing.public_url()}/v1/premium/batch",
+                        f"Batch rainout check: up to {plan['batch_max_items']} games or {plan['max_teams_per_call']} teams", run,
+                        env=kw.get("env"), now=kw.get("now"))
