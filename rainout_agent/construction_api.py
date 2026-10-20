@@ -4,6 +4,7 @@ GET /v1/nowcast?lat=&lon=  (or q=place)
 GET|POST /v1/construction/concrete-pour
 GET|POST /v1/construction/materials
 GET|POST /v1/go-no-go
+GET|POST /v1/should-we-cancel   (organizer wrapper over go-no-go)
 """
 from __future__ import annotations
 
@@ -86,16 +87,28 @@ def _go_no_go(params: dict[str, Any]) -> dict[str, Any]:
                     duration_hours=params.get("duration_hours"), options=opts)
 
 
+def _should_we_cancel(params: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.should_we_cancel import should_we_cancel
+
+    return should_we_cancel(params.get("activity"), venue=params.get("venue") or params.get("field_id"),
+                            team_id=params.get("team_id"), track_id=params.get("track_id"), location=_location(params),
+                            lat=params.get("lat"), lon=params.get("lon"), pick=params.get("pick"),
+                            time=params.get("time") or params.get("start") or params.get("game_time") or params.get("date"),
+                            duration_hours=params.get("duration_hours"), detail=params.get("detail"),
+                            headers=params.get("_headers"))
+
+
 ROUTES: dict[str, tuple[Callable[[dict[str, Any]], dict[str, Any]], tuple[str, ...]]] = {
     "/v1/nowcast": (_nowcast, ("GET",)),
     "/v1/construction/concrete-pour": (_concrete, ("GET", "POST")),
     "/v1/construction/materials": (_materials, ("GET", "POST")),
     "/v1/go-no-go": (_go_no_go, ("GET", "POST")),
+    "/v1/should-we-cancel": (_should_we_cancel, ("GET", "POST")),
 }
 
 
 def handle_construction_request(method: str, path: str, query_string: str, body: bytes = b"",
-                                 content_type: str = "") -> tuple[int, str, bytes, str]:
+                                 content_type: str = "", headers: dict[str, str] | None = None) -> tuple[int, str, bytes, str]:
     """Return (status, content_type, body, cache_control)."""
     route = ROUTES.get(path.rstrip("/"))
     if route is None:
@@ -105,10 +118,13 @@ def handle_construction_request(method: str, path: str, query_string: str, body:
         return _error(405, "method_not_allowed", f"Use {' or '.join(methods)}.")
     try:
         params = _params(method, query_string, body, content_type)
+        params.pop("_headers", None)
+        params["_headers"] = headers or {}
         result = fn(params)
         if result.get("ambiguous"):
             return _json(200, result, http_cache.NO_STORE)
-        return _json(200, result, DATA_CACHE if method == "GET" else http_cache.NO_STORE)
+        per_caller = str(params.get("detail") or "").lower() == "full"  # may depend on the caller's key
+        return _json(200, result, DATA_CACHE if method == "GET" and not per_caller else http_cache.NO_STORE)
     except (BadRequest, rain.RainError) as exc:
         return _error(400, "invalid_request", str(exc))
     except rain.PlaceNotFound as exc:

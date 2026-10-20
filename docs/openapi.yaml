@@ -800,8 +800,53 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/should-we-cancel:
+    get:
+      operationId: shouldWeCancel
+      summary: "Organizer's call: play, delay, cancel, or wait until a check time (built on go-no-go)."
+      description: >-
+        For whoever runs the game, race or job. Uses /v1/go-no-go for the odds, official status and sources, then adds
+        timing: far from the start it answers wait_until a check time; close to the start it decides delay (with delay_to,
+        when a start within 3 hours looks like a go) or cancel. Pass team_id with a date or time, or venue, track_id or a
+        location plus time. Free answers are the basic version. detail=full with a paid X-API-Key adds start_options,
+        best_start, decision_deadline and notify_message (counted as 3 units). Also POST with a JSON body.
+      parameters:
+        - {in: query, name: team_id, required: false, schema: {type: string}, description: Team from /v1/teams/search; the game is picked by date or time., example: tsl-340-744621-4306365}
+        - {in: query, name: venue, required: false, schema: {type: string}, description: Venue name or field_id (alias field_id).}
+        - {in: query, name: track_id, required: false, schema: {type: string}}
+        - {in: query, name: location, required: false, schema: {type: string, maxLength: 120}, description: "Town name or 'lat,lon' (alias q)."}
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}}
+        - {in: query, name: time, required: false, schema: {type: string}, description: "Start: local time, ISO 8601 with offset, or now. With team_id a date (2026-10-24) is enough.", example: "2026-10-24 18:30"}
+        - {in: query, name: activity, required: false, schema: {type: string, enum: [softball, baseball, soccer, motocross, concrete_pour, roofing, painting, general_outdoor_work]}}
+        - {in: query, name: duration_hours, required: false, schema: {type: number, minimum: 0.5, maximum: 16}}
+        - {in: query, name: detail, required: false, schema: {type: string, enum: [basic, full]}, description: full needs a paid API key; otherwise the basic answer is returned with a full_detail note.}
+      responses:
+        "200": {description: Recommendation, content: {application/json: {schema: {$ref: "#/components/schemas/ShouldWeCancelResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    ShouldWeCancelResult:
+      type: object
+      required: [recommendation, play_probability_percent, reason, check_again_at, based_on, sources, detail]
+      properties:
+        recommendation: {type: string, enum: [play, delay, cancel, wait_until]}
+        play_probability_percent: {type: integer, nullable: true}
+        reason: {type: string, description: Plain words; safe to read aloud or forward.}
+        check_again_at: {type: string, nullable: true, description: When to ask again; null once the call is final (cancel).}
+        delay_to: {type: string, nullable: true}
+        wait_until: {type: string, nullable: true}
+        event: {type: object}
+        based_on: {type: object, description: "The go_no_go decision this builds on (decision, weather_decision, event_confirmed, routed_to, official_status)."}
+        sources: {type: array, items: {type: object}}
+        detail: {type: string, enum: [basic, full]}
+        full_detail: {type: string, description: Present on basic answers; how to get the full version.}
+        start_options: {type: array, items: {type: object}, description: Paid only.}
+        best_start: {type: object, nullable: true, description: Paid only.}
+        decision_deadline: {type: string, description: Paid only.}
+        notify_message: {type: string, description: Paid only. Ready-to-send text for players or crew.}
     GoNoGoResult:
       type: object
       required: [activity, decision, reason, event_confirmed, weather_decision, recheck_at, sources, routed_to]

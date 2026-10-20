@@ -116,6 +116,10 @@
       "dest": "/api/construction.py"
     },
     {
+      "src": "/v1/should-we-cancel/?",
+      "dest": "/api/construction.py"
+    },
+    {
       "src": "/v1/construction/([^/]+)/?",
       "dest": "/api/construction.py"
     },
