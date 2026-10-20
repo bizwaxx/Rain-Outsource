@@ -17,7 +17,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.15.0"
+SERVER_VERSION = "0.16.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -38,7 +38,7 @@ INSTRUCTIONS = (
     "report_cancellation (unverified, expires in 24 h, nudges the odds others see while the official status is unknown). "
     "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts, and "
     "get_precipitation_nowcast for the next 2 hours in 15-minute steps. "
-    "Construction (v2 beta, weather screening, not engineering advice): check_concrete_pour."
+    "Construction (v2 beta, weather screening, not engineering advice): check_concrete_pour, check_materials_risk."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -326,6 +326,34 @@ TOOLS.append({
         "required": ["pour_start"],
     },
 })
+TOOLS.append({
+    "name": "check_materials_risk",
+    "title": "Rain damage risk for job-site materials",
+    "description": (
+        "Rain damage risk per material left on a job site over a time window (default next 24 h): drywall, insulation, "
+        "lumber, osb (or plywood), cement_bags (mortar, grout), open_roof_deck, electrical, flooring, masonry_units, "
+        "windows_doors, rebar, open_excavation. Returns overall_risk and per material risk (low/moderate/high/severe), "
+        "reason and plain protective actions, plus expected rain total, peak intensity and gusts (covers can blow off "
+        "at 25+ mph). Covered materials drop one step. Read `summary` aloud. Weather screening only, not engineering advice."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "location": {"type": "string", "description": "Town name or 'lat,lon' when lat/lon aren't given."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "materials": {"type": "array", "minItems": 1, "maxItems": 20,
+                          "items": {"type": "string"}, "description": "Material names, e.g. ['drywall', 'lumber', 'cement_bags']."},
+            "covered": {"type": "boolean", "description": "Whether the materials are tarped or under cover (default false)."},
+            "covered_materials": {"type": "array", "items": {"type": "string"}, "description": "Only these materials are covered."},
+            "start": {"type": "string", "description": "Window start, local time at the site (default now)."},
+            "end": {"type": "string", "description": "Window end, local time (default start + hours)."},
+            "hours": {"type": "number", "minimum": 1, "maximum": 168, "description": "Window length when end is not given (default 24)."},
+            "pick": {"type": "integer", "minimum": 1, "maximum": 5},
+        },
+        "required": ["materials"],
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
 _REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
@@ -469,6 +497,21 @@ def _check_concrete_pour(args: dict[str, Any]) -> dict[str, Any]:
     return _place_call(check_concrete_pour, args.get("location"), lat=args.get("lat"), lon=args.get("lon"), **kw)
 
 
+def _check_materials_risk(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.materials import check_materials_risk
+
+    if not args.get("location") and (args.get("lat") is None or args.get("lon") is None):
+        raise ToolError("Pass lat and lon for the job site, or location (town name or 'lat,lon').")
+    mats = args.get("materials")
+    if not mats:
+        raise ToolError("materials is required, e.g. ['drywall', 'lumber'].")
+    covered_only = {str(x).strip().lower() for x in args.get("covered_materials") or []}
+    if covered_only and isinstance(mats, list):
+        mats = [{"material": x, "covered": str(x).strip().lower() in covered_only} for x in mats]
+    return _place_call(check_materials_risk, args.get("location"), lat=args.get("lat"), lon=args.get("lon"), pick=args.get("pick"),
+                       materials=mats, covered=args.get("covered"), start=args.get("start"), end=args.get("end"), hours=args.get("hours"))
+
+
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -511,6 +554,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "report_cancellation": _report_cancellation,
     "get_precipitation_nowcast": _get_precipitation_nowcast,
     "check_concrete_pour": _check_concrete_pour,
+    "check_materials_risk": _check_materials_risk,
 }
 
 

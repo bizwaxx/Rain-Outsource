@@ -2,6 +2,7 @@
 
 GET /v1/nowcast?lat=&lon=  (or q=place)
 GET|POST /v1/construction/concrete-pour
+GET|POST /v1/construction/materials
 """
 from __future__ import annotations
 
@@ -66,9 +67,18 @@ def _concrete(params: dict[str, Any]) -> dict[str, Any]:
                                search_days=params.get("search_days"))
 
 
+def _materials(params: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.materials import check_materials_risk
+
+    return check_materials_risk(_location(params), lat=params.get("lat"), lon=params.get("lon"), pick=params.get("pick"),
+                                materials=params.get("materials"), covered=params.get("covered"), start=params.get("start"),
+                                end=params.get("end"), hours=params.get("hours"))
+
+
 ROUTES: dict[str, tuple[Callable[[dict[str, Any]], dict[str, Any]], tuple[str, ...]]] = {
     "/v1/nowcast": (_nowcast, ("GET",)),
     "/v1/construction/concrete-pour": (_concrete, ("GET", "POST")),
+    "/v1/construction/materials": (_materials, ("GET", "POST")),
 }
 
 

@@ -107,5 +107,45 @@ which is higher than wind at the slab, so it errs on the cautious side.
 
 Override any threshold with `RAINOUT_CONSTRUCTION_THRESHOLDS=/path/to/override.json` (deep-merged).
 
+## Materials damage risk: `GET|POST /v1/construction/materials`, MCP `check_materials_risk`
+
+```
+GET /v1/construction/materials?lat=30.27&lon=-97.74&materials=drywall,lumber,cement_bags&hours=24
+POST /v1/construction/materials {"lat": 30.27, "lon": -97.74, "start": "2026-10-21 17:00", "end": "2026-10-22 07:00",
+                                  "materials": [{"material": "drywall", "covered": true}, "lumber", "open_roof_deck"]}
+```
+
+The window (default the next 24 h, up to 7 days) gets a **rain level**:
+
+| Level | Rule (data/construction/thresholds.json) |
+|---|---|
+| none | max hourly rain chance < 15% and total < 0.25 mm |
+| heavy | chance ≥ 40% and (total ≥ 12.7 mm / 0.5 in, or an hour ≥ 7.6 mm, AMS "heavy") |
+| likely | chance ≥ 50% or total ≥ 2.5 mm (0.1 in) |
+| possible | anything else |
+
+Each material maps the level to a risk. Covered materials drop one step, except when gusts reach 25 mph
+(loose tarps lift), and moisture-sensitive materials go to at least `moderate` after 6+ hours at 90%+ humidity.
+
+| Material | Label | Risk at none / possible / likely / heavy | Reference |
+|---|---|---|---|
+| `drywall` | drywall (gypsum board) | low / high / severe / severe | Gypsum Association GA-801, Handling and Storage of Gypsum Panel Products |
+| `insulation` | insulation (batts, rolls, loose fill) | low / high / severe / severe | Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting') |
+| `lumber` | framing lumber | low / low / moderate / high | American Wood Council / WWPA lumber storage guidance |
+| `osb` | OSB or plywood sheathing | low / low / moderate / high | APA Engineered Wood Construction Guide (Form E30) |
+| `cement_bags` | bagged cement, mortar or grout | low / high / severe / severe | Portland Cement Association |
+| `open_roof_deck` | open roof deck (no underlayment) | low / moderate / high / severe | Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting') |
+| `electrical` | electrical equipment and rough-in | low / high / severe / severe | NFPA 70 (NEC) 110.11 Deteriorating Agents |
+| `flooring` | wood or laminate flooring | low / high / severe / severe | National Wood Flooring Association installation guidelines |
+| `masonry_units` | brick or block | low / low / low / moderate | Brick Industry Association Technical Notes (e.g. 7A, 23A) |
+| `windows_doors` | windows and doors not yet installed | low / low / moderate / high | Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting') |
+| `rebar` | rebar and structural steel | low / low / low / low | Common field practice (PCA/NRMCA guidance such as NRMCA CIP 11 'Curing In-Place Concrete' and CIP 12 'Hot Weather Concreting') |
+| `open_excavation` | open excavation or trench | low / moderate / high / severe | EPA construction stormwater (SWPPP) guidance |
+
+Aliases are accepted (plywood, sheathing → `osb`; cement, mortar, grout → `cement_bags`; brick, block → `masonry_units`;
+roof deck → `open_roof_deck`; trench → `open_excavation`; plurals). Each result has `risk`, `reason`, `actions` and the
+`reference` text. The response also has `overall_risk`, a spoken `summary`, `rain` (level, total, peak intensity,
+wettest hour), `wind` (gusts, `covers_at_risk`), `humid_hours` and `recheck_at`.
+
 Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0; free tier is non-commercial, under
 10,000 calls a day) and the U.S. National Weather Service.
