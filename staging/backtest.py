@@ -38,7 +38,7 @@ from zoneinfo import ZoneInfo
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "known_outcomes.json"
 HIST_FORECAST = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 ARCHIVE = "https://archive-api.open-meteo.com/v1/archive"
-HOURLY = "precipitation_probability,precipitation,weather_code,temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_gusts_10m"
+HOURLY = "precipitation_probability,precipitation,weather_code,cape,temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_gusts_10m"
 THUNDER = {95, 96, 99}
 # Rain amount in the hour -> stand-in rain chance when no archived probability exists.
 PROXY_POP = ((0.1, 5), (0.5, 35), (2.5, 60), (7.6, 80), (float("inf"), 95))
@@ -126,6 +126,7 @@ def _rows(payload: dict) -> dict[datetime, dict[str, Any]]:
         code = col("weather_code")[i]
         r = rows.setdefault(t, {})
         r.update({"pop": col("precipitation_probability")[i], "code": code, "thunder": code in THUNDER if code is not None else False,
+                  "cape": col("cape")[i],
                   "temp_f": col("temperature_2m")[i], "rh": col("relative_humidity_2m")[i], "dew_f": col("dew_point_2m")[i],
                   "wind_mph": col("wind_speed_10m")[i], "gust_mph": col("wind_gusts_10m")[i]})
         rows.setdefault(t - timedelta(hours=1), {})["mm"] = col("precipitation")[i]
