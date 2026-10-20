@@ -127,6 +127,27 @@ def application(environ, start_response):
         )
         return [payload]
 
+    from rainout_agent.construction_api import ROUTES as CONSTRUCTION_ROUTES
+
+    if path.rstrip("/") in CONSTRUCTION_ROUTES:
+        from http import HTTPStatus
+
+        from rainout_agent.construction_api import MAX_BODY as C_MAX, handle_construction_request
+
+        body = b""
+        if method == "POST":
+            try:
+                length = int(environ.get("CONTENT_LENGTH") or 0)
+            except ValueError:
+                length = 0
+            body = environ["wsgi.input"].read(min(length, C_MAX + 1)) if length > 0 else b""
+        status, content_type, payload, cache_control = handle_construction_request(
+            method, path, environ.get("QUERY_STRING", ""), body, environ.get("CONTENT_TYPE", ""))
+        start_response(f"{status} {HTTPStatus(status).phrase}",
+                       [("Content-Type", content_type), ("Content-Length", str(len(payload))),
+                        ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache_control)])
+        return [payload]
+
     if path.rstrip("/") == "/v1/rain":
         from rainout_agent.rain_api import handle_rain_request
 

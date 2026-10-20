@@ -17,7 +17,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.13.0"
+SERVER_VERSION = "0.14.0"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -36,7 +36,8 @@ INSTRUCTIONS = (
     "field_id as venue to get_venue_status, or as track_id to check_race. "
     "If the user says their game was rained out, delayed, the field is closed or they are playing, offer to share it with "
     "report_cancellation (unverified, expires in 24 h, nudges the odds others see while the official status is unknown). "
-    "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts."
+    "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts, and "
+    "get_precipitation_nowcast for the next 2 hours in 15-minute steps."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -276,9 +277,29 @@ TOOLS.append({
         "required": ["field_id", "status"],
     },
 })
+TOOLS.append({
+    "name": "get_precipitation_nowcast",
+    "title": "Rain in the next 2 hours",
+    "description": (
+        "Two-hour precipitation nowcast in 15-minute steps for a place or job site: amount, intensity (light/moderate/"
+        "heavy) and rain chance per step, when rain starts and stops, and (US) what the nearest station measured in the "
+        "last hour. Use it for 'is it about to rain here?' and right before a pour, roofing or a game. Pass lat/lon for a "
+        "job site, or query with a town name. Read `summary` aloud. Model nowcast (NOAA HRRR via Open-Meteo, NWS), not radar."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "query": {"type": "string", "description": "Town name ('Austin, TX') or 'lat,lon'."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "pick": {"type": "integer", "minimum": 1, "maximum": 5, "description": "Choose match N from an ambiguous result."},
+        },
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
-TOOLS[-1]["annotations"] = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True}
+_REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
+_REPORT["annotations"] = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True}
 _CLIENT: contextvars.ContextVar[str | None] = contextvars.ContextVar("rainout_mcp_client", default=None)
 
 
@@ -400,6 +421,24 @@ def _get_rain_chance(args: dict[str, Any]) -> dict[str, Any]:
         raise ToolError(f"No place matched '{exc.query}'. Similar names: {names}. Ask the user for a country or lat,lon.") from exc
 
 
+def _get_precipitation_nowcast(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.nowcast import get_precipitation_nowcast
+
+    if not args.get("query") and (args.get("lat") is None or args.get("lon") is None):
+        raise ToolError("Pass lat and lon, or query (town name or 'lat,lon').")
+    return _place_call(get_precipitation_nowcast, args.get("query"), lat=args.get("lat"), lon=args.get("lon"), pick=args.get("pick"))
+
+
+def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
+    try:
+        return fn(*a, **kw)
+    except rain.RainError as exc:
+        raise ToolError(str(exc)) from exc
+    except rain.PlaceNotFound as exc:
+        names = "; ".join(s["label"] for s in exc.suggestions) or "none"
+        raise ToolError(f"No place matched '{exc.query}'. Similar names: {names}. Ask the user for a state or lat/lon.") from exc
+
+
 def _report_cancellation(args: dict[str, Any]) -> dict[str, Any]:
     from rainout_agent import reports
 
@@ -430,6 +469,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "get_track_history": _get_track_history,
     "get_rain_chance": _get_rain_chance,
     "report_cancellation": _report_cancellation,
+    "get_precipitation_nowcast": _get_precipitation_nowcast,
 }
 
 

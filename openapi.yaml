@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Rainout Source API
-  version: 0.13.0
-  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, and a worldwide rain-chance lookup. Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
+  version: 0.14.0
+  description: Agent-readable field and rainout status API for outdoor games and events. The Austin pilot now supports Krieg/Craig, Havins, and an Austin metro public/private expansion batch with live National Weather Service game-time weather (cached, with an Open-Meteo fallback), conservative official source polling, and stricter outside-agent answer requirements. Also covers 10 motocross tracks (TX, FL, OK) with race calendars, riding odds and rain history, a worldwide rain-chance lookup and a two-hour precipitation nowcast (/v1/nowcast). Users can report cancellations (/v1/reports); recent unverified reports adjust the odds while the official status is unknown.
   x-creator: JEEZ Labs
 servers:
   - url: https://rainout-agent-source.vercel.app
@@ -707,8 +707,62 @@ paths:
         "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "404": {description: place_not_found (with suggestions), content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
         "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/nowcast:
+    get:
+      operationId: getPrecipitationNowcast
+      summary: Two-hour precipitation nowcast in 15-minute steps for a place or job site.
+      description: >-
+        Amount, intensity (AMS light/moderate/heavy) and rain chance for the next 8 fifteen-minute steps, when rain
+        starts and stops, and (US) what the nearest NWS station measured in the last hour. Free sources: Open-Meteo
+        minutely_15 (NOAA HRRR over North America) for amounts, NWS gridpoints for the US rain chance. Model nowcast,
+        not radar. Pass lat/lon for a job site; town names resolve to the town center. Read summary aloud.
+      parameters:
+        - {in: query, name: lat, required: false, schema: {type: number, minimum: -90, maximum: 90}, example: 30.27}
+        - {in: query, name: lon, required: false, schema: {type: number, minimum: -180, maximum: 180}, example: -97.74}
+        - {in: query, name: q, required: false, schema: {type: string, maxLength: 120}, description: "Town name or 'lat,lon' (alias: location).", example: "Austin, TX"}
+        - {in: query, name: pick, required: false, schema: {type: integer, minimum: 1, maximum: 5}, description: Choose match N from an ambiguous name.}
+      responses:
+        "200": {description: Nowcast, or matches when the name is ambiguous, content: {application/json: {schema: {$ref: "#/components/schemas/NowcastResult"}}}}
+        "400": {description: Bad input, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "404": {description: place_not_found (with suggestions), content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+        "502": {description: Weather or geocoder unavailable, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
 components:
   schemas:
+    NowcastResult:
+      type: object
+      properties:
+        location: {type: object, properties: {lat: {type: number}, lon: {type: number}, label: {type: string}, timezone: {type: string}, precision: {type: string, enum: [exact, place]}, precision_note: {type: string}}}
+        issued_at: {type: string}
+        interval_minutes: {type: integer, example: 15}
+        window: {type: object, properties: {start: {type: string}, end: {type: string}}}
+        intervals:
+          type: array
+          items:
+            type: object
+            properties:
+              start: {type: string}
+              end: {type: string}
+              precip_mm: {type: number, nullable: true}
+              precip_in: {type: number, nullable: true}
+              rate_mm_per_hr: {type: number, nullable: true}
+              intensity: {type: string, nullable: true, enum: [none, light, moderate, heavy]}
+              probability_percent: {type: integer, nullable: true}
+              probability_source: {type: string, nullable: true, enum: [nws, open_meteo]}
+              amount_source: {type: string, nullable: true, enum: [open_meteo, nws_qpf_spread, precip_ai]}
+        rain_expected: {type: boolean}
+        rain_starts_at: {type: string, nullable: true}
+        rain_ends_at: {type: string, nullable: true}
+        peak_intensity: {type: string, nullable: true}
+        total_precip_mm: {type: number, nullable: true}
+        total_precip_in: {type: number, nullable: true}
+        max_probability_percent: {type: integer, nullable: true}
+        observed: {type: object, nullable: true, description: Latest NWS station observation (US).}
+        summary: {type: string}
+        recheck_after_minutes: {type: integer}
+        sources: {type: array, items: {type: object}}
+        notes: {type: array, items: {type: string}}
+        ambiguous: {type: boolean}
+        matches: {type: array, items: {type: object}}
     CancellationReport:
       type: object
       properties:
