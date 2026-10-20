@@ -675,6 +675,9 @@ def _apply_event_risk(track: dict[str, Any], entry: dict[str, Any], ws: datetime
     if v2 is None:
         entry["model"]["note"] = "event weather (Open-Meteo) unavailable or disabled; v1 race model used"
         return
+    entry["model"]["venue_profile"] = {"maintenance": "unknown", "level": "rec", "surface": "motocross_dirt", "maintained": False,
+                                       "sources": {"maintenance": "no evidence (default)", "level": "no evidence (default)",
+                                                   "surface": f"motocross track record (soil: {soil})"}}
     entry["model"].update(version="v2", v1_play_probability=entry["play_probability"], reasons=v2["reasons"],
                           soak_penalty=v2["soak_penalty"], storm_window=v2["storm_window"], features=v2["features"])
     entry["play_probability"] = max(MIN_ODDS, min(MAX_ODDS, v2["play_probability_percent"]))

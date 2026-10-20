@@ -46,12 +46,14 @@ GRID: dict[str, tuple] = {
     "slow": (1.2, 0.8, 1.6),
     "w24": (0.6, 0.3),
     "w48": (0.3, 0.15),
+    # Venue maintenance: soak multiplier at maintained venues (None = older "maintained infield counts as medium").
+    "maint": (None, 0.6, 0.35, 0.2),
 }
 
 
 # Ground-wetness family (7-day bucket minus FAO-56 ET0, by surface, motocross dry-out curve). The window
 # family above stays in the search, so the wetness model has to beat it to be chosen.
-COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor")
+COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor", "maint")
 GRID_WET: dict[str, tuple] = {
     **{k: GRID[k] for k in COMMON},
     "d_fast": (1.0, 0.5, 2.0),
@@ -63,12 +65,21 @@ GRID_WET: dict[str, tuple] = {
 }
 
 
-def grid_points() -> list[dict[str, Any]]:
-    win = [{"soak_model": "window", **dict(zip(GRID, v))} for v in itertools.product(*GRID.values())]
+FAMILIES = ("window",)          # --families window,wetness,hybrid to also search the ground-wetness families
+
+
+def grid_points(families: tuple[str, ...] | None = None) -> list[dict[str, Any]]:
+    families = families or FAMILIES
+    out = []
+    if "window" in families:
+        out += [{"soak_model": "window", **dict(zip(GRID, v))} for v in itertools.product(*GRID.values())]
     wet = [{"soak_model": "wetness", **dict(zip(GRID_WET, v))} for v in itertools.product(*GRID_WET.values())]
-    # Hybrid: the larger of the chosen window soak (fixed at its calibrated drainage) and the wetness bucket.
-    hyb = [{**pt, "soak_model": "hybrid", "fast": 0.15, "medium": 0.6, "slow": 1.6, "w24": 0.6, "w48": 0.3} for pt in wet]
-    return win + wet + hyb
+    if "wetness" in families:
+        out += wet
+    if "hybrid" in families:
+        # Hybrid: the larger of the window soak (fixed at its calibrated drainage) and the wetness bucket.
+        out += [{**pt, "soak_model": "hybrid", "fast": 0.15, "medium": 0.6, "slow": 1.6, "w24": 0.6, "w48": 0.3} for pt in wet]
+    return out
 
 
 def caching_fetch(cache_dir: str | None) -> Callable[[str], dict]:
@@ -122,7 +133,10 @@ def params_from(point: dict[str, Any]) -> dict[str, Any]:
         p["drainage"] = {"fast": point["fast"], "medium": point["medium"], "slow": point["slow"]}
         p["soak_weights"] = (1.0, point["w24"], point["w48"])
     for k in COMMON:
-        p[k] = point[k]
+        if k == "maint":
+            p["maint_soak_factor"] = point.get("maint")
+        else:
+            p[k] = point[k]
     return p
 
 
@@ -131,13 +145,15 @@ _WET_MEMO: dict[tuple, float | None] = {}
 
 def predict(inp: dict[str, Any], params: dict[str, Any]) -> int:
     if params.get("soak_model") in ("wetness", "hybrid"):
-        surface = inp["drainage"] if inp["ball_sport"] else "mx"
+        maintained = bool(inp.get("maintained"))
+        drainage = er.effective_drainage(inp["drainage"], maintained, params)
+        surface = drainage if inp["ball_sport"] else "mx"
         key = (inp["id"], surface, params["wet_drain_mm_h"][surface], params["wet_et_mult"])
         if key not in _WET_MEMO:
             _WET_MEMO[key] = er.wetness_in(inp.get("series"), surface, params)
         feat = {**inp["features"], "wetness_in": _WET_MEMO[key]}
-        base = er.base_percent(feat.get("window_pop") or 0, inp["drainage"], params)
-        return er.adjust(base, feat, inp["drainage"], params, inp["ball_sport"])["play_probability_percent"]
+        base = er.base_percent(feat.get("window_pop") or 0, drainage, params)
+        return er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained)["play_probability_percent"]
     return bt.score_event_risk(inp, params)["p"]
 
 
@@ -164,8 +180,8 @@ def _score(inputs: list[dict[str, Any]], preds: list[int]) -> dict[str, Any]:
             "band_accuracy": round(100 * sum(g["result"] == "correct" for g in gs) / len(gs)) if gs else None}
 
 
-def calibrate(inputs: list[dict[str, Any]]) -> dict[str, Any]:
-    points = grid_points()
+def calibrate(inputs: list[dict[str, Any]], families: tuple[str, ...] | None = None) -> dict[str, Any]:
+    points = grid_points(families)
     preds = [[predict(i, prm) for i in inputs] for prm in (params_from(pt) for pt in points)]
     losses = [[loss(i["outcome"], p) for i, p in zip(inputs, row)] for row in preds]
     totals = [sum(row) for row in losses]
@@ -188,7 +204,9 @@ def calibrate(inputs: list[dict[str, Any]]) -> dict[str, Any]:
             "per_fixture": [{"id": i["id"], "outcome": i["outcome"], "grade": i["grade"], "p_in_sample": preds[best][n],
                              "p_leave_one_out": loo_preds[n], "drainage": i["drainage"]} for n, i in enumerate(inputs)],
             "grid_points": len(points), "simplest_point_in_sample": score(inputs, [predict(i, default) for i in inputs]),
-            "families": {f: family_loo(fam(f)) for f in ("window", "wetness", "hybrid")}}
+            "families": {f: family_loo(fam(f)) for f in (families or FAMILIES)},
+            "maintenance": {str(m): family_loo([k for k, pt in enumerate(points) if pt.get("maint") == m])
+                            for m in GRID["maint"]}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -197,15 +215,16 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--weather-cache", default=None)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--families", default=",".join(FAMILIES))
     args = ap.parse_args(argv)
     fetch = caching_fetch(args.weather_cache)
     tracks = {t["short_id"]: t for t in mx.tracks()}
     inputs = [x for x in (fixture_inputs(fx, fetch, tracks) for fx in bt.load_fixtures()["fixtures"]) if x]
-    res = calibrate(inputs)
+    res = calibrate(inputs, tuple(args.families.split(",")))
     if args.json:
         Path(args.json).write_text(json.dumps(res, indent=1, default=str))
     print(json.dumps({k: res[k] for k in ("chosen", "in_sample", "leave_one_out", "loo_distinct_choices", "grid_points",
-                                          "simplest_point_in_sample", "families")}, indent=1, default=str))
+                                          "simplest_point_in_sample", "families", "maintenance")}, indent=1, default=str))
     return 0
 
 

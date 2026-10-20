@@ -293,23 +293,29 @@ def event_inputs(fx: dict[str, Any], wx: dict[str, Any], track: dict[str, Any] |
     for k in ("earlier_today_in", "prior_24h_in", "prior_48h_in"):
         if feat.get(k) is not None:
             feat[k] = round(feat[k] / soil, 3)   # sandy motocross soil drains faster
-    drainage = er.drainage_class(field_type=fx["field_type"], maintained=bool(fx.get("maintained")))
+    from rainout_agent import venue_profile as vp
+    prof = vp.build({"venue_profile": fx.get("venue_profile") or {}, "surface": fx["field_type"],
+                     "surface_source": "fixture field_type"})
+    drainage = er.drainage_class(field_type=fx["field_type"])
+    maintained = prof["maintained"]
     ball = fx["field_type"] != "motocross"
     series = er.wet_series(wx.get("wet") or {}, start, soil)
     er.add_wetness(feat, series, drainage, ball)
     return {"id": fx["id"], "field_type": fx["field_type"], "outcome": fx["outcome"], "grade": wgrade, "features": feat,
-            "drainage": drainage, "ball_sport": ball, "series": series}
+            "drainage": drainage, "ball_sport": ball, "series": series, "maintained": maintained, "venue_profile": prof}
 
 
 def score_event_risk(inp: dict[str, Any], params: dict[str, Any] | None = None) -> dict[str, Any]:
     from rainout_agent import event_risk as er
 
     feat = inp["features"]
-    if params is not None and inp.get("series") is not None and params.get("soak_model") == "wetness":
-        feat = {**feat, "wetness_in": er.wetness_in(inp["series"], inp["drainage"] if inp["ball_sport"] else "mx", params)}
-    base = er.base_percent(feat.get("window_pop") or 0, inp["drainage"], params)
-    out = er.adjust(base, feat, inp["drainage"], params, inp["ball_sport"])
-    return {"p": out["play_probability_percent"], "base_percent": base, "features": feat, "drainage": inp["drainage"],
+    maintained = bool(inp.get("maintained"))
+    drainage = er.effective_drainage(inp["drainage"], maintained, params)
+    if params is not None and inp.get("series") is not None and params.get("soak_model") in ("wetness", "hybrid"):
+        feat = {**feat, "wetness_in": er.wetness_in(inp["series"], drainage if inp["ball_sport"] else "mx", params)}
+    base = er.base_percent(feat.get("window_pop") or 0, drainage, params)
+    out = er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained)
+    return {"p": out["play_probability_percent"], "base_percent": base, "features": feat, "drainage": drainage,
             "reasons": out["reasons"], "model": "event_risk v2 (window rain, soak by drainage, storms, wind, cold, humility cap)"}
 
 
