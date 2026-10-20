@@ -295,15 +295,17 @@ def fetch_official_rainout_status(field: dict[str, Any], timeout: float = 20, ga
         return result
     if field.get("poll_official_status") is False:
         result["polling_skipped"] = "not_a_status_feed"
-        result["check"] = {"outcome": "not_polled",
+        result["check"] = {"outcome": "not_polled", "link_only": True,
                            "message": f"The official source is an information page, not a status feed, so it isn't read automatically. {official_sources._fallback_text(field)}"}
+        if field.get("official_status_note"):
+            result["check"]["note"] = field["official_status_note"]
         return result
     when = _parse_time(game_time) if isinstance(game_time, str) else game_time
     check = official_sources.check_official_status(field, game_time=when, timeout=timeout)
     result["official_status"] = check.pop("official_status")
     result["checked"] = bool(check.pop("checked", False))
-    if check.get("outcome") in {"blocked", "unavailable"}:
-        result["error"] = "official_source_unavailable"
+    if check.get("outcome") == "unavailable":
+        result["error"] = "official_source_unavailable"  # internal only (lowers source reliability); never shown as an error
     result["check"] = check
     return result
 
