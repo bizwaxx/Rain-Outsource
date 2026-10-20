@@ -17,7 +17,7 @@ from rainout_agent import motocross, rain, team_sources, teams
 from rainout_agent.safe_fetch import FetchError, UnsafeURLError
 
 SERVER_NAME = "rainout-source"
-SERVER_VERSION = "0.16.0"
+SERVER_VERSION = "2.0.0-beta"
 SUPPORTED_VERSIONS = ("2025-06-18", "2025-03-26", "2024-11-05")
 MAX_BODY = 256_000
 
@@ -38,7 +38,9 @@ INSTRUCTIONS = (
     "report_cancellation (unverified, expires in 24 h, nudges the odds others see while the official status is unknown). "
     "Anywhere in the world: get_rain_chance for hourly or daily rain probability and amounts, and "
     "get_precipitation_nowcast for the next 2 hours in 15-minute steps. "
-    "Construction (v2 beta, weather screening, not engineering advice): check_concrete_pour, check_materials_risk."
+    "Construction (v2 beta, weather screening, not engineering advice): check_concrete_pour, check_materials_risk. "
+    "go_no_go answers any of these in one shape (decision, probability_percent, reason, recheck_at, sources) for "
+    "softball, baseball, soccer, motocross, concrete_pour, roofing, painting or general_outdoor_work."
 )
 
 CONFIRM = " Confirm the team match with the user before relying on it."
@@ -354,6 +356,38 @@ TOOLS.append({
         "required": ["materials"],
     },
 })
+TOOLS.append({
+    "name": "go_no_go",
+    "title": "Go / wait / no-go for any outdoor activity",
+    "description": (
+        "One call for any outdoor plan: activity = softball, baseball, soccer, motocross, concrete_pour, roofing, painting "
+        "or general_outdoor_work. Sports with venue (field name or field_id) use official status + forecast + NOAA "
+        "history; motocross with track_id uses the race checker; with only a location you get weather-only odds. "
+        "Construction activities use job-site lat/lon and workability rules (rain during and after, thunder, gusts, "
+        "temperature, humidity/dew point, heat index). Always returns decision (go | wait | no_go | no_event_found), "
+        "probability_percent, reason (read aloud), event_confirmed, weather_decision, recheck_at and sources. "
+        "decision=no_event_found means no race is listed at that time (weather-only odds in probability_percent); tell "
+        "the user and ask for the event link, never say it's on. Construction answers are weather screening, not engineering advice."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "activity": {"type": "string", "enum": ["softball", "baseball", "soccer", "motocross", "concrete_pour", "roofing",
+                                                    "painting", "general_outdoor_work"]},
+            "venue": {"type": "string", "description": "Sports venue name or field_id (find_venue)."},
+            "track_id": {"type": "string", "description": "Motocross track_id (find_track)."},
+            "location": {"type": "string", "description": "Town name or 'lat,lon' when there is no venue."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "time": {"type": "string", "description": "Start, local time at the place ('2026-10-21 07:00'), ISO 8601 with offset, or 'now'."},
+            "duration_hours": {"type": "number", "minimum": 0.5, "maximum": 16, "description": "Length of the game or work (defaults by activity)."},
+            "mix": {"type": "string", "description": "concrete_pour only: standard, high_early, accelerated, retarded, slag_or_fly_ash, low_wc_or_silica_fume."},
+            "protection": {"type": "boolean", "description": "concrete_pour only: covers/blankets ready on site."},
+            "pick": {"type": "integer", "minimum": 1, "maximum": 5},
+        },
+        "required": ["activity"],
+    },
+})
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
 _REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
@@ -512,6 +546,15 @@ def _check_materials_risk(args: dict[str, Any]) -> dict[str, Any]:
                        materials=mats, covered=args.get("covered"), start=args.get("start"), end=args.get("end"), hours=args.get("hours"))
 
 
+def _go_no_go(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent.go_no_go import go_no_go
+
+    opts = {k: args.get(k) for k in ("mix", "protection", "cure_hours", "critical_hours", "concrete_temp_f", "search_days")}
+    return _place_call(go_no_go, args.get("activity"), venue=args.get("venue"), track_id=args.get("track_id"),
+                       location=args.get("location"), lat=args.get("lat"), lon=args.get("lon"), pick=args.get("pick"),
+                       time=args.get("time"), duration_hours=args.get("duration_hours"), options=opts)
+
+
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -555,6 +598,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "get_precipitation_nowcast": _get_precipitation_nowcast,
     "check_concrete_pour": _check_concrete_pour,
     "check_materials_risk": _check_materials_risk,
+    "go_no_go": _go_no_go,
 }
 
 
