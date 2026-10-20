@@ -93,7 +93,7 @@ def test_unlisted_race_never_says_play():
 
 def test_full_detail_needs_paid_key(monkeypatch):
     r, _ = ask(30, lambda t: ("go", 90), detail="full", headers={"X-API-Key": "rk_test_x"})
-    assert r["detail"] == "basic" and "paid API key" in r["full_detail"]
+    assert r["detail"] == "basic" and r["full_detail"] and "start_options" not in r  # unknown key: free answer
     monkeypatch.setattr(swc, "_paid", lambda h: (True, None))
     r, _ = ask(30, lambda t: ("go", 90 - abs(t.hour - 12)), detail="full", headers={"X-API-Key": "rk_test_x"})
     assert r["detail"] == "full" and len(r["start_options"]) == 7
@@ -105,7 +105,10 @@ def test_paid_helper_never_raises(monkeypatch):
     import sys
 
     assert swc._paid(None) == (False, None)
+    import rainout_agent
+
     monkeypatch.setitem(sys.modules, "rainout_agent.api_keys", None)  # paid-tier PR not merged: basic only
+    monkeypatch.delattr(rainout_agent, "api_keys", raising=False)
     assert swc._paid({"X-API-Key": "rk_test_x"}) == (False, None)
 
 
