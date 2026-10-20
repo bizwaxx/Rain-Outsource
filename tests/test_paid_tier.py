@@ -209,7 +209,7 @@ def test_existing_endpoints_ignore_keys_and_stay_unrouted():
     cfg = json.load(open("vercel.json"))
     assert not any("premium" in b["src"] for b in cfg["builds"])  # no extra Vercel function
     premium_routes = {r["src"] for r in cfg["routes"] if r["src"].startswith(("/v1/plans", "/v1/account", "/v1/batch", "/v1/billing"))}
-    assert premium_routes == {"/v1/plans/?", "/v1/account/?", "/v1/batch/?"}
+    assert premium_routes == {"/v1/plans/?", "/v1/account/?", "/v1/batch/?", "/v1/billing/(checkout|success|portal|webhook)/?"}
     assert all(r["dest"] == "/api/status.py" for r in cfg["routes"] if r["src"] in premium_routes)
     for path in ("/v1/status", "/v1/reports", "/v1/fields", "/v1/rain", "/mcp"):
         assert not premium_api.is_premium_path(path)

@@ -890,6 +890,42 @@ paths:
         '401': {description: Invalid key sent. Remove the header to use the free tier.}
         '413': {description: Batch larger than the plan allows.}
         '429': {description: Per-key rate limit or monthly quota reached; see Retry-After.}
+  /v1/billing/checkout:
+    get:
+      summary: Plan picker page (HTML) that starts Stripe Checkout.
+      responses:
+        '200': {description: HTML page.}
+        '503': {description: Billing not configured, or a live key without ALLOW_LIVE.}
+    post:
+      summary: Create a Stripe Checkout session for a subscription.
+      requestBody:
+        content:
+          application/json:
+            schema: {type: object, properties: {plan: {type: string, enum: [coach, league, org]}, email: {type: string}}}
+      responses:
+        '200': {description: '{checkout_url, session_id, plan, mode}'}
+        '303': {description: Redirect to Stripe Checkout (form posts).}
+  /v1/billing/success:
+    get:
+      summary: After Checkout, shows the API key for a completed session.
+      parameters:
+        - {name: session_id, in: query, required: true, schema: {type: string}}
+      responses:
+        '200': {description: '{api_key, plan, subscription_status, ...}'}
+        '409': {description: Checkout not complete.}
+  /v1/billing/portal:
+    post:
+      summary: Stripe customer-portal link for the key's subscription.
+      parameters:
+        - {name: X-API-Key, in: header, required: true, schema: {type: string}}
+      responses:
+        '200': {description: '{portal_url}'}
+  /v1/billing/webhook:
+    post:
+      summary: Stripe webhook (signature-verified); issues, grace-periods or revokes keys.
+      responses:
+        '200': {description: '{received, type, action}'}
+        '400': {description: Bad or stale Stripe-Signature.}
 components:
   schemas:
     ShouldWeCancelResult:

@@ -3,6 +3,7 @@
 * ``GET/POST /v1/keys`` free self-serve API key (no card); GET is a signup page.
 * ``GET  /v1/plans``    public plan list (free vs paid limits and features).
 * ``GET  /v1/account``  usage dashboard for the key holder (needs a key).
+* ``/v1/billing/*``      Stripe Checkout, success page (shows the key), portal, webhook.
 * ``POST /v1/batch``    many games and/or teams in one call. Free: up to 3 items
   with no key. Paid keys: up to the plan's batch size, counted against quotas.
 
@@ -15,9 +16,10 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 from urllib.parse import parse_qs
 
-from rainout_agent import api_keys, plans, signup, usage
+from rainout_agent import api_keys, billing, plans, signup, usage
 
-MAX_BODY = 64_000
+MAX_BODY = 512_000  # Stripe webhooks can be large; batch bodies are capped at BATCH_MAX_BODY
+BATCH_MAX_BODY = 64_000
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -105,6 +107,7 @@ def batch(items: list[Any], plan_id: str, *, status_fn: Callable[[dict], dict] =
 def handle_premium_request(method: str, path: str, query: str, body: bytes, headers: dict[str, str] | None = None,
                            **kw: Any) -> Response:
     path = path.rstrip("/") or "/"
+    billing.install_resolver()
     if method == "OPTIONS":
         return 204, {**CORS_HEADERS, "Cache-Control": "no-store"}, b""
     if path == "/v1/plans":
@@ -130,14 +133,19 @@ def handle_premium_request(method: str, path: str, query: str, body: bytes, head
         return _keys(method, body, headers, kw)
     if path == "/v1/batch":
         return _batch(method, body, headers, kw)
+    if path.startswith("/v1/billing/"):
+        try:
+            return _billing(method, path, query, body, headers)
+        except billing.BillingError as exc:
+            return _error(exc.status, exc.code, exc.message)
     return _error(404, "not_found", "Unknown paid-tier path. See /v1/plans.")
 
 
 def _batch(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str, Any]) -> Response:
     if method != "POST":
         return _error(405, "method_not_allowed", 'POST {"items": [{"field_id": "Krieg", "game_time": "..."}, {"team_id": "..."}]}')
-    if len(body) > MAX_BODY:
-        return _error(413, "body_too_large", f"Body must be under {MAX_BODY} bytes.")
+    if len(body) > BATCH_MAX_BODY:
+        return _error(413, "body_too_large", f"Body must be under {BATCH_MAX_BODY} bytes.")
     info, err = api_keys.resolve_request(headers)
     if err:
         return _key_error(err)
@@ -187,6 +195,71 @@ def _at_risk(result: dict[str, Any]) -> bool:
         return any((g or {}).get("at_risk") for g in result["games"] + [result.get("next_game")])
     pct = result.get("game_time_play_probability_percent")
     return pct is not None and pct < 70
+
+
+def _html(status: int, html: str) -> Response:
+    return status, {"Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", **CORS_HEADERS}, html.encode()
+
+
+def _checkout_page(canceled: bool) -> Response:
+    rows = "".join(
+        f'<form method="post" action="/v1/billing/checkout"><input type="hidden" name="plan" value="{pid}">'
+        f'<h2>{p["name"]} &mdash; ${p["price_usd_month"]}/month</h2><ul>{"".join(f"<li>{f}</li>" for f in p["features"])}</ul>'
+        f'<button type="submit">Subscribe to {p["name"]}</button></form>'
+        for pid, p in plans.PLANS.items() if pid in plans.PAID)
+    rows = rows.replace('<input type="hidden" name="plan"',
+                        '<input type="password" name="api_key" placeholder="Your API key (rk_...)" required> <input type="hidden" name="plan"')
+    note = "<p>Checkout was canceled; nothing was charged.</p>" if canceled else ""
+    return _html(200, "<!doctype html><meta charset=utf-8><title>Upgrade Rainout Source</title>"
+                      "<h1>Upgrade your Rainout Source key</h1>" + note +
+                      "<p>Step 1: <a href=/v1/keys>get a free key</a> (no card). Step 2: paste it below and pick a plan. "
+                      "The API stays free without a key; paid plans add bigger batches, whole-league calls and more.</p>"
+                      + rows)
+
+
+def _billing(method: str, path: str, query: str, body: bytes, headers: dict[str, str] | None) -> Response:
+    params = {k: v[0] for k, v in parse_qs(query or "", keep_blank_values=True).items()}
+    action = path[len("/v1/billing/"):]
+    if action == "webhook":
+        if method != "POST":
+            return _error(405, "method_not_allowed", "Stripe sends POST.")
+        h = {k.lower(): v for k, v in (headers or {}).items()}
+        return _json(200, billing.handle_webhook(body, h.get("stripe-signature") or ""))
+    if action == "checkout":
+        if method == "GET":
+            billing.mode()  # 503 when billing is off or a live key is refused
+            return _checkout_page(bool(params.get("canceled")))
+        if method != "POST":
+            return _error(405, "method_not_allowed", "POST plan=coach|league|org.")
+        h = {k.lower(): v for k, v in (headers or {}).items()}
+        form = {k: v[0] for k, v in parse_qs(body.decode("utf-8", "replace")).items()} \
+            if "form" in (h.get("content-type") or "") else (json.loads(body or b"{}") if body.strip() else {})
+        plan = (form.get("plan") or params.get("plan") or "").strip().lower()
+        # Free signup first: upgrades start from an existing key (free or paid).
+        key_headers = dict(headers or {})
+        if form.get("api_key") and not api_keys.key_from_headers(key_headers):
+            key_headers["X-API-Key"] = str(form["api_key"])
+        info, err = api_keys.resolve_request(key_headers)
+        if err:
+            return _key_error(err)
+        if not info:
+            return _error(401, "free_key_required", "Create a free key first (POST /v1/keys or /v1/keys, no card), then upgrade with it.",
+                          signup="/v1/keys")
+        session = billing.create_checkout(plan, email=form.get("email") or None, from_key=info)
+        if "form" in (h.get("content-type") or ""):
+            return 303, {"Location": session["checkout_url"], "Cache-Control": "no-store", **CORS_HEADERS}, b""
+        return _json(200, session)
+    if action == "success":
+        result = billing.checkout_success(params.get("session_id") or "")
+        return _json(200, result)
+    if action == "portal":
+        info, err = api_keys.resolve_request(headers)
+        if err:
+            return _key_error(err)
+        if not info:
+            return _error(401, "api_key_required", "Send X-API-Key to open the billing portal for your subscription.")
+        return _json(200, billing.create_portal(info))
+    return _error(404, "not_found", "Billing paths: checkout, success, portal, webhook.")
 
 
 SIGNUP_PAGE = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
@@ -244,7 +317,3 @@ def _keys(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[str
                           "<p>Copy it now; it is shown only once. Send it as the <code>X-API-Key</code> header. "
                           "See usage at <code>GET /v1/account</code>.</p>")
     return _json(201, result)
-
-
-def _html(status: int, html: str) -> Response:
-    return status, {"Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", **CORS_HEADERS}, html.encode()
