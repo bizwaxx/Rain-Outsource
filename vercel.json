@@ -72,6 +72,18 @@
       "dest": "/api/status.py"
     },
     {
+      "src": "/v1/outcomes/?",
+      "dest": "/api/status.py"
+    },
+    {
+      "src": "/v1/outcomes/(feed\\.atom|scoreboard)",
+      "dest": "/api/status.py"
+    },
+    {
+      "src": "/scoreboard/?",
+      "dest": "/api/status.py"
+    },
+    {
       "src": "/v1/schedule/check",
       "dest": "/api/schedule.py"
     },
