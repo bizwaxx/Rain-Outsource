@@ -70,7 +70,7 @@ def rows_from_payload(payload: dict[str, Any]) -> dict[datetime, dict[str, Any]]
 
 def evaluate(lat: float, lon: float, start: datetime, duration_h: float, drainage: str, *, thunder_forecast: bool = False,
              ball_sport: bool = True, soil_factor: float = 1.0, cache: Cache | None = None,
-             timeout: float = 4.0, maintained: bool = False) -> dict[str, Any] | None:
+             timeout: float = 4.0, maintained: bool = False, soak_memory: float = 1.0) -> dict[str, Any] | None:
     """event_risk for one event, or None when disabled or the weather fetch fails (caller keeps v1)."""
     if not enabled():
         return None
@@ -91,5 +91,5 @@ def evaluate(lat: float, lon: float, start: datetime, duration_h: float, drainag
         feat["thunder_window"] = True    # the NWS text forecast mentions thunder for the game
     drainage = er.effective_drainage(drainage, maintained)
     base = er.base_percent(feat["window_pop"], drainage)
-    out = er.adjust(base, feat, drainage, None, ball_sport, maintained)
+    out = er.adjust(base, feat, drainage, None, ball_sport, maintained, soak_memory)
     return {**out, "base_percent": base, "features": feat, "source": SOURCE, "model": "event_risk v2"}
