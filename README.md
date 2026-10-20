@@ -262,7 +262,7 @@ Example conversation: `docs/agent-conversation.md`.
 
 ### MCP server and llms.txt
 
-- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
+- MCP (Streamable HTTP): `https://rainout-agent-source.vercel.app/mcp`. Tools: `find_team`, `get_games`, `check_game`, `get_venue_status`, `check_schedule`, `find_venue`, `find_track`, `get_track_events`, `check_race`, `get_track_history`, `get_rain_chance`, `get_precipitation_nowcast`, and `report_cancellation` (the only one that stores anything: an anonymous report in the cache). See [docs/mcp.md](docs/mcp.md).
 - Agent summary: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt).
 
 ## Motocross race checker
@@ -309,6 +309,14 @@ Map data (c) OpenStreetMap contributors, ODbL 1.0. Storage design, pipeline and 
 amount for any place in the world, with a one-sentence `summary`. It uses NWS in the US and Open-Meteo
 elsewhere and as the fallback, all free with no key. The same module powers the MCP tool `get_rain_chance`, a box CLI
 (`rain "Austin, TX"`), the motocross checker and the venue checks. Details: [docs/rain.md](docs/rain.md).
+
+## Rain in the next 2 hours (nowcast, v2 beta)
+
+`GET /v1/nowcast?lat=30.27&lon=-97.74` (or `q=Austin, TX`) gives precipitation for the next 2 hours in 15-minute
+steps: amount, intensity, rain chance, when rain starts and stops, and in the US what the nearest NWS station
+measured in the last hour. Free sources only: Open-Meteo `minutely_15` (NOAA HRRR over North America) and NWS
+gridpoints. MCP tool: `get_precipitation_nowcast`. It is the first piece of the v2 construction layer; see
+[docs/construction.md](docs/construction.md).
 
 ## Weather caching and fallback
 

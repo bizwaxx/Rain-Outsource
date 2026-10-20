@@ -42,6 +42,10 @@
       "use": "@vercel/python"
     },
     {
+      "src": "api/construction.py",
+      "use": "@vercel/python"
+    },
+    {
       "src": "api/llms.py",
       "use": "@vercel/python"
     },
@@ -126,6 +130,10 @@
     {
       "src": "/v1/rain/?",
       "dest": "/api/rain.py"
+    },
+    {
+      "src": "/v1/nowcast/?",
+      "dest": "/api/construction.py"
     },
     {
       "src": "/mcp/?",

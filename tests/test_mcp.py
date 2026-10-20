@@ -49,11 +49,11 @@ def test_notifications_get_202_and_ping_works():
     assert rpc("ping")[2]["result"] == {}
 
 
-def test_tools_list_has_twelve_tools_with_calendar_rule():
+def test_tools_list_with_calendar_rule():
     tools = {t["name"]: t for t in rpc("tools/list")[2]["result"]["tools"]}
     assert set(tools) == {"find_team", "get_games", "check_game", "get_venue_status", "check_schedule",
                           "find_track", "find_venue", "get_track_events", "check_race", "get_track_history", "get_rain_chance",
-                          "report_cancellation"}
+                          "report_cancellation", "get_precipitation_nowcast"}
     for name, t in tools.items():
         assert t["inputSchema"]["type"] == "object"
         assert "anyOf" not in t["inputSchema"] and "oneOf" not in t["inputSchema"]
@@ -164,7 +164,7 @@ def test_vercel_mcp_handler_and_routes():
     h.end_headers = lambda: None
     h.do_POST()
     assert sent["code"] == 200 and sent["Cache-Control"] == "no-store"
-    assert len(json.loads(h.wfile.getvalue())["result"]["tools"]) == 12
+    assert len(json.loads(h.wfile.getvalue())["result"]["tools"]) == len(mcp_server.TOOLS) == 13
 
 
 def test_wsgi_mcp_and_llms_txt():
