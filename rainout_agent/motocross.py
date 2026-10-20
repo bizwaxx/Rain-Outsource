@@ -541,6 +541,8 @@ def official_status(track: dict[str, Any], ev: dict[str, Any], notices: list[dic
         return {"status": "cancelled", "evidence": [{"source": s["name"], "url": s["url"], "text": s["listed_as"]} for s in ev["sources"]]}
     status = "unknown"
     toks = _event_tokens(ev)
+    practice_event = bool(PRACTICE_RE.search(ev["name"] or ""))
+    first_day, last_day = _days(ev)[0], _days(ev)[-1]
     for n in notices:
         text = f"{n.get('title', '')} {n.get('text', '')}".strip()
         if not mx.NOTICE_RE.search(text) and not mx.GOOD_RE.search(text):
@@ -550,31 +552,144 @@ def official_status(track: dict[str, Any], ev: dict[str, Any], notices: list[dic
             continue
         if posted is None and n.get("source_name") and "home page" not in n["source_name"].lower() and "schedule" not in n["source_name"].lower():
             continue
-        found = mx.find_date_range(text)
-        if found:
-            month, day = found["start"]
-            ev_days = {(d.month, d.day) for d in _days(ev)}
-            if (month, day) not in ev_days:
-                continue
-        practice_only = bool(re.search(r"\bpractice\b", text, re.I)) and not re.search(r"\b(race|racing|round|moto|event)\b", text, re.I)
+        when = notice_dates(n.get("title", ""), n.get("text", ""), posted, ev)
+        if when == "other":
+            continue  # about a different date (a make-up date or a different weekend never counts as this one)
+        if _other_track_or_round(text, track, ev):
+            continue
+        practice_only = (bool(re.search(r"\bpractice\b", text, re.I)) and not re.search(r"\b(race|racing|round|moto|event)\b", text, re.I)
+                         and not practice_event)
         about_event = bool(toks & set(_norm(text).split())) or bool(re.search(r"\b(race|racing|event|this weekend|tonight|tomorrow)\b", text, re.I))
         if practice_only or not about_event:
             continue
+        # Undated post: it can still be about this event when it was posted on race day or up to two days before
+        # and names the event (series, round) - e.g. "Round 6 of the Texas Night Series is canceled due to the weather".
+        implied = (when == "none" and posted is not None and first_day - timedelta(days=2) <= _posted_day(posted) <= last_day
+                   and bool(toks & set(_norm(text).split())))
+        dated = when == "match" or implied
+        hedged = bool(re.search(r"\b(may|might|could|possibly)\s+(?:be\s+|get\s+)?(?:cancel|postpon|rain)", text, re.I))
         item = {"source": n.get("source_name"), "url": n.get("source_url"), "text": text[:300],
                 "posted": posted.isoformat() if posted else None}
         if mx.GOOD_RE.search(text) and not re.search(r"cancel|postpon|rained out", text, re.I):
             evidence.append(item)
             status = "on" if status == "unknown" else status
-        elif re.search(r"cancel+ed|canceled|rained out|no racing", text, re.I) and found and posted:
+        elif re.search(r"cancel+ed|canceled|canceling|cancelling|rained out|no racing", text, re.I) and dated and posted and not hedged:
             evidence.append(item)
             status = "cancelled"
-        elif re.search(r"postpon", text, re.I) and found:
+        elif re.search(r"postpon", text, re.I) and dated and not hedged:
             evidence.append(item)
             status = "postponed"
         else:
             evidence.append(item)
             status = "uncertain" if status in ("unknown", "on") else status
     return {"status": status, "evidence": evidence}
+
+
+_MAKEUP_RE = re.compile(r"\b(reschedul\w*|re-scheduled|make[- ]?up|rain date|moved? (?:on )?to|next round|next race|next weekend|"
+                        r"double points|new date|instead)\b", re.I)
+_DATELINE_AFTER_RE = re.compile(r"^,?\s*(?:20\d\d)?\s*\([^)]{2,60}\)\s*[-\u2013\u2014]")
+_TONIGHT_RE = re.compile(r"\b(tonight\W?s?|today\W?s?|this evening)\b", re.I)
+
+
+def _posted_day(posted: datetime) -> date:
+    # WordPress "date" is the site's local wall time (notices_from_wp tags it UTC), so use the wall date as-is.
+    return posted.date()
+
+
+def _date_mentions(text: str, year: int) -> list[tuple[int, int, set[date]]]:
+    """(start, end, days) for every date phrase in ``text``."""
+    out = []
+    for m in mx.DATE_RE.finditer(text):
+        found = mx.find_date_range(m.group(0))
+        if not found:
+            continue
+        y = found.get("year") or year
+        span = mx._make_dates(found, y)
+        days = set()
+        if span:
+            d = span[0]
+            while d <= span[1]:
+                days.add(d)
+                d += timedelta(days=1)
+        else:
+            for mon, day in mx._tokens(m.group("body")):
+                try:
+                    days.add(date(y, mon or found["start"][0], day))
+                except ValueError:
+                    pass
+        out.append((m.start(), m.end(), days))
+    for m in mx.NUMERIC_RE.finditer(text):
+        mo, d1 = int(m.group("m")), int(m.group("d"))
+        d2 = int(m.group("d2")) if m.group("d2") else d1
+        y = int(m.group("year")) if m.group("year") else year
+        try:
+            days = {date(y, mo, d) for d in range(d1, d2 + 1)} if 1 <= mo <= 12 and d2 - d1 <= 10 else set()
+        except ValueError:
+            days = set()
+        if days:
+            out.append((m.start(), m.end(), days))
+    return out
+
+
+def notice_dates(title: str, body: str, posted: datetime | None, ev: dict[str, Any]) -> str:
+    """Does a notice point at this event's days? Returns "match", "other" or "none" (no usable date).
+
+    Every date in the post is checked, not just the first:
+    * a press dateline ("August 18, 2012 (Wortham, Texas) -") is the posting date; it only counts as the event
+      date when the post says tonight/today ("Tonight's AllStar Amateurs has been rained out ...");
+    * dates after "rescheduled for", "make-up", "rain date", "next round" ... are make-up or other events and are
+      ignored, so "rescheduled for Sunday, December 2nd" never hides (or creates) a cancellation;
+    * tonight/today/tomorrow/this weekend are resolved against the post date.
+    """
+    ev_days = set(_days(ev))
+    year = ev["start"].year
+    hits: set[date] = set()
+    content_dates = False
+    tonight = bool(_TONIGHT_RE.search(f"{title} {body}"))
+    for part in (title, body):
+        for s, e, days in _date_mentions(part, year):
+            if _DATELINE_AFTER_RE.match(part[e:]):
+                if tonight:
+                    hits |= days
+                continue
+            sentence = re.split(r"[.!?]\s", part[max(0, s - 80):s])[-1]
+            if _MAKEUP_RE.search(sentence):
+                continue
+            content_dates = True
+            hits |= days
+    if posted is not None:
+        pd = _posted_day(posted)
+        text = f"{title} {body}"
+        rel: set[date] = set()
+        if _TONIGHT_RE.search(text):
+            rel.add(pd)
+        if re.search(r"\btomorrow\b", text, re.I):
+            rel.add(pd + timedelta(days=1))
+        if re.search(r"\bthis weekend\b", text, re.I):
+            rel |= {pd} | {pd + timedelta(days=i) for i in range(0, 7 - pd.weekday()) if (pd + timedelta(days=i)).weekday() >= 4}
+        if rel and not content_dates:
+            hits |= rel
+            content_dates = True
+    if hits & ev_days:
+        return "match"
+    return "other" if content_dates else "none"
+
+
+def _other_track_or_round(text: str, track: dict[str, Any], ev: dict[str, Any]) -> bool:
+    """True when the notice names a different track (and not this one) or a different round number."""
+    low = _norm(text.replace("\u2019", "'"))
+    def named(t: dict[str, Any]) -> bool:
+        names = {t.get("name", "")} | set(t.get("aliases") or [])
+        return any(len(_norm(a)) > 3 and re.search(rf"\b{re.escape(_norm(a))}\b", low) for a in names if a)
+    if not named(track):
+        try:
+            if any(named(t) for t in tracks() if t.get("short_id") != track.get("short_id")):
+                return True
+        except Exception:  # pragma: no cover - track list unavailable
+            pass
+    rnd = lambda s: {int(x) for x in re.findall(r"\b(?:rd|rnd|round)\.?\s*(\d{1,2})\b", s or "", re.I)}
+    ev_r, n_r = rnd(ev.get("name")), rnd(text)
+    return bool(ev_r and n_r and not (ev_r & n_r))
 
 
 def _days(ev: dict[str, Any]) -> list[date]:
