@@ -112,6 +112,10 @@
       "dest": "/api/construction.py"
     },
     {
+      "src": "/v1/go-no-go/?",
+      "dest": "/api/construction.py"
+    },
+    {
       "src": "/v1/construction/([^/]+)/?",
       "dest": "/api/construction.py"
     },

@@ -17,7 +17,12 @@
     "nwfa": "National Wood Flooring Association installation guidelines: deliver and store flooring only in an enclosed, dry, climate-controlled building.",
     "bia_tn": "Brick Industry Association Technical Notes (e.g. 7A, 23A): cover stockpiles and wall tops during construction to limit saturation and efflorescence.",
     "epa_swppp": "EPA construction stormwater (SWPPP) guidance: stabilize open excavations and stockpiles before rain; inspect controls after 0.25 in or more.",
-    "tarp_wind": "Rule of thumb: loose tarps and poly start to lift around 25 mph gusts unless tied down and weighted."
+    "tarp_wind": "Rule of thumb: loose tarps and poly start to lift around 25 mph gusts unless tied down and weighted.",
+    "shingles": "Asphalt shingle manufacturers' cold-weather application instructions (and ARMA guidance): self-seal strips need warmth, special care below about 40 F; don't install on wet decks.",
+    "sspc_pa1": "SSPC-PA 1 / common coating practice: surface temperature at least 5 F above the dew point; relative humidity at most 85%; follow the label's minimum temperature (often 50 F, some latex 35 F) and rain-safe dry time.",
+    "osha_heat": "OSHA-NIOSH Heat Safety Tool heat index bands: 91-103 F moderate, 103-115 F high, above 115 F very high risk.",
+    "roof_wind": "Common roofing safety practice: stop handling sheets or bundles on the roof in gusty wind; manufacturers' and OSHA fall-protection guidance treat high wind as a stop condition.",
+    "sports_model": "Rainout Source play-probability model (docs/play-probability.md)."
   },
   "concrete": {
     "defaults": {
@@ -356,6 +361,66 @@
       "steel": "rebar",
       "trench": "open_excavation",
       "excavation": "open_excavation"
+    }
+  },
+  "go_no_go": {
+    "decision_bands": {
+      "go_min_percent": 70,
+      "wait_min_percent": 40,
+      "source": [
+        "sports_model"
+      ]
+    },
+    "activities": {
+      "roofing": {
+        "label": "roofing",
+        "default_hours": 8,
+        "rain_wait_pop": 30,
+        "rain_no_go_pop": 60,
+        "rain_wait_mm": 0.5,
+        "dry_after_hours": 2,
+        "gust_wait_mph": 25,
+        "gust_no_go_mph": 35,
+        "min_temp_wait_f": 40,
+        "source": [
+          "shingles",
+          "roof_wind",
+          "noaa_lightning"
+        ]
+      },
+      "painting": {
+        "label": "exterior painting",
+        "default_hours": 6,
+        "rain_wait_pop": 20,
+        "rain_no_go_pop": 50,
+        "rain_wait_mm": 0.25,
+        "dry_after_hours": 4,
+        "gust_wait_mph": 20,
+        "min_temp_wait_f": 50,
+        "max_temp_wait_f": 90,
+        "max_rh_wait": 85,
+        "min_dew_spread_f": 5,
+        "source": [
+          "sspc_pa1",
+          "noaa_lightning"
+        ]
+      },
+      "general_outdoor_work": {
+        "label": "outdoor work",
+        "default_hours": 8,
+        "rain_wait_pop": 40,
+        "rain_no_go_pop": 70,
+        "rain_wait_mm": 2.5,
+        "dry_after_hours": 0,
+        "gust_wait_mph": 30,
+        "gust_no_go_mph": 45,
+        "heat_index_wait_f": 103,
+        "heat_index_no_go_f": 115,
+        "source": [
+          "osha_heat",
+          "noaa_lightning"
+        ]
+      }
     }
   }
 }

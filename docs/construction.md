@@ -1,5 +1,8 @@
 # Construction layer (v2 beta)
 
+Tools: `get_precipitation_nowcast` (`/v1/nowcast`), `check_concrete_pour` (`/v1/construction/concrete-pour`),
+`check_materials_risk` (`/v1/construction/materials`) and `go_no_go` (`/v1/go-no-go`).
+
 Rainout Source v2 adds rain-risk tools for outdoor work on top of the sports core. It reuses the same free
 weather plumbing (NWS, Open-Meteo, the shared cache) and the same answer style: a decision, a probability,
 one plain sentence of reason, and the sources.
@@ -146,6 +149,49 @@ Aliases are accepted (plywood, sheathing → `osb`; cement, mortar, grout → `c
 roof deck → `open_roof_deck`; trench → `open_excavation`; plurals). Each result has `risk`, `reason`, `actions` and the
 `reference` text. The response also has `overall_risk`, a spoken `summary`, `rain` (level, total, peak intensity,
 wettest hour), `wind` (gusts, `covers_at_risk`), `humid_hours` and `recheck_at`.
+
+## Unified go / no-go: `GET|POST /v1/go-no-go`, MCP `go_no_go`
+
+```
+GET /v1/go-no-go?activity=softball&venue=Krieg&time=2026-10-23 20:20
+GET /v1/go-no-go?activity=motocross&track_id=swan&time=2026-10-24 09:00
+GET /v1/go-no-go?activity=roofing&lat=30.27&lon=-97.74&time=2026-10-21 08:00
+POST /v1/go-no-go {"activity": "concrete_pour", "lat": 30.27, "lon": -97.74, "time": "2026-10-21 07:00", "mix": "high_early"}
+```
+
+Every answer has the same core shape:
+
+```json
+{"activity": "roofing", "decision": "go | wait | no_go", "probability_percent": 88,
+ "reason": "Go for roofing: 5% rain chance, 54-83°F, gusts to 12 mph.",
+ "recheck_at": "2026-10-20T20:00:00-05:00", "sources": [...], "routed_to": "workability",
+ "time": {...}, "location": {...}, "details": {...}}
+```
+
+| activity | Needs | Routed to | probability_percent means |
+|---|---|---|---|
+| softball, baseball, soccer | `venue` (name or field_id) | `get_venue_status` (official status + NWS + NOAA history) | chance the game is played |
+| softball, baseball, soccer | only a location | `weather_only_play_odds` (same unknown-status model, no official status) | chance the game is played |
+| motocross | `track_id` | `check_race` | chance the race runs |
+| concrete_pour | lat/lon or town | `check_concrete_pour` | chance the pour goes as planned |
+| roofing, painting, general_outdoor_work | lat/lon or town | `workability` | chance conditions stay workable |
+
+Sports decisions: official cancellation → `no_go`; otherwise ≥ 70% → `go`, 40-69% → `wait`, < 40% → `no_go`.
+
+Workability rules (data/construction/thresholds.json → `go_no_go.activities`):
+
+| Rule | roofing | painting (exterior) | general_outdoor_work |
+|---|---|---|---|
+| Thunderstorms in the window | no-go | no-go | no-go |
+| Rain chance wait / no-go | 30% / 60% | 20% / 50% | 40% / 70% |
+| Rain after finishing (wait) | 2 h, ≥ 30% | 4 h dry time, ≥ 20% | — |
+| Gusts wait / no-go | 25 / 35 mph | 20 mph | 30 / 45 mph |
+| Temperature | wait below 40 °F (shingle sealing) | wait below 50 °F or above 90 °F | — |
+| Humidity / dew point | — | wait above 85% RH or within 5 °F of dew point (SSPC-PA 1) | — |
+| Heat index (NWS) | — | — | wait ≥ 103 °F, no-go ≥ 115 °F (OSHA-NIOSH bands) |
+
+Inspired by Rain Check (Australia, field-service workability go/no-go) and WeatherNews (venue-specific event go/no-go
+tied to schedules). Neither is integrated; both are paid/regional services.
 
 Weather data by [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0; free tier is non-commercial, under
 10,000 calls a day) and the U.S. National Weather Service.
