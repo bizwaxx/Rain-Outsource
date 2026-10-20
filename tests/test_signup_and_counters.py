@@ -137,3 +137,28 @@ def test_tiered_incr_falls_back_to_memory_when_upstash_down():
         raise OSError("down")
     tiered = cache.TieredCache(cache.MemoryCache(), cache.UpstashCache("https://u", "t", transport=down))
     assert tiered.incr("c", 1, 60) == 1 and tiered.incr("c", 1, 60) == 2
+
+
+def test_signup_counts_event_only_on_success(monkeypatch):
+    import sys
+    import types
+
+    seen = []
+    fake = types.ModuleType("rainout_agent.metrics")
+    fake.event = lambda name, headers=None: seen.append(name)
+    monkeypatch.setitem(sys.modules, "rainout_agent.metrics", fake)
+    import rainout_agent
+
+    monkeypatch.setattr(rainout_agent, "metrics", fake, raising=False)
+    assert create(client="5.5.5.5")[0] == 201
+    assert create({"website": "spam"}, client="5.5.5.6")[0] == 400
+    assert seen == ["free_key_signup"]
+    fake.event = lambda *a, **k: 1 / 0  # a broken counter never breaks signup
+    assert create(client="5.5.5.7")[0] == 201
+
+
+def test_signup_works_without_metrics_module(monkeypatch):
+    import sys
+
+    monkeypatch.setitem(sys.modules, "rainout_agent.metrics", None)  # import raises ImportError
+    assert create(client="6.6.6.6")[0] == 201
