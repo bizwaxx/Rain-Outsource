@@ -452,7 +452,7 @@ def lookup(lat: Any, lon: Any, start: datetime | None, now: datetime | None = No
     if not _enabled() or lat in (None, "") or lon in (None, ""):
         return None
     try:
-        return CHECK(float(lat), float(lon), start, now=now)
+        return CHECK(float(lat), float(lon), start, now=now, budget_s=4.0)
     except Exception:
         return None
 
