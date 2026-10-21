@@ -64,6 +64,10 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/accuracy(\\.html)?/?",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/icon\\.png",
       "dest": "/api/index.py"
     },

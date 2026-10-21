@@ -40,7 +40,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def _send_page(self, head=False):
-        """Serve /privacy, /terms, /icon.png and the MCP server card from this function."""
+        """Serve /privacy, /terms, /accuracy, /icon.png and the MCP server card from this function."""
         page = discovery_pages.lookup(self.path)
         if page is None:
             return False

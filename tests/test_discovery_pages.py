@@ -153,3 +153,34 @@ def test_metrics_labels_are_bounded():
     assert metrics.endpoint_for("/icon.png") == "icon"
     assert metrics.endpoint_for("/.well-known/mcp/server-card.json") == "server_card"
     assert discovery_pages.lookup("/nope") is None
+
+
+def test_accuracy_page_served_with_the_published_numbers():
+    import re
+    from pathlib import Path
+    from rainout_agent import discovery_pages
+
+    for path in ("/accuracy", "/accuracy.html", "/accuracy/"):
+        status, ctype, body, _ = discovery_pages.lookup(path)
+        assert status == 200 and ctype.startswith("text/html")
+    page = discovery_pages.lookup("/accuracy")[2].decode()
+    md = (Path(__file__).resolve().parents[1] / "docs" / "accuracy.md").read_text()
+    for text in (page, md):
+        assert "154" in text and "85%" in text and "37 were right and 2 were wrong" in text
+        assert "80% or more" in text and "20% or less" in text
+        assert "official status" in text.lower() and "estimate" in text.lower()
+        assert re.search(r"43 different settings", text)
+    # The HTML mirrors the Markdown: every table number in the .md is on the page.
+    for row in re.findall(r"^\| (Baseball|Softball|Motocross|Artificial turf|Dirt infield) \|(.+)\|$", md, re.M):
+        for cell in row[1].split("|"):
+            assert cell.strip() in page
+    assert discovery_pages.server_card()["links"]["accuracy"].endswith("/accuracy")
+
+
+def test_accuracy_route_goes_to_the_index_function():
+    import json
+    from pathlib import Path
+
+    cfg = json.loads((Path(__file__).resolve().parents[1] / "vercel.json").read_text())
+    routes = [r for r in cfg["routes"] if "accuracy" in r["src"]]
+    assert routes and all(r["dest"] == "/api/index.py" for r in routes)
