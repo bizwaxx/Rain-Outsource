@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switch free in 5 minutes: rainout status board, odds and free alerts | Rain-Outsource</title>
+<meta name="description" content="Using Rainout Line or RainedOut? Keep it, and add a free Rain-Outsource board on top: each field's official status and how fresh it is, rain odds, player reports, and free calendar alerts. Import your field list or schedule in minutes.">
+<link rel="canonical" href="https://rainout-agent-source.vercel.app/switch">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rain-Outsource">
+<meta property="og:title" content="Switch free in 5 minutes: add rain odds and free alerts to your rainout line">
+<meta property="og:description" content="Each field's official status and how fresh it is, rain odds, player reports and free calendar alerts. Keep your current line and add ours on top.">
+<meta property="og:url" content="https://rainout-agent-source.vercel.app/switch">
+<meta property="og:image" content="https://rainout-agent-source.vercel.app/icon.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Switch free in 5 minutes","url":"https://rainout-agent-source.vercel.app/switch","isPartOf":{"@id":"https://rainout-agent-source.vercel.app/#app"},"about":"Free rainout status board with field status freshness, rain odds, player reports and calendar alerts for leagues"}
+</script>
+<style>
+:root{--ink:#1a2433;--muted:#5b6776;--line:#e4e8ee;--brand:#0b63ce;--go:#1a8a4a;--warn:#c47d00;--stop:#c4322f;--unk:#6b7280}
+*{box-sizing:border-box}
+body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#f5f7fa}
+a{color:var(--brand)}
+header{background:linear-gradient(180deg,#0d1b2a,#1b4a7f);color:#fff;padding:30px 18px;text-align:center}
+header h1{margin:6px 0;font-size:30px}
+header p{margin:6px auto;max-width:660px;color:#dbe6f4}
+header .home{color:#fff;font-weight:600;text-decoration:none}
+main{max-width:860px;margin:0 auto;padding:6px 18px 50px}
+section{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:20px 0}
+h2{margin:0 0 8px;font-size:22px}
+h3{margin:16px 0 6px;font-size:17px}
+textarea,input[type=text],input[type=url],input[type=time]{width:100%;padding:11px;font:16px/1.4 ui-monospace,Menlo,Consolas,monospace;border:1.5px solid var(--line);border-radius:10px}
+textarea{min-height:110px}
+button{padding:11px 16px;font-size:16px;font-weight:700;color:#fff;background:var(--brand);border:0;border-radius:10px;cursor:pointer;margin:8px 8px 0 0}
+button.secondary{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+button:disabled{opacity:.5;cursor:not-allowed}
+pre{background:#0d1b2a;color:#e8f0fa;border-radius:10px;padding:12px 14px;overflow-x:auto;font-size:14px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+.hint{color:var(--muted);font-size:14px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
+.steps div{background:rgba(255,255,255,.1);border-radius:12px;padding:10px;font-size:15px}
+.card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0}
+.card .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline}
+.card .name{font-weight:700;font-size:18px}
+.pct{font-size:30px;font-weight:800}
+.go{color:var(--go)}.warn{color:var(--warn)}.stop{color:var(--stop)}.unk{color:var(--unk)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#eef0f3}
+.pill.works{background:#e3f5ea;color:var(--go)}.pill.stub{background:#fdf3e0;color:var(--warn)}
+.match{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.match select{flex:1 1 300px;padding:8px;font-size:15px;border-radius:8px;border:1.5px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.err{color:var(--stop)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.alert{display:flex;gap:12px;align-items:flex-start;border-top:1px solid var(--line);padding:12px 0}
+.alert:first-of-type{border-top:0}
+footer{max-width:860px;margin:0 auto;padding:0 18px 40px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <a class="home" href="/">← Rain-Outsource</a>
+  <h1>Switch free in 5 minutes</h1>
+  <p>Already using Rainout Line or RainedOut? Keep it. Add a free board on top that shows each field's official status and how fresh it is, the rain odds and player reports, with free calendar alerts. The official status always comes first; the odds are an estimate. <a href="/accuracy">How accurate is this?</a></p>
+  <div class="steps">
+    <div><strong>1.</strong> Paste your field list</div>
+    <div><strong>2.</strong> Get your live board and share the link</div>
+    <div><strong>3.</strong> Add your schedule for game-by-game odds</div>
+    <div><strong>4.</strong> Turn on free alerts</div>
+  </div>
+</header>
+<main>
+
+<section id="fields">
+  <h2>1. Add your fields</h2>
+  <p>One field per line. Add the city and state if you can, or a latitude and longitude. You can also upload a CSV with a <code>name</code> column, plus <code>city</code>, <code>state</code>, or <code>lat</code> and <code>lon</code> columns.</p>
+  <label for="fieldlist" class="hint">Field list</label>
+  <textarea id="fieldlist" placeholder="Krieg Field, Austin, TX&#10;Zilker Metropolitan Park, TX&#10;30.2672,-97.7431 City Park Field 3"></textarea>
+  <div class="row">
+    <button id="findbtn">Find my fields</button>
+    <label class="hint">or upload CSV/TXT <input type="file" id="fieldfile" accept=".csv,.txt,text/csv,text/plain"></label>
+  </div>
+  <p class="hint">Up to 25 fields. We search about 64,000 US ball and soccer fields and 162 motocross tracks (OpenStreetMap), plus 78 hand-checked venues. Fields outside the US aren't covered yet.</p>
+  <div id="matches"></div>
+  <div id="matchactions" style="display:none"><button id="buildbtn">Build my board</button></div>
+</section>
+
+<section id="board" style="display:none">
+  <h2>2. Your live board</h2>
+  <div class="row">
+    <label for="checkdate" class="hint">Game date</label><input type="text" id="checkdate" style="max-width:150px" placeholder="YYYY-MM-DD">
+    <label for="checktime" class="hint">Time (your time zone)</label><input type="time" id="checktime" value="19:00" style="max-width:130px">
+    <button class="secondary" id="refreshbtn">Refresh</button>
+  </div>
+  <div id="cards"></div>
+  <h3>Share this board</h3>
+  <p class="hint">Post this link next to your rainout line. It always opens with these fields.</p>
+  <div class="row"><input type="text" id="sharelink" readonly><button class="secondary" id="copyshare">Copy link</button></div>
+</section>
+
+<section id="schedule">
+  <h2>3. Import your schedule (optional)</h2>
+  <p>This gives odds for every game, and a calendar your players can subscribe to with a risk note on each game.</p>
+  <h3>Option A: your calendar link (best, it stays up to date)</h3>
+  <p class="hint">Most league and team apps can export an iCal (.ics) or webcal link. Paste it here.</p>
+  <input type="url" id="icsurl" placeholder="https://… or webcal://…/schedule.ics">
+  <button id="icsbtn">Check this calendar</button>
+  <h3>Option B: paste or upload an iCal or CSV file</h3>
+  <p class="hint">CSV columns: <code>start</code> (like <code>2026-10-23T19:00:00-05:00</code>, or separate <code>date</code> and <code>time</code>), <code>venue</code>, and optional <code>title</code>, <code>home</code>, <code>away</code>.</p>
+  <textarea id="schedtext" placeholder="start,venue,title&#10;2026-10-23T19:00:00-05:00,Krieg,Hawks vs Owls"></textarea>
+  <div class="row">
+    <button id="schedbtn">Check this schedule</button>
+    <label class="hint">or upload <input type="file" id="schedfile" accept=".ics,.csv,text/calendar,text/csv"></label>
+  </div>
+  <div id="schedout"></div>
+</section>
+
+<section id="alerts">
+  <h2>4. Free alerts</h2>
+  <p>Free, with no per-message fee. Here's what works today and what's still coming.</p>
+  <div class="alert"><span class="pill works">Works</span><div><strong>Calendar alerts (ICS).</strong> Import a calendar link in step 3 and you get a subscribe link. Each game shows its odds and a risk note, and your players' calendar apps refresh it on their own schedule (often every few hours). If you paste or upload a file instead, you get a one-time download that doesn't update.</div></div>
+  <div class="alert"><span class="pill works">Works, while this page is open</span><div><strong>Browser notifications.</strong> Keep this page open (on a clubhouse laptop, for example) and it re-checks your board every 10 minutes. It alerts you when an official status changes, the odds drop below 50%, or a player sends a new report.
+    <div class="row"><button class="secondary" id="notifybtn">Turn on browser notifications</button><span class="hint" id="notifystate"></span></div></div></div>
+  <div class="alert"><span class="pill stub">Coming soon (stub)</span><div><strong>Web push to phones, even with the page closed.</strong> This needs a small background sender, and it isn't built yet. Nothing here signs you up.</div></div>
+  <div class="alert"><span class="pill stub">Coming soon (stub)</span><div><strong>Email alerts.</strong> This needs a free email-sending account, which isn't set up yet. We don't collect any email addresses on this page.</div></div>
+</section>
+
+<section id="keep">
+  <h2>Keep your current line, add ours on top</h2>
+  <ul>
+    <li><strong>Your official call stays the boss.</strong> Keep posting rainouts the way you do today. When we can read your public status page, we show your call first, and we never override it. When we can't, we say so and point players to your line.</li>
+    <li><strong>Post our board link next to your line.</strong> Use the share link from step 2 on your website, in team emails, or pinned in your group chat.</li>
+    <li><strong>Embed one field on your website:</strong></li>
+  </ul>
+<pre><code id="embedcode">&lt;iframe src="https://rainout-agent-source.vercel.app/switch/embed?field_id=YOUR_FIELD_ID" width="340" height="230" style="border:0" title="Field status and rain odds"&gt;&lt;/iframe&gt;</code></pre>
+  <ul>
+    <li><strong>Players can share what they see.</strong> The "Rained out" and "We're playing" buttons on each field card send an anonymous report. Reports expire after 24 hours and never replace the official call.</li>
+    <li><strong>Tell us your official status page.</strong> If your league posts status on a public page, <a href="https://github.com/bizwaxx/Rain-Outsource/issues">open an issue</a> with the link and we'll try to read it.</li>
+  </ul>
+</section>
+
+<section id="agents">
+  <h2>For AI assistants and developers</h2>
+  <p>Everything on this page uses the same free API and MCP server. No key is needed. An assistant can answer "is my game on?" with the same data:</p>
+<pre><code>claude mcp add --transport http rain-outsource https://rainout-agent-source.vercel.app/mcp
+
+# REST, same data as the board
+GET  /v1/fields?q=Krieg&amp;state=TX
+GET  /v1/status?field_id=FIELD_ID&amp;game_time=2026-10-23T19:00:00-05:00
+GET  /v1/schedule/check?ics_url=https://…/team.ics[&amp;format=ics]
+POST /v1/schedule/check        (text/csv or text/calendar body)
+POST /v1/reports  {"field_id": "…", "status": "cancelled|delayed|field_closed|playing"}</code></pre>
+  <p class="hint">MCP tools: <code>find_venue</code>, <code>get_venue_status</code>, <code>check_schedule</code>, <code>report_cancellation</code>. More in <a href="/llms.txt">llms.txt</a>.</p>
+</section>
+
+<section>
+  <h2>Good to know</h2>
+  <ul>
+    <li>The odds are estimates, not promises (<a href="/accuracy">how accurate they are</a>). This isn't safety advice. For lightning and severe weather, follow your venue's rules and your local weather service.</li>
+    <li>Nothing on this page imports data from any other rainout service. You paste your own field list or schedule.</li>
+    <li>Rainout Line and RainedOut are names of other services, owned by their respective owners. Rain-Outsource isn't affiliated with them or endorsed by them.</li>
+  </ul>
+</section>
+
+</main>
+<footer>
+  <p>Weather: National Weather Service and NOAA (US), Open-Meteo.com (CC BY 4.0). Venue data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL). <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/">Home</a></p>
+</footer>
+<script src="/switch.js" defer></script>
+</body>
+</html>
