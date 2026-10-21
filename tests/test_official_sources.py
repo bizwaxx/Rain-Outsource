@@ -182,11 +182,13 @@ def test_blocked_unreachable_and_cached(monkeypatch):
 
 
 def test_status_api_reports_the_check(monkeypatch):
-    f = load_field("cedar-park-tx-brushy-creek-sports-park-softball-fields")
+    f = {**load_field("cedar-park-tx-brushy-creek-sports-park-softball-fields"), "poll_official_status": True}
     monkeypatch.setattr(o, "fetch_page", lambda url, timeout: (403, "Attention Required! | Cloudflare"))
     r = fetch_official_rainout_status(f, game_time="2026-10-17T19:00:00-05:00")
-    assert r["official_status"] == "unknown" and r["error"] == "official_source_unavailable"
-    assert r["check"]["outcome"] == "blocked" and f["official_status_source_url"] in r["check"]["message"]
+    # a 403 is "official source unreadable" plus the link, not an error
+    assert r["official_status"] == "unknown" and "error" not in r
+    assert r["check"]["outcome"] == "blocked" and r["check"]["readable"] is False
+    assert r["check"]["message"].startswith("Official source unreadable") and f["official_status_source_url"] in r["check"]["message"]
     info = fetch_official_rainout_status(load_field("austin-tx-western-hills-little-league"))
     assert info["check"]["outcome"] == "not_polled" and "isn't read automatically" in info["check"]["message"]
 
@@ -272,3 +274,14 @@ def test_rainedout_alert_messages():
     # Without opting in, an organization-wide message only counts when it names the venue.
     other = field(field_name="Lakeside Park", aliases=[], official_status_source_url=url)
     assert run(RAINEDOUT.format(items=msgs), other, url=url)["outcome"] == "no_match"
+
+
+def test_link_only_venues_are_not_polled_and_say_why(monkeypatch):
+    monkeypatch.setattr(o, "fetch_page", lambda url, timeout: (_ for _ in ()).throw(AssertionError("link-only venues must not be fetched")))
+    krieg = fetch_official_rainout_status(load_field("austin-tx-krieg-field-softball-complex"))
+    assert krieg["check"]["outcome"] == "not_polled" and krieg["check"]["link_only"] is True
+    assert "512-978-2680" in krieg["check"]["message"] and "rainout line" in krieg["check"]["note"]
+    for fid in ("cedar-park-tx-brushy-creek-sports-park-softball-fields", "cedar-park-tx-elizabeth-milburn-park-multipurpose-fields"):
+        r = fetch_official_rainout_status(load_field(fid))
+        assert r["check"]["outcome"] == "not_polled" and "403" in r["check"]["note"]
+        assert load_field(fid)["official_status_source_url"] in r["check"]["message"]

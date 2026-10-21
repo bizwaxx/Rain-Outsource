@@ -544,10 +544,14 @@ def check_official_status(field: dict[str, Any], game_time: datetime | None = No
     tz = field_zone(field)
     page = load_page(url, timeout, now, tz, fetch)
     if page.get("fetch_error"):
-        what = "blocks automated checks" if page["fetch_error"] == "blocked" else "couldn't be reached"
-        return {"official_status": "unknown", "parser": None, "outcome": page["fetch_error"],
-                "message": f"The official page {what} ({page.get('detail')}). {_fallback_text(field)}",
-                "fallback": _fallback_text(field), "checked": False, "cache": page.get("cache")}
+        if page["fetch_error"] == "blocked":
+            # Not an error for the caller: the status simply can't be read automatically. Say so and give the link.
+            msg = (f"Official source unreadable: the page blocks automated checks ({page.get('detail')}), so the status "
+                   f"stays unknown. {_fallback_text(field)}")
+        else:
+            msg = f"The official page couldn't be reached ({page.get('detail')}). {_fallback_text(field)}"
+        return {"official_status": "unknown", "parser": None, "outcome": page["fetch_error"], "readable": False,
+                "source_url": url, "message": msg, "fallback": _fallback_text(field), "checked": False, "cache": page.get("cache")}
     try:
         result = decide(page, field, game_time, now)
     except Exception as exc:  # pragma: no cover - parsing must never break a status answer
