@@ -26,9 +26,11 @@ def backtest_items(bt: dict[str, Any] | None) -> list[dict[str, Any]]:
         ids = held["confident_wrong_ids"] if held else [r["id"] for r in bt["results"] if r.get("confident_wrong")]
         items.append({"id": "backtest:confident_wrong", "target": "Backtest (offline, production model code)", "status": "fail", "severity": "blocker",
                       "detail": f"{s['confident_wrong']} confident wrong calls" + (" (leave-one-out)" if held else "") + ": " + ", ".join(ids),
-                      "owner": "Model (play_probability.py / motocross.py)",
-                      "fix": "Count rain in the hours before the start and the prior day (wet field / soaked track), and weight thunder "
-                             "risk from the whole game window, not only the start hour. Re-run the backtest after the change."})
+                      "owner": "Model (event_risk.py) / Jimmy (accept or not)",
+                      "fix": "Soak, storm-window, wind, cold and venue-maintenance rules are in (event_risk v2). Check each listed call: "
+                             "events cancelled for a forecast that never happened are unpredictable from archived weather (Jimmy decides "
+                             "whether to accept them); the rest need more real fixtures or venue data, not new rules. Never tune on the "
+                             "held-out score."})
     if s["directional_accuracy"] is not None and s["directional_accuracy"] < THRESHOLDS["backtest_directional_accuracy"]:
         items.append({"id": "backtest:accuracy", "target": "Backtest (offline, production model code)", "status": "fail", "severity": "blocker",
                       "detail": f"directional accuracy {s['directional_accuracy']}%" + (" (leave-one-out)" if held else "") + f" (need >= {THRESHOLDS['backtest_directional_accuracy']}%)",

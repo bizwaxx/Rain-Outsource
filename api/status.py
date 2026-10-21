@@ -52,7 +52,9 @@ class handler(BaseHTTPRequestHandler):
             return self._send_json(400, {"error": "missing_game_time"})
 
         try:
-            payload = build_status_result(field_query=field_query, game_time=game_time)
+            from rainout_agent.venue_profile import parse_override
+
+            payload = build_status_result(field_query=field_query, game_time=game_time, venue_override=parse_override(params))
         except Exception as exc:  # pragma: no cover - live host safety net
             return self._send_json(
                 502,

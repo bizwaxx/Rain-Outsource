@@ -115,6 +115,11 @@ TOOLS: list[dict[str, Any]] = [
             "properties": {
                 "venue": {"type": "string"},
                 "game_time": {"type": "string", "description": "ISO-8601 with offset"},
+                "venue_maintenance": {"type": "string", "enum": ["yes", "no", "unknown"],
+                                      "description": "Optional league override: the venue has a tarp or grounds crew."},
+                "venue_level": {"type": "string", "enum": ["college_pro", "rec"], "description": "Optional league override."},
+                "venue_surface": {"type": "string", "enum": ["turf", "grass", "dirt_infield", "motocross_dirt"],
+                                  "description": "Optional league override."},
             },
             "required": ["venue", "game_time"],
         },
@@ -327,7 +332,9 @@ def _venue_status(args: dict[str, Any]) -> dict[str, Any]:
     from rainout_agent.status_api import build_status_result
 
     venue, game_time = _require(args, "venue"), _require(args, "game_time")
-    result = build_status_result(field_query=venue, game_time=game_time)
+    from rainout_agent.venue_profile import parse_override
+
+    result = build_status_result(field_query=venue, game_time=game_time, venue_override=parse_override(args))
     if result.get("error") == "unknown_field":
         raise ToolError(result.get("spoken_answer") or "Unknown venue.")
     return result
