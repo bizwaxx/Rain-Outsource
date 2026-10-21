@@ -142,6 +142,22 @@
       .then(function (d) { btn.textContent = d.error ? (d.message || d.error) : "Thanks, report shared"; refreshBoard(); })
       .catch(function () { btn.textContent = "Couldn't send, try again"; btn.disabled = false; });
   }
+  // "Was it on?": after the game, tell us whether it went ahead (feeds the venue's drainage memory and the scoreboard).
+  function wasItOn(fieldId, outcome, btn, msg) {
+    var day = $("checkdate").value.trim() || today();
+    if (day > today()) { msg.textContent = "Ask again after the game: outcomes are for today or the last 7 days."; return; }
+    var words = {played: "went ahead (played)", cancelled: "was called off"};
+    if (!window.confirm("Share an anonymous report that the game on " + day + " " + words[outcome] + "? Only send what you know yourself.")) return;
+    btn.disabled = true;
+    getJSON("/v1/outcomes", {method: "POST", headers: {"Content-Type": "application/json", "Accept": "application/json"},
+                             body: JSON.stringify({field_id: fieldId, date: day, outcome: outcome})})
+      .then(function (d) {
+        msg.textContent = d.__status === 404 ? "Outcome reports aren't live on this server yet." :
+          d.error ? (d.message || d.error) : "Thanks! That helps us learn how this field drains.";
+        if (d.error) btn.disabled = false;
+      })
+      .catch(function () { msg.textContent = "Couldn't send, try again"; btn.disabled = false; });
+  }
   function card(fieldId, d) {
     if (d.error) return el("div", {class: "card"}, [el("div", {class: "name", text: fieldId}), el("p", {class: "err", text: d.message || d.error})]);
     var official = String(d.official_status || "unknown").toLowerCase();
@@ -158,10 +174,14 @@
     var b1 = el("button", {class: "secondary", text: "Rained out"}), b2 = el("button", {class: "secondary", text: "We're playing"});
     b1.addEventListener("click", function () { report(d.field_id || fieldId, "cancelled", b1); });
     b2.addEventListener("click", function () { report(d.field_id || fieldId, "playing", b2); });
+    var wMsg = el("span", {class: "hint", text: ""});
+    var w1 = el("button", {class: "secondary", text: "It was on"}), w2 = el("button", {class: "secondary", text: "It was called off"});
+    w1.addEventListener("click", function () { wasItOn(d.field_id || fieldId, "played", w1, wMsg); });
+    w2.addEventListener("click", function () { wasItOn(d.field_id || fieldId, "cancelled", w2, wMsg); });
     var embed = el("button", {class: "secondary", text: "Embed code"});
     embed.addEventListener("click", function () {
       $("embedcode").textContent = '<iframe src="' + location.origin + "/switch/embed?field_id=" + encodeURIComponent(d.field_id || fieldId) +
-        '" width="340" height="230" style="border:0" title="Field status and rain odds"></iframe>';
+        '" width="340" height="290" style="border:0" title="Field status and rain odds"></iframe>';
       $("keep").scrollIntoView({behavior: "smooth"});
     });
     return el("div", {class: "card"}, [
@@ -175,7 +195,8 @@
       fresh.length && chk.message ? el("div", {class: "hint", text: chk.message}) : null,
       el("div", {text: "Rain chance at game time: " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + ". " + (d.reason || "")}),
       el("div", {class: "hint", text: repText}),
-      el("div", {class: "row"}, [b1, b2, embed])
+      el("div", {class: "row"}, [b1, b2, embed]),
+      el("div", {class: "row"}, [el("strong", {text: "Was it on? "}), w1, w2, wMsg])
     ]);
   }
   function refreshBoard() {
