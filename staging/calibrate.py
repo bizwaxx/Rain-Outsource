@@ -200,7 +200,7 @@ def calibrate(inputs: list[dict[str, Any]], families: tuple[str, ...] | None = N
         return {"chosen": points[best_f], "in_sample": score(inputs, preds[best_f], split=False), "leave_one_out": score(inputs, lp)}
     return {"chosen": points[best], "chosen_params": params_from(points[best]),
             "in_sample": score(inputs, preds[best]), "leave_one_out": score(inputs, loo_preds),
-            "loo_distinct_choices": len(set(loo_choice)),
+            "loo_distinct_choices": len(set(loo_choice)), "loo_points": [points[k] for k in loo_choice],
             "per_fixture": [{"id": i["id"], "outcome": i["outcome"], "grade": i["grade"], "p_in_sample": preds[best][n],
                              "p_leave_one_out": loo_preds[n], "drainage": i["drainage"]} for n, i in enumerate(inputs)],
             "grid_points": len(points), "simplest_point_in_sample": score(inputs, [predict(i, default) for i in inputs]),
