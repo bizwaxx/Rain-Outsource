@@ -544,7 +544,9 @@ def build_status_result(
             outcomes.snapshot_prediction(response, field, _parse_time(game_time), test=snapshot == "test")
         except Exception:  # pragma: no cover - snapshots must never break a status answer
             pass
-    return response
+    from rainout_agent import odds_label
+
+    return odds_label.apply(response)
 
 
 def _drainage_memory(field: dict[str, Any]) -> dict[str, Any]:

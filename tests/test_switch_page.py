@@ -98,3 +98,11 @@ def test_was_it_on_buttons_confirm_before_posting():
     for name in ("switch.js", "switch-embed.js"):
         js = (root / name).read_text()
         assert '"/v1/outcomes"' in js and "window.confirm(" in js and "Was it on?" in js
+def test_switch_board_and_embed_label_estimate_official_first_and_link_accuracy():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "site"
+    js, emb, html = ((root / n).read_text() for n in ("switch.js", "switch-embed.js", "switch.html"))
+    assert js.index('"Official status: "') < js.index('" estimate, not an official call · "')
+    assert 'Odds (estimate)' in js and js.count('"/accuracy"') >= 2
+    assert emb.index('"Official: "') < emb.index('chance of play (estimate)') and '"/accuracy"' in emb
+    assert 'href="/accuracy"' in html and "official status always comes first" in html
