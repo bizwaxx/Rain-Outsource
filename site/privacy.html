@@ -22,9 +22,9 @@
 
 <h2>What we keep</h2>
 <ul>
-<li><strong>Usage counts.</strong> Totals like "how many calls each tool or endpoint got per day." These are aggregate numbers only. We don't store raw IP addresses in them.</li>
-<li><strong>Rainout reports you choose to share.</strong> If you or your agent send a report (for example "cancelled" at a field), we store the field, the status, the game time and any short note you add. Reports are anonymous and are deleted automatically after 24 hours. Please don't put names or contact details in the note.</li>
-<li><strong>Rate limits.</strong> To stop spam on rainout reports, we keep a one-way hashed form of the sender's network address for about an hour, then it expires. We can't turn it back into the address.</li>
+<li><strong>Usage counts.</strong> Totals like "how many calls each tool or endpoint got per day," kept for about 400 days. To estimate how many different clients used the service on a day, the network address is turned into a keyed one-way hash (HMAC-SHA256 with a secret key that changes every day) and added to an approximate counter (a HyperLogLog) that keeps only the total. We also keep one record of the very first outside request: its time, the endpoint or tool, a broad client type (like "curl") and the country our host reports. No raw IP address or User-Agent is stored.</li>
+<li><strong>Rainout reports you choose to share.</strong> If you or your agent send a report (for example "cancelled" at a field), we store the field, the status, the game time, the time of the report and any short note you add (up to 280 characters). Reports are public: anyone can read recent ones at <code>/v1/reports</code>. They are anonymous and are deleted automatically after 24 hours. Please don't put names or contact details in the note.</li>
+<li><strong>Rate limits.</strong> To stop spam on rainout reports, the sender's network address is turned into a keyed one-way hash (HMAC-SHA256 with a secret key that changes every day) and used as an hourly counter key. It expires within an hour and is never written into the report. Without the secret key, nobody can work out an address from the hash by trying addresses. We hold the key, so during that hour we could check whether a particular address matches. We don't do that.</li>
 <li><strong>Weather cache.</strong> We save weather forecasts for places so we don't ask the weather services the same thing over and over. This is weather data, not data about you.</li>
 </ul>
 
