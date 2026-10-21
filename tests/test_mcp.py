@@ -181,4 +181,4 @@ def test_wsgi_mcp_and_llms_txt():
     assert out["status"].startswith("200") and json.loads(resp)["result"] == {}
     text = b"".join(application({"REQUEST_METHOD": "GET", "PATH_INFO": "/llms.txt", "QUERY_STRING": ""}, sr)).decode()
     assert out["headers"]["Content-Type"].startswith("text/plain")
-    assert text.startswith("# Rainout Source") and "/mcp" in text and "ask the user before adding" in text
+    assert text.startswith(("# Rain-Outsource", "# Rainout Source")) and "/mcp" in text and "ask the user before adding" in text
