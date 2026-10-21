@@ -23,6 +23,10 @@ staging/calibrate.py and docs/model.md):
 5. Humility cap: with any real risk signal present (``humble_soak_in`` of rain already fell, a 30% rain chance,
    storms or 35 mph gusts), never say more than ``humble_cap`` (so not "confident").
 6. Turf floor: artificial turf without any storm signal never drops below ``turf_floor``.
+7. Forecast-threat cap: with any threat signal from the day before through the event (storms, a 30% chance in the
+   window, a 40% chance the day before, unstable air the evening before, or cold), never say more than
+   ``threat_cap``, because organizers cancel on threats that never arrive. Motocross answers with a threat also
+   carry ``FORECAST_CANCEL_NOTE`` ("organizers here sometimes cancel on the forecast alone").
 """
 from __future__ import annotations
 
@@ -30,15 +34,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-20 18:08 CT, 61 fixtures, 82,944 grid points, venue maintenance
-    # profile). In-sample: 74% directional, 2 confident wrong. Leave-one-out (honest): 70% directional, 3 confident
-    # wrong. Before the maintenance profile: 72% / 2 in-sample, 69% / 4 held out. The 7-day wetness bucket alone
-    # scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so the "window" soak stays.
-    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.6},
-    "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
+    # Chosen by staging/calibrate.py (2026-10-21 09:42 CT, 129 scored fixtures, 331,776 grid points, window family,
+    # venue maintenance profile, forecast-threat cap axes). In-sample: 83% directional, 2 confident wrong.
+    # Leave-one-out (honest, every axis re-chosen per fold): 80% directional, 5 confident wrong. Same set without the
+    # threat caps: 81% / 4 in-sample, 79% / 7 held out. Previous PARAMS (61 fixtures): 74% / 2 in-sample, 70% / 3 LOO.
+    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 0.8},
+    "soak_weights": (1.0, 0.3, 0.15),       # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
     "turf_rain_factor": 0.7,
-    "storm_cape": 1500,                     # None = only explicit thunder forecasts
+    "storm_cape": None,                     # None = only explicit thunder forecasts
     "gust_mph": 45,                         # None = off
     "cold_f": 35,                           # None = off
     "humble_cap": 79,                       # None = off
@@ -55,7 +59,7 @@ PARAMS: dict[str, Any] = {
     "maint_soak_factor": 0.35,
     # Forecast-threat caps (cancellations on a storm threat that never arrives). With any threat signal from the
     # day before through the event (see ``threat_signal``), never say more than this (None = off).
-    "threat_cap": None,
+    "threat_cap": 79,
     # Motocross organizers often cancel on the forecast alone: with any threat signal, cap at this (None = off).
     "mx_forecast_cap": None,
 }
@@ -336,7 +340,7 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
             pct = cap
             reasons.append(f"{why.rstrip('.')}: not above {cap}%.")
     forecast_note = None
-    if not ball_sport and p.get("mx_forecast_cap") is not None:
+    if not ball_sport:
         threat = threat_signal(feat, p) if threat is None else threat
         if threat:
             forecast_note = FORECAST_CANCEL_NOTE

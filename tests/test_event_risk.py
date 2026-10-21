@@ -21,8 +21,14 @@ def test_dry_day_stays_high_and_soak_hurts_dirt_more_than_turf():
     wet = _rows({-20: 25.4})          # an inch the day before
     dirt = er.evaluate(wet, wet, START, 3, "slow")["play_probability_percent"]
     turf = er.evaluate(wet, wet, START, 3, "fast")["play_probability_percent"]
-    assert dirt < turf <= 79          # humility cap: rain already fell
-    assert dirt <= 55                 # an inch the day before costs a dirt infield ~40 points
+    assert dirt <= turf <= 79         # humility cap: rain already fell, so never "confident"
+    soaked = _rows({-20: 50.8})       # two inches the day before: dirt now loses points, turf doesn't
+    dirt2 = er.evaluate(soaked, soaked, START, 3, "slow")["play_probability_percent"]
+    turf2 = er.evaluate(soaked, soaked, START, 3, "fast")["play_probability_percent"]
+    assert dirt2 < turf2 <= 79
+    # Same day: an inch this morning hurts dirt far more than turf.
+    am = _rows({-4: 25.4})
+    assert er.evaluate(am, am, START, 3, "slow")["play_probability_percent"] < er.evaluate(am, am, START, 3, "fast")["play_probability_percent"]
 
 
 def test_storm_in_window_caps_and_wind_caps():
