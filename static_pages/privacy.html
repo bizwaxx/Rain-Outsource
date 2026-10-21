@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Privacy (draft): Rain-Outsource</title>
+<link rel="icon" href="/icon.png">
+<style>body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1a2433;background:#f5f7fa}main{max-width:760px;margin:0 auto;padding:24px 18px 50px}a{color:#0b63ce}.draft{background:#fff4d6;border:2px solid #c47d00;border-radius:12px;padding:12px 16px;font-weight:700}h1{font-size:28px;margin:18px 0 4px}h2{font-size:20px;margin:26px 0 6px}.meta{color:#5b6776;font-size:14px}code{background:#e8edf3;padding:1px 4px;border-radius:4px}</style>
+</head>
+<body>
+<main>
+<p class="draft">DRAFT, not legal advice, Jimmy to review. Not final, and the wording may change before it is approved.</p>
+<h1>Privacy</h1>
+<p class="meta">Draft dated October 21, 2026. Covers the Rain-Outsource API and MCP server at rainout-agent-source.vercel.app. This page describes what the code in <a href="https://github.com/bizwaxx/Rain-Outsource">the public repository</a> actually does.</p>
+
+<h2>The short version</h2>
+<p>The free tier has no accounts. You don't need a sign-up, an email or an API key. We don't sell data, we don't run ads or ad trackers, and these pages and the API set no cookies. We keep daily usage counts, short-lived rainout reports, and a cache of weather forecasts. We do not store IP addresses.</p>
+
+<h2>Usage counts</h2>
+<ul>
+<li><strong>What is counted.</strong> For each day (Central time) we count requests per endpoint and calls per MCP tool. Each count is split by a coarse caller type: outside user, our own tests, uptime monitor, or search bot. The caller type is worked out from the request's User-Agent, and the User-Agent itself is not stored.</li>
+<li><strong>Unique visitors.</strong> To estimate how many different clients used the service on a day, your network (IP) address is run through a keyed one-way hash (HMAC-SHA256). The secret key changes every day, so the same client can't be matched from one day to the next. The result goes into a HyperLogLog counter, which keeps only an approximate total, not the hashes. The raw IP address is never stored.</li>
+<li><strong>First outside use.</strong> We keep one record of the very first outside request ever made. It holds the time, which endpoint or tool was called, a broad client family (for example "Claude" or "curl"), and the country our host reports for the request. It holds no IP address and no User-Agent.</li>
+<li><strong>How long.</strong> Daily counts are kept for about 400 days. The first-use record is kept until we delete it.</li>
+</ul>
+
+<h2>Rainout reports you choose to send</h2>
+<ul>
+<li><strong>What we store.</strong> When you or your agent report a field as cancelled, delayed or playing, we store the field, the status, the game date and time, the time of the report, a random report id, and any note you add (up to 280 characters).</li>
+<li><strong>Who can see it.</strong> Reports are public. Anyone can read them at <code>/v1/reports</code>, and they can nudge the odds others see for that field. Please don't put names, phone numbers or other personal details in a note.</li>
+<li><strong>How long.</strong> Reports are deleted automatically after 24 hours.</li>
+<li><strong>Spam limits.</strong> To limit spam, the sender's network address is turned into a short SHA-256 hash and used as an hourly counter key. That key expires within an hour, and it is never written into the report. This hash has no secret key, so it is a one-way scramble, not strong anonymization.</li>
+</ul>
+
+<h2>Weather cache</h2>
+<p>We cache forecasts by place, so we don't ask the weather services the same question over and over. That cache holds weather data and coordinates, not information about who asked.</p>
+
+<h2>What we send to other services</h2>
+<ul>
+<li><strong>Weather and place search.</strong> To answer a question we send the place's coordinates, or the place name you typed, to the US National Weather Service (api.weather.gov) and to Open-Meteo (forecasts and place search). We never send your identity. We identify ourselves to them with our own User-Agent.</li>
+<li><strong>Links you give us.</strong> If you give us a schedule or calendar link, our server fetches that link to read the games on it.</li>
+<li><strong>Official status pages.</strong> We read public official status pages from leagues, parks, venues and tracks.</li>
+<li><strong>Bundled data.</strong> Venue locations and past rainfall come from OpenStreetMap and NOAA data that ships with the code, so looking them up sends nothing to anyone.</li>
+</ul>
+
+<h2>Hosting</h2>
+<p>The service runs on Vercel, and its shared storage (the counters, reports and cache above) is Upstash Redis. Like any web host, Vercel handles each request, including your IP address, under its own privacy policy and may keep short technical logs. Our code does not copy IP addresses into our storage.</p>
+
+<h2>Calendars</h2>
+<p>Rain-Outsource never reads or writes your calendar. It can hand your agent a ready-made event, and your agent should ask you before adding it.</p>
+
+<h2>Children</h2>
+<p>The service doesn't ask for personal information from anyone, including children.</p>
+
+<h2>Changes and contact</h2>
+<p>Changes to this page show up in the public GitHub history. For questions, or to ask about a report you sent, open an issue at <a href="https://github.com/bizwaxx/Rain-Outsource/issues">github.com/bizwaxx/Rain-Outsource/issues</a> or write to:</p>
+<address>Rain-Outsource<br>403 E Ben White Blvd, Ste B<br>Austin, TX 78704</address>
+<p class="meta"><a href="/terms">Terms</a> · <a href="https://bizwaxx.github.io/Rain-Outsource/">Docs</a></p>
+</main>
+</body>
+</html>
