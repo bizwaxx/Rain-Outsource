@@ -101,4 +101,11 @@ def lookup(path: str) -> tuple[int, str, bytes, str] | None:
     if path in STATIC_FILES:
         name, ctype, cache = STATIC_FILES[path]
         return 200, ctype, (SITE_DIR / name).read_bytes(), cache
+    # Repo-root docs served by this function too (keeps the deployment under Vercel Hobby's 12-function limit).
+    if path == "/llms.txt":
+        return 200, "text/plain; charset=utf-8", (SITE_DIR.parent / "llms.txt").read_bytes(), "public, max-age=3600, s-maxage=86400"
+    if path == "/openapi.yaml":
+        from rainout_agent import http_cache
+
+        return 200, "application/yaml; charset=utf-8", (SITE_DIR.parent / "openapi.yaml").read_bytes(), http_cache.OPENAPI
     return None

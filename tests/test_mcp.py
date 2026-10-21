@@ -154,7 +154,7 @@ def test_vercel_mcp_handler_and_routes():
 
     cfg = json.loads((Path(__file__).parents[1] / "vercel.json").read_text())
     srcs = {r["src"]: r["dest"] for r in cfg["routes"]}
-    assert srcs["/mcp/?"] == "/api/mcp.py" and srcs["/llms\\.txt"] == "/api/llms.py"
+    assert srcs["/mcp/?"] == "/api/mcp.py" and srcs["/llms\\.txt"] == "/api/site.py"
     body = b'{"jsonrpc":"2.0","id":7,"method":"tools/list"}'
     h = mod.handler.__new__(mod.handler)
     h.headers = {"Content-Length": str(len(body)), "Content-Type": "application/json"}
