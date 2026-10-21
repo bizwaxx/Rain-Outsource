@@ -155,6 +155,17 @@ def workability(activity: str, rows: dict[datetime, dict[str, Any]], start: date
 def go_no_go(activity: str | None, *, venue: str | None = None, track_id: str | None = None, location: str | None = None,
              lat: Any = None, lon: Any = None, pick: Any = None, time: str | None = None, duration_hours: Any = None,
              options: dict[str, Any] | None = None, now: datetime | None = None, cache: Cache | None = None) -> dict[str, Any]:
+    """Weather go / wait / no-go, plus advisory lightning near the start (active lightning turns "go" into "wait")."""
+    from rainout_agent import lightning
+
+    result = _go_no_go(activity, venue=venue, track_id=track_id, location=location, lat=lat, lon=lon, pick=pick, time=time,
+                       duration_hours=duration_hours, options=options, now=now, cache=cache)
+    return lightning.apply_to_decision(result, now=now)
+
+
+def _go_no_go(activity: str | None, *, venue: str | None = None, track_id: str | None = None, location: str | None = None,
+              lat: Any = None, lon: Any = None, pick: Any = None, time: str | None = None, duration_hours: Any = None,
+              options: dict[str, Any] | None = None, now: datetime | None = None, cache: Cache | None = None) -> dict[str, Any]:
     act = (activity or "").strip().lower().replace("-", "_").replace(" ", "_")
     act = ALIASES.get(act, act)
     if act not in ACTIVITIES:

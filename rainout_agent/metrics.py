@@ -90,7 +90,7 @@ def endpoint_for(path: str) -> str:
     fixed = {"/": "index", "/api": "index", "/health": "health", "/v1/status": "status", "/api/status": "status",
              "/v1/reports": "reports", "/v1/fields": "fields", "/openapi.yaml": "openapi", "/llms.txt": "llms",
              "/v1/stats": "stats", "/v1/schedule/check": "schedule", "/v1/teams/search": "teams.search",
-             "/v1/tracks": "tracks.list", "/v1/rain": "rain", "/mcp": "mcp", "/v1/admin/usage": "admin.usage",
+             "/v1/tracks": "tracks.list", "/v1/rain": "rain", "/v1/lightning": "lightning", "/v1/lightning/ingest": "lightning.ingest", "/mcp": "mcp", "/v1/admin/usage": "admin.usage",
              "/v1/plans": "plans", "/v1/account": "account", "/v1/batch": "batch", "/v1/keys": "keys",
              "/v1/premium/batch": "premium.batch",
              "/.well-known/mcp/server-card.json": "server_card", "/robots.txt": "robots", "/sitemap.xml": "sitemap",

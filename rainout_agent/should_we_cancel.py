@@ -144,6 +144,13 @@ def should_we_cancel(activity: str | None = None, *, venue: str | None = None, t
         rec, check_again = "cancel", None
         src = "the league schedule" if league_cancelled else "the official status page"
         reason = f"It's already called off on {src} ({game.get('league_status') if league_cancelled else official}). Tell everyone it's off."
+    elif base.get("lightning_delay"):
+        # Advisory lightning near the venue: a "play" becomes a delay until the 30-minute all-clear.
+        held = base["lightning_delay"].get("until")
+        delay_to = datetime.fromisoformat(held.replace("Z", "+00:00")) if held else None
+        rec = "delay"
+        check_again = min(x for x in (delay_to, now + timedelta(minutes=15)) if x)
+        reason = base.get("reason") or "Lightning delay."
     elif decision == "no_event_found":
         rec, wait_until = "wait_until", recheck
         reason = f"I can't find this {what} listed, so I won't say it's on. Confirm with the organizer or track first. {facts}"
@@ -200,6 +207,7 @@ def should_we_cancel(activity: str | None = None, *, venue: str | None = None, t
         "wait_until": _iso(wait_until, tz) if rec == "wait_until" else None,
         "event": {"activity": base.get("activity", act), "start": base["time"]["start"], "location": base.get("location"),
                   **({"team": game.get("team"), "opponent": game.get("opponent"), "game_id": game.get("game_id")} if game else {})},
+        **({"lightning": base["lightning"]} if base.get("lightning") else {}),
         "based_on": {"tool": "go_no_go", "decision": decision, "weather_decision": base.get("weather_decision"),
                      "event_confirmed": base.get("event_confirmed"), "routed_to": base.get("routed_to"),
                      "official_status": official},

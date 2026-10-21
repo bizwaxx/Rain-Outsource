@@ -1,0 +1,921 @@
+{
+    "@context": [
+        "https://geojson.org/geojson-ld/geojson-context.jsonld",
+        {
+            "@version": "1.1",
+            "wx": "https://api.weather.gov/ontology#",
+            "@vocab": "https://api.weather.gov/ontology#"
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.784d31f1c22ddb5bf10a1086d0587a55717bbb38.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.784d31f1c22ddb5bf10a1086d0587a55717bbb38.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.784d31f1c22ddb5bf10a1086d0587a55717bbb38.001.1",
+                "areaDesc": "Wayne; Hardin; Mercer; Auglaize; Darke; Shelby; Logan; Union; Delaware; Miami; Champaign; Clark; Madison; Franklin",
+                "geocode": {
+                    "SAME": [
+                        "018177",
+                        "039065",
+                        "039107",
+                        "039011",
+                        "039037",
+                        "039149",
+                        "039091",
+                        "039159",
+                        "039041",
+                        "039109",
+                        "039021",
+                        "039023",
+                        "039097",
+                        "039049"
+                    ],
+                    "UGC": [
+                        "INZ050",
+                        "OHZ026",
+                        "OHZ034",
+                        "OHZ035",
+                        "OHZ042",
+                        "OHZ043",
+                        "OHZ044",
+                        "OHZ045",
+                        "OHZ046",
+                        "OHZ051",
+                        "OHZ052",
+                        "OHZ053",
+                        "OHZ054",
+                        "OHZ055"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/INZ050",
+                    "https://api.weather.gov/zones/forecast/OHZ026",
+                    "https://api.weather.gov/zones/forecast/OHZ034",
+                    "https://api.weather.gov/zones/forecast/OHZ035",
+                    "https://api.weather.gov/zones/forecast/OHZ042",
+                    "https://api.weather.gov/zones/forecast/OHZ043",
+                    "https://api.weather.gov/zones/forecast/OHZ044",
+                    "https://api.weather.gov/zones/forecast/OHZ045",
+                    "https://api.weather.gov/zones/forecast/OHZ046",
+                    "https://api.weather.gov/zones/forecast/OHZ051",
+                    "https://api.weather.gov/zones/forecast/OHZ052",
+                    "https://api.weather.gov/zones/forecast/OHZ053",
+                    "https://api.weather.gov/zones/forecast/OHZ054",
+                    "https://api.weather.gov/zones/forecast/OHZ055"
+                ],
+                "references": [],
+                "sent": "2026-10-21T09:16:00-04:00",
+                "effective": "2026-10-21T09:16:00-04:00",
+                "onset": "2026-10-21T09:16:00-04:00",
+                "expires": "2026-10-21T10:45:00-04:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Wilmington OH",
+                "headline": "Special Weather Statement issued October 21 at 9:16AM EDT by NWS Wilmington OH",
+                "description": "Patchy dense fog with visibility of one quarter mile or less will\nbe present this morning.\n\nMotorists should be prepared for rapid changes in visibility.\nAllow for greater distances between vehicles, use low beam\nheadlights, and allow extra time to reach your destination.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSILN"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS81 KILN 211316"
+                    ],
+                    "NWSheadline": [
+                        "DENSE FOG THIS MORNING"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6a85bf747d81c997a3fda1db130d9fc8da25dc94.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6a85bf747d81c997a3fda1db130d9fc8da25dc94.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.6a85bf747d81c997a3fda1db130d9fc8da25dc94.001.1",
+                "areaDesc": "Rawlins; Decatur; Norton; Dundy; Hitchcock; Red Willow",
+                "geocode": {
+                    "SAME": [
+                        "020153",
+                        "020039",
+                        "020137",
+                        "031057",
+                        "031087",
+                        "031145"
+                    ],
+                    "UGC": [
+                        "KSZ002",
+                        "KSZ003",
+                        "KSZ004",
+                        "NEZ079",
+                        "NEZ080",
+                        "NEZ081"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/KSZ002",
+                    "https://api.weather.gov/zones/forecast/KSZ003",
+                    "https://api.weather.gov/zones/forecast/KSZ004",
+                    "https://api.weather.gov/zones/forecast/NEZ079",
+                    "https://api.weather.gov/zones/forecast/NEZ080",
+                    "https://api.weather.gov/zones/forecast/NEZ081"
+                ],
+                "references": [],
+                "sent": "2026-10-21T06:45:00-06:00",
+                "effective": "2026-10-21T06:45:00-06:00",
+                "onset": "2026-10-21T06:45:00-06:00",
+                "expires": "2026-10-21T11:00:00-06:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Goodland KS",
+                "headline": "Special Weather Statement issued October 21 at 6:45AM MDT by NWS Goodland KS",
+                "description": "Patchy dense fog continues in the Kansas and Nebraska border area.\nMcCook and Oberlin have recently reported visibility as low as a\nquarter of a mile. The fog will continue for another few hours\nbefore burning off between 10 and 11 AM CDT.\n\nWildlife, stalled vehicles and other road obstructions will be\ndifficult to spot. Low visibility may cause the time to slow down\nand stop to be longer than the time you are able to see ahead.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSGLD"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS83 KGLD 211245"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.b298d09dc1e0fb187188828aba3053743914d8e3.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.b298d09dc1e0fb187188828aba3053743914d8e3.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.b298d09dc1e0fb187188828aba3053743914d8e3.001.1",
+                "areaDesc": "Valley; Sherman; Dawson; Buffalo; Gosper; Phelps; Furnas; Harlan",
+                "geocode": {
+                    "SAME": [
+                        "031175",
+                        "031163",
+                        "031047",
+                        "031019",
+                        "031073",
+                        "031137",
+                        "031065",
+                        "031083"
+                    ],
+                    "UGC": [
+                        "NEZ039",
+                        "NEZ046",
+                        "NEZ060",
+                        "NEZ061",
+                        "NEZ072",
+                        "NEZ073",
+                        "NEZ082",
+                        "NEZ083"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/NEZ039",
+                    "https://api.weather.gov/zones/forecast/NEZ046",
+                    "https://api.weather.gov/zones/forecast/NEZ060",
+                    "https://api.weather.gov/zones/forecast/NEZ061",
+                    "https://api.weather.gov/zones/forecast/NEZ072",
+                    "https://api.weather.gov/zones/forecast/NEZ073",
+                    "https://api.weather.gov/zones/forecast/NEZ082",
+                    "https://api.weather.gov/zones/forecast/NEZ083"
+                ],
+                "references": [],
+                "sent": "2026-10-21T05:51:00-05:00",
+                "effective": "2026-10-21T05:51:00-05:00",
+                "onset": "2026-10-21T05:51:00-05:00",
+                "expires": "2026-10-21T10:00:00-05:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Hastings NE",
+                "headline": "Special Weather Statement issued October 21 at 5:51AM CDT by NWS Hastings NE",
+                "description": "Patchy dense fog has developed over portions of south central\nNebraska this morning. Visibility of a quarter mile or less is\npossible at times in dense fog. If traveling, be prepared for\nvisibility quickly changing over short distances and allow for\nextra driving time this morning. Fog will begin to dissipate by\nthe mid morning hours.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSGID"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS83 KGID 211051"
+                    ],
+                    "NWSheadline": [
+                        "Patchy Dense Fog Possible Through 10am"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.fe0f2b7833d094da57ced166f9a4865bd03b84ee.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.fe0f2b7833d094da57ced166f9a4865bd03b84ee.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.fe0f2b7833d094da57ced166f9a4865bd03b84ee.001.1",
+                "areaDesc": "Custer; Keith; Perkins; Lincoln; Chase; Hayes; Frontier",
+                "geocode": {
+                    "SAME": [
+                        "031041",
+                        "031101",
+                        "031135",
+                        "031111",
+                        "031029",
+                        "031085",
+                        "031063"
+                    ],
+                    "UGC": [
+                        "NEZ038",
+                        "NEZ057",
+                        "NEZ058",
+                        "NEZ059",
+                        "NEZ069",
+                        "NEZ070",
+                        "NEZ071"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/NEZ038",
+                    "https://api.weather.gov/zones/forecast/NEZ057",
+                    "https://api.weather.gov/zones/forecast/NEZ058",
+                    "https://api.weather.gov/zones/forecast/NEZ059",
+                    "https://api.weather.gov/zones/forecast/NEZ069",
+                    "https://api.weather.gov/zones/forecast/NEZ070",
+                    "https://api.weather.gov/zones/forecast/NEZ071"
+                ],
+                "references": [],
+                "sent": "2026-10-21T05:40:00-05:00",
+                "effective": "2026-10-21T05:40:00-05:00",
+                "onset": "2026-10-21T05:40:00-05:00",
+                "expires": "2026-10-21T10:00:00-05:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS North Platte NE",
+                "headline": "Special Weather Statement issued October 21 at 5:40AM CDT by NWS North Platte NE",
+                "description": ".Patchy dense fog has developed across portions of southwest and\ncentral Nebraska early this morning. If traveling, be prepared for\nrapid visibility reductions over short distances and allow for\nextra driving time this morning. Fog will begin to dissipate by\nmid-morning after the sun rises.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSLBF"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS83 KLBF 211040"
+                    ],
+                    "NWSheadline": [
+                        "PATCHY DENSE FOG WILL CONTINUE THIS MORNING"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.8ed2a5ba1ceca03c1b1233e0e76c4ed7303726ae.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.8ed2a5ba1ceca03c1b1233e0e76c4ed7303726ae.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.8ed2a5ba1ceca03c1b1233e0e76c4ed7303726ae.001.1",
+                "areaDesc": "Dundy; Hitchcock; Red Willow",
+                "geocode": {
+                    "SAME": [
+                        "031057",
+                        "031087",
+                        "031145"
+                    ],
+                    "UGC": [
+                        "NEZ079",
+                        "NEZ080",
+                        "NEZ081"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/NEZ079",
+                    "https://api.weather.gov/zones/forecast/NEZ080",
+                    "https://api.weather.gov/zones/forecast/NEZ081"
+                ],
+                "references": [],
+                "sent": "2026-10-21T04:40:00-06:00",
+                "effective": "2026-10-21T04:40:00-06:00",
+                "onset": "2026-10-21T04:40:00-06:00",
+                "expires": "2026-10-21T09:00:00-06:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Goodland KS",
+                "headline": "Special Weather Statement issued October 21 at 4:40AM MDT by NWS Goodland KS",
+                "description": "Patchy dense fog has developed along the Republican River valley,\nincluding the McCook area.\n\nVisibility will be limited to a half mile or less at times, which\nwill reduce the reaction time for motorists.\n\nThe fog will burn off between 10 and 11 AM CDT later this morning.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSGLD"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS83 KGLD 211040"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.f6203feb2e3a0f6e3d69b4995500739b54023723.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.f6203feb2e3a0f6e3d69b4995500739b54023723.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.f6203feb2e3a0f6e3d69b4995500739b54023723.001.1",
+                "areaDesc": "Dade; Walker; Catoosa; Whitfield; Murray; Fannin; Gilmer; Union; Towns; Chattooga; Gordon; Pickens; Dawson; Lumpkin; White; Floyd; Bartow; Cherokee; Forsyth; Hall; Banks; Jackson; Madison; Polk; Paulding; Cobb; North Fulton; Gwinnett; Barrow; Clarke; Oconee; Oglethorpe; Wilkes; Haralson; Carroll; Douglas; South Fulton; DeKalb; Rockdale; Walton; Newton; Morgan; Greene; Taliaferro; Heard; Coweta; Fayette; Clayton; Spalding; Henry; Butts; Jasper; Putnam; Hancock; Warren; Troup; Meriwether; Pike; Upson; Lamar; Monroe; Jones; Baldwin; Washington; Glascock; Jefferson; Harris; Talbot; Taylor; Crawford; Bibb; Twiggs; Wilkinson; Johnson; Emanuel; Muscogee; Chattahoochee; Marion; Schley; Macon; Peach; Houston; Bleckley; Laurens; Treutlen; Stewart; Webster; Sumter; Dooly; Crisp; Pulaski; Wilcox; Dodge; Telfair; Wheeler; Montgomery; Toombs",
+                "geocode": {
+                    "SAME": [
+                        "013083",
+                        "013295",
+                        "013047",
+                        "013313",
+                        "013213",
+                        "013111",
+                        "013123",
+                        "013291",
+                        "013281",
+                        "013055",
+                        "013129",
+                        "013227",
+                        "013085",
+                        "013187",
+                        "013311",
+                        "013115",
+                        "013015",
+                        "013057",
+                        "013117",
+                        "013139",
+                        "013011",
+                        "013157",
+                        "013195",
+                        "013233",
+                        "013223",
+                        "013067",
+                        "013121",
+                        "013135",
+                        "013013",
+                        "013059",
+                        "013219",
+                        "013221",
+                        "013317",
+                        "013143",
+                        "013045",
+                        "013097",
+                        "013089",
+                        "013247",
+                        "013297",
+                        "013217",
+                        "013211",
+                        "013133",
+                        "013265",
+                        "013149",
+                        "013077",
+                        "013113",
+                        "013063",
+                        "013255",
+                        "013151",
+                        "013035",
+                        "013159",
+                        "013237",
+                        "013141",
+                        "013301",
+                        "013285",
+                        "013199",
+                        "013231",
+                        "013293",
+                        "013171",
+                        "013207",
+                        "013169",
+                        "013009",
+                        "013303",
+                        "013125",
+                        "013163",
+                        "013145",
+                        "013263",
+                        "013269",
+                        "013079",
+                        "013021",
+                        "013289",
+                        "013319",
+                        "013167",
+                        "013107",
+                        "013215",
+                        "013053",
+                        "013197",
+                        "013249",
+                        "013193",
+                        "013225",
+                        "013153",
+                        "013023",
+                        "013175",
+                        "013283",
+                        "013259",
+                        "013307",
+                        "013261",
+                        "013093",
+                        "013081",
+                        "013235",
+                        "013315",
+                        "013091",
+                        "013271",
+                        "013309",
+                        "013209",
+                        "013279"
+                    ],
+                    "UGC": [
+                        "GAZ001",
+                        "GAZ002",
+                        "GAZ003",
+                        "GAZ004",
+                        "GAZ005",
+                        "GAZ006",
+                        "GAZ007",
+                        "GAZ008",
+                        "GAZ009",
+                        "GAZ011",
+                        "GAZ012",
+                        "GAZ013",
+                        "GAZ014",
+                        "GAZ015",
+                        "GAZ016",
+                        "GAZ019",
+                        "GAZ020",
+                        "GAZ021",
+                        "GAZ022",
+                        "GAZ023",
+                        "GAZ024",
+                        "GAZ025",
+                        "GAZ027",
+                        "GAZ030",
+                        "GAZ031",
+                        "GAZ032",
+                        "GAZ033",
+                        "GAZ034",
+                        "GAZ035",
+                        "GAZ036",
+                        "GAZ037",
+                        "GAZ038",
+                        "GAZ039",
+                        "GAZ041",
+                        "GAZ042",
+                        "GAZ043",
+                        "GAZ044",
+                        "GAZ045",
+                        "GAZ046",
+                        "GAZ047",
+                        "GAZ048",
+                        "GAZ049",
+                        "GAZ050",
+                        "GAZ051",
+                        "GAZ052",
+                        "GAZ053",
+                        "GAZ054",
+                        "GAZ055",
+                        "GAZ056",
+                        "GAZ057",
+                        "GAZ058",
+                        "GAZ059",
+                        "GAZ060",
+                        "GAZ061",
+                        "GAZ062",
+                        "GAZ066",
+                        "GAZ067",
+                        "GAZ068",
+                        "GAZ069",
+                        "GAZ070",
+                        "GAZ071",
+                        "GAZ072",
+                        "GAZ073",
+                        "GAZ074",
+                        "GAZ075",
+                        "GAZ076",
+                        "GAZ078",
+                        "GAZ079",
+                        "GAZ080",
+                        "GAZ081",
+                        "GAZ082",
+                        "GAZ083",
+                        "GAZ084",
+                        "GAZ085",
+                        "GAZ086",
+                        "GAZ089",
+                        "GAZ090",
+                        "GAZ091",
+                        "GAZ092",
+                        "GAZ093",
+                        "GAZ094",
+                        "GAZ095",
+                        "GAZ096",
+                        "GAZ097",
+                        "GAZ098",
+                        "GAZ102",
+                        "GAZ103",
+                        "GAZ104",
+                        "GAZ105",
+                        "GAZ106",
+                        "GAZ107",
+                        "GAZ108",
+                        "GAZ109",
+                        "GAZ110",
+                        "GAZ111",
+                        "GAZ112",
+                        "GAZ113"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/GAZ001",
+                    "https://api.weather.gov/zones/forecast/GAZ002",
+                    "https://api.weather.gov/zones/forecast/GAZ003",
+                    "https://api.weather.gov/zones/forecast/GAZ004",
+                    "https://api.weather.gov/zones/forecast/GAZ005",
+                    "https://api.weather.gov/zones/forecast/GAZ006",
+                    "https://api.weather.gov/zones/forecast/GAZ007",
+                    "https://api.weather.gov/zones/forecast/GAZ008",
+                    "https://api.weather.gov/zones/forecast/GAZ009",
+                    "https://api.weather.gov/zones/forecast/GAZ011",
+                    "https://api.weather.gov/zones/forecast/GAZ012",
+                    "https://api.weather.gov/zones/forecast/GAZ013",
+                    "https://api.weather.gov/zones/forecast/GAZ014",
+                    "https://api.weather.gov/zones/forecast/GAZ015",
+                    "https://api.weather.gov/zones/forecast/GAZ016",
+                    "https://api.weather.gov/zones/forecast/GAZ019",
+                    "https://api.weather.gov/zones/forecast/GAZ020",
+                    "https://api.weather.gov/zones/forecast/GAZ021",
+                    "https://api.weather.gov/zones/forecast/GAZ022",
+                    "https://api.weather.gov/zones/forecast/GAZ023",
+                    "https://api.weather.gov/zones/forecast/GAZ024",
+                    "https://api.weather.gov/zones/forecast/GAZ025",
+                    "https://api.weather.gov/zones/forecast/GAZ027",
+                    "https://api.weather.gov/zones/forecast/GAZ030",
+                    "https://api.weather.gov/zones/forecast/GAZ031",
+                    "https://api.weather.gov/zones/forecast/GAZ032",
+                    "https://api.weather.gov/zones/forecast/GAZ033",
+                    "https://api.weather.gov/zones/forecast/GAZ034",
+                    "https://api.weather.gov/zones/forecast/GAZ035",
+                    "https://api.weather.gov/zones/forecast/GAZ036",
+                    "https://api.weather.gov/zones/forecast/GAZ037",
+                    "https://api.weather.gov/zones/forecast/GAZ038",
+                    "https://api.weather.gov/zones/forecast/GAZ039",
+                    "https://api.weather.gov/zones/forecast/GAZ041",
+                    "https://api.weather.gov/zones/forecast/GAZ042",
+                    "https://api.weather.gov/zones/forecast/GAZ043",
+                    "https://api.weather.gov/zones/forecast/GAZ044",
+                    "https://api.weather.gov/zones/forecast/GAZ045",
+                    "https://api.weather.gov/zones/forecast/GAZ046",
+                    "https://api.weather.gov/zones/forecast/GAZ047",
+                    "https://api.weather.gov/zones/forecast/GAZ048",
+                    "https://api.weather.gov/zones/forecast/GAZ049",
+                    "https://api.weather.gov/zones/forecast/GAZ050",
+                    "https://api.weather.gov/zones/forecast/GAZ051",
+                    "https://api.weather.gov/zones/forecast/GAZ052",
+                    "https://api.weather.gov/zones/forecast/GAZ053",
+                    "https://api.weather.gov/zones/forecast/GAZ054",
+                    "https://api.weather.gov/zones/forecast/GAZ055",
+                    "https://api.weather.gov/zones/forecast/GAZ056",
+                    "https://api.weather.gov/zones/forecast/GAZ057",
+                    "https://api.weather.gov/zones/forecast/GAZ058",
+                    "https://api.weather.gov/zones/forecast/GAZ059",
+                    "https://api.weather.gov/zones/forecast/GAZ060",
+                    "https://api.weather.gov/zones/forecast/GAZ061",
+                    "https://api.weather.gov/zones/forecast/GAZ062",
+                    "https://api.weather.gov/zones/forecast/GAZ066",
+                    "https://api.weather.gov/zones/forecast/GAZ067",
+                    "https://api.weather.gov/zones/forecast/GAZ068",
+                    "https://api.weather.gov/zones/forecast/GAZ069",
+                    "https://api.weather.gov/zones/forecast/GAZ070",
+                    "https://api.weather.gov/zones/forecast/GAZ071",
+                    "https://api.weather.gov/zones/forecast/GAZ072",
+                    "https://api.weather.gov/zones/forecast/GAZ073",
+                    "https://api.weather.gov/zones/forecast/GAZ074",
+                    "https://api.weather.gov/zones/forecast/GAZ075",
+                    "https://api.weather.gov/zones/forecast/GAZ076",
+                    "https://api.weather.gov/zones/forecast/GAZ078",
+                    "https://api.weather.gov/zones/forecast/GAZ079",
+                    "https://api.weather.gov/zones/forecast/GAZ080",
+                    "https://api.weather.gov/zones/forecast/GAZ081",
+                    "https://api.weather.gov/zones/forecast/GAZ082",
+                    "https://api.weather.gov/zones/forecast/GAZ083",
+                    "https://api.weather.gov/zones/forecast/GAZ084",
+                    "https://api.weather.gov/zones/forecast/GAZ085",
+                    "https://api.weather.gov/zones/forecast/GAZ086",
+                    "https://api.weather.gov/zones/forecast/GAZ089",
+                    "https://api.weather.gov/zones/forecast/GAZ090",
+                    "https://api.weather.gov/zones/forecast/GAZ091",
+                    "https://api.weather.gov/zones/forecast/GAZ092",
+                    "https://api.weather.gov/zones/forecast/GAZ093",
+                    "https://api.weather.gov/zones/forecast/GAZ094",
+                    "https://api.weather.gov/zones/forecast/GAZ095",
+                    "https://api.weather.gov/zones/forecast/GAZ096",
+                    "https://api.weather.gov/zones/forecast/GAZ097",
+                    "https://api.weather.gov/zones/forecast/GAZ098",
+                    "https://api.weather.gov/zones/forecast/GAZ102",
+                    "https://api.weather.gov/zones/forecast/GAZ103",
+                    "https://api.weather.gov/zones/forecast/GAZ104",
+                    "https://api.weather.gov/zones/forecast/GAZ105",
+                    "https://api.weather.gov/zones/forecast/GAZ106",
+                    "https://api.weather.gov/zones/forecast/GAZ107",
+                    "https://api.weather.gov/zones/forecast/GAZ108",
+                    "https://api.weather.gov/zones/forecast/GAZ109",
+                    "https://api.weather.gov/zones/forecast/GAZ110",
+                    "https://api.weather.gov/zones/forecast/GAZ111",
+                    "https://api.weather.gov/zones/forecast/GAZ112",
+                    "https://api.weather.gov/zones/forecast/GAZ113"
+                ],
+                "references": [],
+                "sent": "2026-10-21T01:34:00-04:00",
+                "effective": "2026-10-21T01:34:00-04:00",
+                "onset": "2026-10-21T01:34:00-04:00",
+                "expires": "2026-10-21T19:00:00-04:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Peachtree City GA",
+                "headline": "Special Weather Statement issued October 21 at 1:34AM EDT by NWS Peachtree City GA",
+                "description": "Relative Humidities of 30 percent or less can be expected for 4\nor more hours this afternoon into the evening. Winds will be\nmostly less than 7 MPH and variable.\n\nWith dry fuels, high fire danger conditions can be expected.\n\nPlease refer to your local burn permitting authorities\nwhether you may burn outdoors.  If you do burn outside,\nuse extreme caution.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSFFC"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS82 KFFC 210534"
+                    ],
+                    "NWSheadline": [
+                        "HIGH FIRE DANGER CONDITIONS THIS AFTERNOON INTO THE EVENING FOR MOST OF NORTH AND CENTRAL GEORGIA DUE TO LOW RELATIVE HUMIDITIES"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.5415ba38b6247cc25af252fa405cbcf7d6e376df.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.5415ba38b6247cc25af252fa405cbcf7d6e376df.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.5415ba38b6247cc25af252fa405cbcf7d6e376df.001.1",
+                "areaDesc": "Rabun; Habersham; Stephens; Franklin; Hart; Elbert",
+                "geocode": {
+                    "SAME": [
+                        "013241",
+                        "013137",
+                        "013257",
+                        "013119",
+                        "013147",
+                        "013105"
+                    ],
+                    "UGC": [
+                        "GAZ010",
+                        "GAZ017",
+                        "GAZ018",
+                        "GAZ026",
+                        "GAZ028",
+                        "GAZ029"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/GAZ010",
+                    "https://api.weather.gov/zones/forecast/GAZ017",
+                    "https://api.weather.gov/zones/forecast/GAZ018",
+                    "https://api.weather.gov/zones/forecast/GAZ026",
+                    "https://api.weather.gov/zones/forecast/GAZ028",
+                    "https://api.weather.gov/zones/forecast/GAZ029"
+                ],
+                "references": [],
+                "sent": "2026-10-21T01:18:00-04:00",
+                "effective": "2026-10-21T01:18:00-04:00",
+                "onset": "2026-10-21T01:18:00-04:00",
+                "expires": "2026-10-21T13:30:00-04:00",
+                "ends": null,
+                "status": "Actual",
+                "messageType": "Alert",
+                "category": "Met",
+                "severity": "Moderate",
+                "certainty": "Observed",
+                "urgency": "Expected",
+                "event": "Special Weather Statement",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Greenville-Spartanburg SC",
+                "headline": "Special Weather Statement issued October 21 at 1:18AM EDT by NWS Greenville-Spartanburg SC",
+                "description": "Relative humidity will fall below 25 percent again this\nafternoon across northeast Georgia. Given the dry vegetation and\nlow fine fuel moisture, outdoor fires will be able to spread\nquickly once started, increasing the danger of wildfires.\n\nPlease refer to your local burn permitting authority on whether\nyou can burn today. If you do burn, use extreme caution since\nfires can quickly get out of hand under these conditions.",
+                "instruction": null,
+                "response": "Execute",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SPSGSP"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS82 KGSP 210518"
+                    ],
+                    "NWSheadline": [
+                        "INCREASED FIRE DANGER ACROSS NORTHEAST GEORGIA FROM NOON UNTIL 7 PM EDT THIS EVENING"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SPS"
+                    ],
+                    "NationalWeatherService": [
+                        "SPS"
+                    ]
+                }
+            }
+        }
+    ],
+    "title": "Current Special Weather Statement events",
+    "updated": "2026-10-21T14:15:16+00:00"
+}
