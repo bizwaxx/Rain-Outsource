@@ -30,7 +30,7 @@
 <li><strong>What we store.</strong> When you or your agent report a field as cancelled, delayed or playing, we store the field, the status, the game date and time, the time of the report, a random report id, and any note you add (up to 280 characters).</li>
 <li><strong>Who can see it.</strong> Reports are public. Anyone can read them at <code>/v1/reports</code>, and they can nudge the odds others see for that field. Please don't put names, phone numbers or other personal details in a note.</li>
 <li><strong>How long.</strong> Reports are deleted automatically after 24 hours.</li>
-<li><strong>Spam limits.</strong> To limit spam, the sender's network address is turned into a short SHA-256 hash and used as an hourly counter key. That key expires within an hour, and it is never written into the report. This hash has no secret key, so it is a one-way scramble, not strong anonymization.</li>
+<li><strong>Spam limits.</strong> To limit spam, the sender's network address is turned into a keyed one-way hash (HMAC-SHA256 with a secret key that changes every day) and used as an hourly counter key. That key expires within an hour, and it is never written into the report. Without the secret key, nobody can work out an address from the hash by trying addresses. We hold the key, so during that hour we could check whether a particular address matches. We don't do that.</li>
 </ul>
 
 <h2>Weather cache</h2>

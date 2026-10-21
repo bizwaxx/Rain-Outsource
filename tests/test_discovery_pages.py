@@ -73,13 +73,15 @@ def test_privacy_matches_what_the_code_does():
     assert "raw IP address is never stored" in html
     # reports: 24 h, 280 chars, public, unsalted rate-limit hash described honestly
     assert "24 hours" in html and "280 characters" in html and "/v1/reports" in html
-    assert "no secret key" in html
+    assert "keyed one-way hash" in html and "changes every day" in html and "within an hour" in html
+    assert "no secret key" not in html
     # constants behind those claims
     from rainout_agent import reports
     assert reports.REPORT_TTL_S == 24 * 3600
     assert reports.MAX_NOTE_CHARS == 280
     assert metrics.TTL_S == 400 * 86400
-    assert reports.client_key("203.0.113.9") != "203.0.113.9"
+    import hashlib
+    assert reports.client_key("203.0.113.9") != hashlib.sha256(b"203.0.113.9").hexdigest()[:16]  # keyed (PR #52)
     day = metrics.today()
     assert metrics.client_hash("203.0.113.9", day) != metrics.client_hash("203.0.113.9", "2000-01-01")
 
