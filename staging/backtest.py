@@ -302,7 +302,8 @@ def event_inputs(fx: dict[str, Any], wx: dict[str, Any], track: dict[str, Any] |
     series = er.wet_series(wx.get("wet") or {}, start, soil)
     er.add_wetness(feat, series, drainage, ball)
     return {"id": fx["id"], "field_type": fx["field_type"], "outcome": fx["outcome"], "grade": wgrade, "features": feat,
-            "drainage": drainage, "ball_sport": ball, "series": series, "maintained": maintained, "venue_profile": prof}
+            "drainage": drainage, "ball_sport": ball, "series": series, "maintained": maintained, "venue_profile": prof,
+            "rain_tolerant": er.rain_tolerant(fx.get("activity"), prof.get("level"))}
 
 
 def score_event_risk(inp: dict[str, Any], params: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -313,8 +314,9 @@ def score_event_risk(inp: dict[str, Any], params: dict[str, Any] | None = None) 
     drainage = er.effective_drainage(inp["drainage"], maintained, params)
     if params is not None and inp.get("series") is not None and params.get("soak_model") in ("wetness", "hybrid"):
         feat = {**feat, "wetness_in": er.wetness_in(inp["series"], drainage if inp["ball_sport"] else "mx", params)}
-    base = er.base_percent(feat.get("window_pop") or 0, drainage, params)
-    out = er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained)
+    tol = bool(inp.get("rain_tolerant"))
+    base = er.base_percent(feat.get("window_pop") or 0, drainage, params, tol)
+    out = er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained, tolerant=tol)
     return {"p": out["play_probability_percent"], "base_percent": base, "features": feat, "drainage": drainage,
             "reasons": out["reasons"], "model": "event_risk v2 (window rain, soak by drainage, storms, wind, cold, humility cap)"}
 

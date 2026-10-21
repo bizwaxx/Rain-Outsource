@@ -1,0 +1,490 @@
+{
+ "settings_rule": [
+  [
+   null,
+   null
+  ],
+  [
+   null,
+   0.5
+  ],
+  [
+   null,
+   0.2
+  ],
+  [
+   null,
+   0.0
+  ],
+  [
+   0.7,
+   null
+  ],
+  [
+   0.7,
+   0.5
+  ],
+  [
+   0.7,
+   0.2
+  ],
+  [
+   0.7,
+   0.0
+  ],
+  [
+   0.5,
+   null
+  ],
+  [
+   0.5,
+   0.5
+  ],
+  [
+   0.5,
+   0.2
+  ],
+  [
+   0.5,
+   0.0
+  ],
+  [
+   0.3,
+   null
+  ],
+  [
+   0.3,
+   0.5
+  ],
+  [
+   0.3,
+   0.2
+  ],
+  [
+   0.3,
+   0.0
+  ],
+  [
+   0.0,
+   null
+  ],
+  [
+   0.0,
+   0.5
+  ],
+  [
+   0.0,
+   0.2
+  ],
+  [
+   0.0,
+   0.0
+  ]
+ ],
+ "base_points": 82944,
+ "total_combinations": 1658880,
+ "before": {
+  "all": {
+   "n": 175,
+   "dir": 82,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 71
+  },
+  "soccer": {
+   "n": 25,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 72
+  },
+  "pro_soccer(tolerant)": {
+   "n": 23,
+   "dir": 74,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 74
+  },
+  "new21": {
+   "n": 21,
+   "dir": 71,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 71
+  },
+  "baseball": {
+   "n": 82,
+   "dir": 85,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 73
+  },
+  "softball": {
+   "n": 35,
+   "dir": 86,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 69
+  },
+  "motocross": {
+   "n": 33,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 67
+  }
+ },
+ "after": {
+  "all": {
+   "n": 175,
+   "dir": 82,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 71
+  },
+  "soccer": {
+   "n": 25,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 72
+  },
+  "pro_soccer(tolerant)": {
+   "n": 23,
+   "dir": 74,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 74
+  },
+  "new21": {
+   "n": 21,
+   "dir": 71,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 71
+  },
+  "baseball": {
+   "n": 82,
+   "dir": 85,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 73
+  },
+  "softball": {
+   "n": 35,
+   "dir": 86,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 69
+  },
+  "motocross": {
+   "n": 33,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 67
+  }
+ },
+ "fold_choices": {
+  "(None, None)": 175
+ },
+ "conf_play_before": [
+  40,
+  38
+ ],
+ "conf_play_after": [
+  40,
+  38
+ ],
+ "in_sample_best": {
+  "setting": [
+   null,
+   null
+  ],
+  "point": {
+   "soak_model": "window",
+   "humble_cap": 79,
+   "humble_soak_in": 0.15,
+   "turf_floor": null,
+   "gust_mph": 45,
+   "cold_f": 35,
+   "storm_cape": null,
+   "turf_rain_factor": 0.7,
+   "fast": 0.3,
+   "medium": 0.6,
+   "slow": 1.2,
+   "w24": 0.6,
+   "w48": 0.3,
+   "maint": 0.2,
+   "threat_cap": 79,
+   "mx_forecast_cap": null,
+   "unstable_cape": 2500,
+   "cancel_floor": 21
+  }
+ },
+ "per_soccer": [
+  {
+   "id": "atxfc-lafc-2025-07-05",
+   "outcome": "not_played",
+   "before": 22,
+   "after": 22,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "atxfc-galaxy-2023-09-24",
+   "outcome": "played",
+   "before": 96,
+   "after": 96,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "ntx-statecup-richland-2024-05-12",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "brownwood-wylie-2024-08-30",
+   "outcome": "not_played",
+   "before": 42,
+   "after": 42,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-austin-fc-2021-08-18",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-red-bull-new-york-2024-03-23",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-fc-dallas-2024-04-27",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-racing-louisville-2022-05-14",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-orlando-city-sc-2022-08-28",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-houston-dash-2021-05-23",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-inter-miami-cf-2022-09-13",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-chicago-stars-fc-2022-04-30",
+   "outcome": "played",
+   "before": 73,
+   "after": 73,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-new-england-revolu-2022-03-12",
+   "outcome": "played",
+   "before": 45,
+   "after": 45,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-chicago-fire-fc-2022-03-19",
+   "outcome": "played",
+   "before": 74,
+   "after": 74,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-new-york-city-fc-2023-03-11",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-portland-timbers-2024-03-02",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-la-galaxy-2023-08-20",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-lafc-2023-08-20",
+   "outcome": "not_played",
+   "before": 28,
+   "after": 28,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-houston-dynamo-2024-07-07",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-philadelphia-union-2024-03-09",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-racing-louisville-2025-05-16",
+   "outcome": "not_played",
+   "before": 36,
+   "after": 36,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-nc-courage-2018-09-16",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-red-bulls-2021-08-21",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "mls-real-salt-lake-2024-03-02",
+   "outcome": "played",
+   "before": 45,
+   "after": 45,
+   "fold_setting": [
+    null,
+    null
+   ]
+  },
+  {
+   "id": "nwsl-san-diego-wave-2023-08-19",
+   "outcome": "played",
+   "before": 96,
+   "after": 96,
+   "fold_setting": [
+    null,
+    null
+   ]
+  }
+ ],
+ "changed_non_soccer": []
+}

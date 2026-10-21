@@ -76,7 +76,19 @@ PARAMS: dict[str, Any] = {
     "cancel_floor": 21,
     # Optional ceiling for weather-only answers while no official status is posted (None = off; Jimmy's call).
     "status_ceiling": None,
+    # Rain tolerance for college/pro soccer (tune/soccer-pro-rain, OFF by default): pro and college soccer play through
+    # plain rain (lightning still stops them). For a rain-tolerant event, the window rain chance counts at
+    # ``pro_rain_factor`` and the soak at ``pro_soak_factor`` (None = off). Storm, wind and cold rules are unchanged.
+    "pro_rain_factor": None,
+    "pro_soak_factor": None,
 }
+RAIN_TOLERANT_NOTE = "College and pro soccer usually play through rain (lightning still stops play)."
+RAIN_TOLERANT_SPORTS = {"soccer"}
+
+
+def rain_tolerant(sport: str | None, level: str | None) -> bool:
+    """True for sports that play through plain rain at this level (college/pro soccer)."""
+    return (sport or "").lower() in RAIN_TOLERANT_SPORTS and level == "college_pro"
 UNSTABLE_CAP = 79
 UNSTABLE_NOTE = "Unstable air: pop-up storms can form even with a low rain chance, and organizers may call it early."
 STATUS_CEILING_NOTE = "No official status yet; organizers can still cancel for non-weather reasons."
@@ -292,17 +304,19 @@ def threat_signal(feat: dict[str, Any], params: dict[str, Any] | None = None) ->
                 or (feat.get("cape_prev") or 0) >= cape)
 
 
-def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None = None) -> int:
+def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None = None, tolerant: bool = False) -> int:
     """Unknown-status odds from the window's rain chance (same curve as play_probability)."""
     from rainout_agent.play_probability import unknown_status_play_percent
 
     p = params or PARAMS
     eff = window_pop * (p["turf_rain_factor"] if drainage == "fast" else 1.0)
+    if tolerant and p.get("pro_rain_factor") is not None:
+        eff *= p["pro_rain_factor"]
     return unknown_status_play_percent(int(round(window_pop)), False, eff)
 
 
 def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None,
-           ball_sport: bool = True, maintained: bool = False, soak_memory: float = 1.0) -> dict[str, Any]:
+           ball_sport: bool = True, maintained: bool = False, soak_memory: float = 1.0, tolerant: bool = False) -> dict[str, Any]:
     """Apply soak, storm, wind, cold and humility rules to a base play probability.
 
     ``soak_memory`` is the venue's learned drainage memory (rainout_agent.outcomes), a bounded multiplier."""
@@ -312,6 +326,10 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
     soak, raw = soak_index(feat, drainage, p, maintained)
     if soak is not None and soak_memory != 1.0:
         soak = round(soak * soak_memory, 2)
+    if tolerant and (p.get("pro_rain_factor") is not None or p.get("pro_soak_factor") is not None):
+        if soak is not None and p.get("pro_soak_factor") is not None:
+            soak = round(soak * p["pro_soak_factor"], 2)
+        reasons.append(RAIN_TOLERANT_NOTE)
     soak_pts = round(interp(soak, SOAK_PENALTY)) if soak is not None else 0
     if soak_pts:
         pct -= soak_pts

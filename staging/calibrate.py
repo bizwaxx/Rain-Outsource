@@ -159,8 +159,9 @@ def predict(inp: dict[str, Any], params: dict[str, Any]) -> int:
         if key not in _WET_MEMO:
             _WET_MEMO[key] = er.wetness_in(inp.get("series"), surface, params)
         feat = {**inp["features"], "wetness_in": _WET_MEMO[key]}
-        base = er.base_percent(feat.get("window_pop") or 0, drainage, params)
-        return er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained)["play_probability_percent"]
+        tol = bool(inp.get("rain_tolerant"))
+        base = er.base_percent(feat.get("window_pop") or 0, drainage, params, tol)
+        return er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained, tolerant=tol)["play_probability_percent"]
     return bt.score_event_risk(inp, params)["p"]
 
 
