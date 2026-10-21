@@ -99,3 +99,12 @@ def test_unstable_air_cap_and_cancel_floor_carry_honest_notes():
     assert any("check the official status" in r for r in floored["reasons"])
     # Defaults: both rules on.
     assert er.PARAMS["unstable_cape"] == 2500 and er.PARAMS["cancel_floor"] == 21
+
+
+def test_status_ceiling_is_optional_and_labelled():
+    assert er.PARAMS["status_ceiling"] is None          # off by default (policy choice, see docstring)
+    dry = _rows()
+    assert er.evaluate(dry, dry, START, 3, "fast")["play_probability_percent"] >= 80
+    capped = er.evaluate(dry, dry, START, 3, "fast", {**er.PARAMS, "status_ceiling": 79})
+    assert capped["play_probability_percent"] == 79
+    assert any("No official status yet" in r for r in capped["reasons"])

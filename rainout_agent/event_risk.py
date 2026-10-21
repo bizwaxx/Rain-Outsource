@@ -32,6 +32,10 @@ staging/calibrate.py and docs/model.md):
 9. Cancel floor: weather alone never says less than ``cancel_floor`` (so never "confident cancel"), because organizers
    sometimes play through a bad forecast. This model only runs when no official status is posted; a posted
    cancellation still decides (0%).
+10. Status ceiling (optional, off by default): with no official status yet, never say more than ``status_ceiling``,
+   because organizers can still cancel for reasons the weather doesn't show. Held out on 154 fixtures it removes the
+   last 2 confident wrong calls, but answers at 80%+ were right 95% of the time (37 of 39), so it is a policy
+   choice, not a calibration fix.
 """
 from __future__ import annotations
 
@@ -70,9 +74,12 @@ PARAMS: dict[str, Any] = {
     "unstable_cape": 2500,
     # Weather alone never goes below this (None = off); a posted official cancellation still gives 0%.
     "cancel_floor": 21,
+    # Optional ceiling for weather-only answers while no official status is posted (None = off; Jimmy's call).
+    "status_ceiling": None,
 }
 UNSTABLE_CAP = 79
 UNSTABLE_NOTE = "Unstable air: pop-up storms can form even with a low rain chance, and organizers may call it early."
+STATUS_CEILING_NOTE = "No official status yet; organizers can still cancel for non-weather reasons."
 CANCEL_FLOOR_NOTE = ("Weather alone can't make a cancellation certain (organizers sometimes play through a bad "
                      "forecast); check the official status.")
 THREAT_SIGNALS = {"pop": 30, "prev_pop": 40}
@@ -368,6 +375,9 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
     if p.get("cancel_floor") is not None and pct < p["cancel_floor"]:
         pct = p["cancel_floor"]
         reasons.append(f"{CANCEL_FLOOR_NOTE.rstrip('.')}: not below {p['cancel_floor']}%.")
+    if p.get("status_ceiling") is not None and pct > p["status_ceiling"]:
+        pct = p["status_ceiling"]
+        reasons.append(f"{STATUS_CEILING_NOTE.rstrip('.')}: not above {p['status_ceiling']}%.")
     pct = int(max(0, min(100, round(pct))))
     return {"play_probability_percent": pct, "soak_index_in": soak, "soak_raw_in": raw, "soak_penalty": soak_pts,
             "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons,
