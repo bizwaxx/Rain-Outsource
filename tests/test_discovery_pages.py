@@ -120,7 +120,7 @@ def test_server_card_matches_live_tools_and_version():
     assert card["serverInfo"] == {"name": SERVER_NAME, "title": "Rain-Outsource", "version": SERVER_VERSION}
     assert SERVER_VERSION == "0.13.0"
     assert [t["name"] for t in card["tools"]] == [t["name"] for t in TOOLS]
-    assert len(card["tools"]) == 12
+    assert len(card["tools"]) == len(TOOLS) == 13  # 12 + report_outcome (#46)
     assert card["transport"] == {"type": "streamable-http", "url": "https://rainout-agent-source.vercel.app/mcp"}
     assert card["authentication"] == {"required": False}
     for t in card["tools"]:
