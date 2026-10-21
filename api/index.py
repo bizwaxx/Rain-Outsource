@@ -10,8 +10,15 @@ from rainout_agent.status_api import list_supported_fields
 BASE_URL = "https://rainout-agent-source.vercel.app"
 
 
+def _is_demo(path):
+    p = urlparse(path or "/").path.rstrip("/")
+    return p == "/demo" or p.startswith("/demo/")
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if _is_demo(self.path):
+            return self._demo("GET")
         payload = {
             "status": "ok",
             "service": "rainout-source",
@@ -28,6 +35,31 @@ class handler(BaseHTTPRequestHandler):
             payload["weather_cache"] = get_cache().describe()
             return self._send_json(200, payload, http_cache.NO_STORE)
         self._send_json(200, payload, http_cache.INDEX)
+
+    def do_POST(self):
+        if _is_demo(self.path):
+            return self._demo("POST")
+        self._send_json(405, {"error": "method_not_allowed"})
+
+    def _demo(self, method):
+        from rainout_agent import demo
+
+        url = urlparse(self.path)
+        body = b""
+        if method == "POST":
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except (TypeError, ValueError):
+                length = 0
+            body = self.rfile.read(min(length, 4096)) if length > 0 else b""
+        status, headers, payload = demo.handle(method, url.path, url.query, body,
+                                               self.headers.get("Content-Type") or "", self.headers.get("Accept") or "")
+        self.send_response(status)
+        for k, v in headers.items():
+            self.send_header(k, v)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
 
     def _send_json(self, status_code, payload, cache_control=http_cache.NO_STORE):
         body = json.dumps(payload).encode("utf-8")
