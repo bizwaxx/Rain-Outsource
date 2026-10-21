@@ -44,7 +44,8 @@ NWS_SOURCE = "National Weather Service API"
 NWS_STALE_SOURCE = "National Weather Service API (cached; NWS currently unavailable)"
 OPEN_METEO_SOURCE = "Open-Meteo (fallback; NWS unavailable)"
 OPEN_METEO_WORLD_SOURCE = "Open-Meteo"
-MET_NORWAY_URL = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+# "complete" (not "compact"): it carries probability_of_precipitation where MET has one (the Nordic area).
+MET_NORWAY_URL = "https://api.met.no/weatherapi/locationforecast/2.0/complete"
 MET_NORWAY_SOURCE = "MET Norway Locationforecast"
 MET_NORWAY_STALE_SOURCE = "MET Norway Locationforecast (cached; MET Norway currently unavailable)"
 MET_NORWAY_ATTRIBUTION = "Data from MET Norway (api.met.no), CC BY 4.0"
@@ -315,7 +316,7 @@ def fetch_met_norway(field: dict[str, Any], cache: Cache, timeout: float, now: f
     """
     wall_now = time.time() if now is None else now
     lat, lon = _coords(field)
-    key = f"metno:compact:{lat:.4f},{lon:.4f}"
+    key = f"metno:complete:{lat:.4f},{lon:.4f}"
     cached = cache.get(key)
     if not (isinstance(cached, dict) and cached.get("periods")):
         cached = None
