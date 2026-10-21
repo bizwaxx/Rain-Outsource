@@ -11,12 +11,13 @@ Existing endpoints are not routed here and never require a key.
 """
 from __future__ import annotations
 
+import contextvars
 import json
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 from urllib.parse import parse_qs
 
-from rainout_agent import api_keys, billing, plans, signup, usage, x402
+from rainout_agent import api_keys, billing, plans, signup, source_policy, usage, x402
 
 MAX_BODY = 512_000  # Stripe webhooks can be large; batch bodies are capped at BATCH_MAX_BODY
 BATCH_MAX_BODY = 64_000
@@ -100,8 +101,15 @@ def batch(items: list[Any], plan_id: str, *, status_fn: Callable[[dict], dict] =
         ok = not (isinstance(result, dict) and result.get("error"))
         return {"index": idx, "ok": ok, "input": item, "result": result}
 
+    # Copy the caller's context into each worker so the paid-request mark (source_policy) follows the items.
+    contexts = [contextvars.copy_context() for _ in items]
     with ThreadPoolExecutor(max_workers=max(1, min(workers, len(items)))) as pool:
-        return list(pool.map(run, enumerate(items)))
+        return list(pool.map(lambda job: job[0].run(run, job[1]), zip(contexts, enumerate(items))))
+
+
+def is_paid_plan(plan_id: str | None) -> bool:
+    """Paid answers: Stripe subscription plans and x402 pay-per-call (not the anonymous or free-key tiers)."""
+    return plan_id in plans.PAID or plan_id == "pay_per_call"
 
 
 def handle_premium_request(method: str, path: str, query: str, body: bytes, headers: dict[str, str] | None = None,
@@ -181,10 +189,12 @@ def _batch(method: str, body: bytes, headers: dict[str, str] | None, kw: dict[st
                 return _error(429, exc.code, exc.message, {"Retry-After": str(exc.retry_after), "X-Rainout-Plan": plan_id},
                               retry_after_seconds=exc.retry_after, usage=exc.usage,
                               anonymous_allowance=f"Batches of up to {anon['batch_max_items']} still work at the anonymous level.")
-    results = batch(items, plan_id, **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
+    with source_policy.paid_request(is_paid_plan(plan_id)):
+        results = batch(items, plan_id, **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
+        data_sources = source_policy.tier_label()
     at_risk = [r["index"] for r in results if r.get("ok") and _at_risk(r["result"])]
     payload = {"plan": plan_id, "count": len(results), "ok": sum(1 for r in results if r.get("ok")),
-               "at_risk_indexes": at_risk, "results": results}
+               "at_risk_indexes": at_risk, "data_sources": data_sources, "results": results}
     if use:
         payload["usage"] = {"this_month": use["this_month"], "limits": use["limits"]}
     if info and info.notes:
@@ -285,13 +295,16 @@ def _premium_batch(method: str, body: bytes, headers: dict[str, str] | None, kw:
         return _error(413, "batch_too_large", f"Pay-per-call allows {plan['batch_max_items']} items and {plan['max_teams_per_call']} teams.")
 
     def run() -> Response:
-        results = batch(items, "pay_per_call", **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
+        with source_policy.paid_request(True):
+            results = batch(items, "pay_per_call", **{k: v for k, v in kw.items() if k in {"status_fn", "team_fn"}})
+            data_sources = source_policy.tier_label()
         if not any(r.get("ok") for r in results):
             return _error(502, "no_results", "Every item failed, so no payment was taken. Check the items and retry.",
                           results=results)
         at_risk = [r["index"] for r in results if r.get("ok") and _at_risk(r["result"])]
         return _json(200, {"plan": "pay_per_call", "count": len(results), "ok": sum(1 for r in results if r.get("ok")),
-                           "at_risk_indexes": at_risk, "results": results}, {"X-Rainout-Plan": "pay_per_call"})
+                           "at_risk_indexes": at_risk, "data_sources": data_sources, "results": results},
+                     {"X-Rainout-Plan": "pay_per_call"})
 
     return x402.paywall(headers, f"{billing.public_url()}/v1/premium/batch",
                         f"Batch rainout check: up to {plan['batch_max_items']} games or {plan['max_teams_per_call']} teams", run,

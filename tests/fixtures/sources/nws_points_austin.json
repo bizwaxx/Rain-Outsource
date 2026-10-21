@@ -1,0 +1,32 @@
+{
+ "_recorded": "Recorded 2026-10-21 from api.weather.gov/points/30.2672,-97.7431 (trimmed)",
+ "properties": {
+  "forecastHourly": "https://api.weather.gov/gridpoints/EWX/156,91/forecast/hourly",
+  "timeZone": "America/Chicago",
+  "relativeLocation": {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.7541339,
+     30.2986219
+    ]
+   },
+   "properties": {
+    "city": "Austin",
+    "state": "TX",
+    "distance": {
+     "unitCode": "wmoUnit:m",
+     "value": 0
+    },
+    "bearing": {
+     "unitCode": "wmoUnit:degree_(angle)",
+     "value": 0
+    }
+   }
+  },
+  "gridId": "EWX",
+  "gridX": 156,
+  "gridY": 91
+ }
+}
