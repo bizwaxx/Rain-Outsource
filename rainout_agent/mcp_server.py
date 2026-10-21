@@ -750,6 +750,9 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
     except Exception as exc:  # pragma: no cover - live safety net (e.g. weather outage)
         return {"content": [{"type": "text", "text": f"Rainout Source error: {exc.__class__.__name__}. Tell the user to check the official source."}],
                 "isError": True}
+    from rainout_agent import odds_label
+
+    data = odds_label.apply(data)
     return {"content": [{"type": "text", "text": json.dumps(data, default=str)}], "structuredContent": data, "isError": False}
 
 

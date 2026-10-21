@@ -12,6 +12,8 @@ MAX_BODY_BYTES = schedule.MAX_INPUT_BYTES
 
 
 def _json(status: int, payload: dict[str, Any]) -> tuple[int, str, bytes]:
+    from rainout_agent import odds_label
+    odds_label.apply(payload)
     return status, "application/json", json.dumps(payload).encode("utf-8")
 
 
