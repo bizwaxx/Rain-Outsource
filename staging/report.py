@@ -15,17 +15,25 @@ def backtest_items(bt: dict[str, Any] | None) -> list[dict[str, Any]]:
     if not bt:
         return []
     items = []
-    s = bt["summary"]["overall"]
+    s = dict(bt["summary"]["overall"])
+    held = (bt["summary"].get("held_out") or {}).get("leave_one_out")
+    if held:
+        # Gate on the honest (leave-one-out) numbers for the calibrated model; construction keeps its in-sample grade.
+        cons = bt["summary"]["by_field_type"].get("construction") or {"confident_wrong": 0}
+        s["confident_wrong"] = held["confident_wrong"] + cons["confident_wrong"]
+        s["directional_accuracy"] = held["directional_accuracy"]
     if s["confident_wrong"] > THRESHOLDS["backtest_confident_wrong"]:
-        cw = [r for r in bt["results"] if r.get("confident_wrong")]
+        ids = held["confident_wrong_ids"] if held else [r["id"] for r in bt["results"] if r.get("confident_wrong")]
         items.append({"id": "backtest:confident_wrong", "target": "Backtest (offline, production model code)", "status": "fail", "severity": "blocker",
-                      "detail": f"{len(cw)} confident wrong calls: " + ", ".join(f"{r['id']} ({r['p']}%, {r['outcome']})" for r in cw),
-                      "owner": "Model (play_probability.py / motocross.py)",
-                      "fix": "Count rain in the hours before the start and the prior day (wet field / soaked track), and weight thunder "
-                             "risk from the whole game window, not only the start hour. Re-run the backtest after the change."})
+                      "detail": f"{s['confident_wrong']} confident wrong calls" + (" (leave-one-out)" if held else "") + ": " + ", ".join(ids),
+                      "owner": "Model (event_risk.py) / Jimmy (accept or not)",
+                      "fix": "Soak, storm-window, wind, cold and venue-maintenance rules are in (event_risk v2). Check each listed call: "
+                             "events cancelled for a forecast that never happened are unpredictable from archived weather (Jimmy decides "
+                             "whether to accept them); the rest need more real fixtures or venue data, not new rules. Never tune on the "
+                             "held-out score."})
     if s["directional_accuracy"] is not None and s["directional_accuracy"] < THRESHOLDS["backtest_directional_accuracy"]:
         items.append({"id": "backtest:accuracy", "target": "Backtest (offline, production model code)", "status": "fail", "severity": "blocker",
-                      "detail": f"directional accuracy {s['directional_accuracy']}% (need >= {THRESHOLDS['backtest_directional_accuracy']}%)",
+                      "detail": f"directional accuracy {s['directional_accuracy']}%" + (" (leave-one-out)" if held else "") + f" (need >= {THRESHOLDS['backtest_directional_accuracy']}%)",
                       "owner": "Model", "fix": "See the per-type table and mismatch list."})
     bad_beh = [(r["id"], b) for r in bt["results"] for b in r.get("behaviour", []) if b.get("ok") is False]
     parser = [x for x in bad_beh if x[1]["check"] == "mx_notice_parser"]
@@ -116,6 +124,21 @@ def render_backtest(bt: dict[str, Any]) -> list[str]:
     for k, a in list(s["by_field_type"].items()) + [("**all**", s["overall"])]:
         L.append(f"| {k} | {a['fixtures']} | {a['played']} / {a['not_played']} | {a['correct']} | {a['hedged']} | {a['wrong']} | "
                  f"{a['directional_accuracy']}% | {a['confident_wrong']} |" + (f" ({a['skipped']} skipped)" if a["skipped"] else ""))
+    h = s.get("held_out")
+    if h:
+        lo, ins = h["leave_one_out"], h["in_sample"]
+        L += ["", "Before (v1, start-hour model) vs after (v2 event_risk). In-sample uses the parameters fitted on all fixtures; "
+              "**held-out is leave-one-out** (each fixture predicted with parameters fitted without it) and is the honest number.", "",
+              "| Field type | v1 directional | v1 confident wrong | v2 in-sample directional | v2 in-sample CW | v2 held-out directional | v2 held-out CW |",
+              "|---|---|---|---|---|---|---|"]
+        for k in list(lo["by_field_type"]) + ["**all**"]:
+            v1 = s["v1_overall"] if k == "**all**" else s["v1_by_field_type"].get(k, {})
+            a = ins if k == "**all**" else ins["by_field_type"][k]
+            b = lo if k == "**all**" else lo["by_field_type"][k]
+            L.append(f"| {k} | {v1.get('directional_accuracy')}% | {v1.get('confident_wrong')} | {a['directional_accuracy']}% | {a['confident_wrong']} | "
+                     f"{b['directional_accuracy']}% | {b['confident_wrong']} |")
+        L += ["", f"Held-out confident wrong: {', '.join(lo['confident_wrong_ids']) or 'none'}. Chosen parameters: `{h['chosen']}` "
+              f"({h['grid_points']} grid points; {h['loo_distinct_choices']} distinct choices across the leave-one-out folds)."]
     L += ["", "By weather grade (archived_forecast is the fair test; the proxies convert rain amounts to a rain chance):", "",
           "| Weather grade | Fixtures | Directional | Confident wrong |", "|---|---|---|---|"]
     for k, a in s["by_weather_grade"].items():

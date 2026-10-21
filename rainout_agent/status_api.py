@@ -427,8 +427,16 @@ def build_status_result(
     game_time: str,
     weather: dict[str, Any] | None = None,
     official_status: str | None = None,
+    venue_override: dict[str, str] | None = None,
+    snapshot: str | None = None,
 ) -> dict[str, Any]:
-    """Build the live API JSON result for one field and game time."""
+    """Build the live API JSON result for one field and game time.
+
+    ``venue_override`` (from ``venue_maintenance`` / ``venue_level`` / ``venue_surface``) lets a league state its
+    venue's tarp/crew, level and surface; it is labelled as unverified in ``venue_profile.sources``.
+
+    ``snapshot``: "real" stores these odds as the pre-event prediction for the accuracy scoreboard (live
+    requests), "test" stores it as a marked test (local memory only), None skips it (library/test use)."""
     field_id = resolve_field_id(field_query)
     if not field_id:
         supported_names = ", ".join(field["name"] for field in list_supported_fields())
@@ -441,7 +449,10 @@ def build_status_result(
             "spoken_answer": f"I do not know that field yet. Right now Rain-Outsource supports: {supported_names}.",
         }
 
-    field = load_field(field_id)
+    from rainout_agent import venue_profile
+
+    field = dict(load_field(field_id))
+    field["venue_profile_resolved"] = venue_profile.build(field, venue_override)
     official_data = {
         "official_status": official_status or "unknown",
         "source_url": field.get("official_status_source_url"),
@@ -462,6 +473,8 @@ def build_status_result(
         hours_until_game=_hours_until_game(game_time),
         historical_calibration=calibration,
     )
+
+    model_info = _apply_event_risk(field, game_time, official_status_value, weather_data, probability)
 
     response = build_agent_status_response(
         field_name=field["field_name"],
@@ -495,6 +508,8 @@ def build_status_result(
             "forecast_period_start": weather_data.get("forecast_period_start"),
             "historical_calibration": _public_calibration(calibration, probability),
             "verification_level": field.get("verification_level", "confirmed"),
+            "model": model_info,
+            "venue_profile": field["venue_profile_resolved"],
         }
     )
     if field.get("verification_level") == "osm_only":
@@ -520,7 +535,73 @@ def build_status_result(
         reports.apply_to_status(response, field, _parse_time(game_time))
     except Exception:  # pragma: no cover - reports must never break a status answer
         pass
+    if snapshot:
+        try:
+            from rainout_agent import outcomes
+
+            outcomes.snapshot_prediction(response, field, _parse_time(game_time), test=snapshot == "test")
+        except Exception:  # pragma: no cover - snapshots must never break a status answer
+            pass
     return response
+
+
+def _drainage_memory(field: dict[str, Any]) -> dict[str, Any]:
+    try:
+        from rainout_agent import outcomes
+
+        return outcomes.venue_memory(field["id"])
+    except Exception:  # pragma: no cover - memory must never break a status answer
+        return {"active": False, "soak_multiplier": 1.0, "explain": "drainage memory unavailable"}
+
+
+EVENT_DURATION_H = {"softball": 2.5, "baseball": 3.0, "soccer": 2.0, "football": 3.0}
+
+
+def _event_duration_h(field: dict[str, Any]) -> float:
+    sport = str(field.get("sport") or "").lower()
+    return next((h for k, h in EVENT_DURATION_H.items() if k in sport), 2.5)
+
+
+def _apply_event_risk(field: dict[str, Any], game_time: str, official_status: str, weather_data: dict[str, Any],
+                      probability: dict[str, Any]) -> dict[str, Any]:
+    """v2 whole-event model (soak, storms over the game window, wind, cold) when nothing official is posted.
+
+    Mutates ``probability`` on success. Any failure keeps the v1 answer and says so in ``model``."""
+    if official_status != "unknown":
+        return {"version": "v1", "note": "official status is posted, so it decides"}
+    from rainout_agent import event_risk, event_weather
+
+    start = _parse_time(game_time)
+    coords = field.get("coordinates") or {}
+    if start is None or coords.get("lat") is None:
+        return {"version": "v1", "note": "no game time or coordinates for the event model"}
+    memory = _drainage_memory(field)
+    try:
+        prof = field.get("venue_profile_resolved") or {}
+        v2 = event_weather.evaluate(coords["lat"], coords["lon"], start, _event_duration_h(field),
+                                    event_risk.drainage_class(field), thunder_forecast=bool(weather_data.get("thunderstorm_likely")),
+                                    maintained=bool(prof.get("maintained")),
+                                    soak_memory=memory["soak_multiplier"] if memory.get("active") else 1.0)
+    except Exception:  # pragma: no cover - the event model must never break a status answer
+        v2 = None
+    if v2 is None:
+        return {"version": "v1", "note": "event weather (Open-Meteo) unavailable or disabled; game-hour model used",
+                "drainage_memory": memory}
+    v1 = probability["play_probability_percent"]
+    probability["play_probability_percent"] = v2["play_probability_percent"]
+    if memory.get("active") and v2["soak_penalty"]:
+        v2["reasons"].append(memory["explain"])
+    if v2["reasons"]:
+        probability["reason"] = f"{probability['reason']} {' '.join(v2['reasons'])}"
+    pct = v2["play_probability_percent"]
+    if pct < 40:
+        probability["risk_level"], probability["recommendation"] = "high", "check again before leaving"
+    elif pct < 70 and probability.get("risk_level") == "low":
+        probability["risk_level"], probability["recommendation"] = "medium", "check again before leaving"
+    return {"version": "v2", "v1_play_probability_percent": v1, "drainage": v2["drainage"], "features": v2["features"],
+            "soak_penalty": v2["soak_penalty"], "storm_window": v2["storm_window"], "storm_day": v2["storm_day"],
+            "reasons": v2["reasons"], "source": v2["source"], "drainage_memory": memory,
+            "forecast_cancel_note": v2.get("forecast_cancel_note")}
 
 
 def _weather_label(weather_data: dict[str, Any]) -> str:

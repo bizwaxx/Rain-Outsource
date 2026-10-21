@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 from rainout_agent import metrics
 from rainout_agent import http_cache
 from rainout_agent.premium_api import MAX_BODY as PREMIUM_MAX, handle_premium_request, is_premium_path
+from rainout_agent.outcomes_api import MAX_BODY as OUTCOMES_MAX_BODY, handle_outcomes_request, snapshot_mode
 from rainout_agent.reports_api import MAX_BODY, handle_reports_request
 from rainout_agent.status_api import build_status_result
 
@@ -50,22 +51,54 @@ class handler(BaseHTTPRequestHandler):
         if payload:
             self.wfile.write(payload)
 
+    # 'Was it on?' outcomes, the feed and the scoreboard live here too, next to the pre-event snapshots.
+    def _outcomes(self, method):
+        parsed = urlparse(self.path)
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        body = self.rfile.read(min(length, OUTCOMES_MAX_BODY + 1)) if length > 0 else b""
+        status, headers, payload = handle_outcomes_request(
+            method, parsed.path, parsed.query, body, self.headers.get("Content-Type") or "", dict(self.headers.items()),
+            client=(self.client_address or [None])[0])
+        self.send_response(status)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        for key, value in headers.items():
+            self.send_header(key, value)
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        if payload:
+            self.wfile.write(payload)
+
+    @staticmethod
+    def _is_outcomes(path):
+        p = path.rstrip("/")
+        return p == "/scoreboard" or p == "/v1/outcomes" or p.startswith("/v1/outcomes/")
+
     def do_POST(self):
         if is_premium_path(urlparse(self.path).path):
             return self._premium("POST")
-        if urlparse(self.path).path.rstrip("/") == "/v1/reports":
+        path = urlparse(self.path).path
+        if self._is_outcomes(path):
+            return self._outcomes("POST")
+        if path.rstrip("/") == "/v1/reports":
             return self._reports("POST")
         return self._send_json(405, {"error": "method_not_allowed"})
 
     def do_OPTIONS(self):
         if is_premium_path(urlparse(self.path).path):
             return self._premium("OPTIONS")
+        if self._is_outcomes(urlparse(self.path).path):
+            return self._outcomes("OPTIONS")
         return self._reports("OPTIONS")
 
     def do_GET(self):
         parsed = urlparse(self.path)
         if is_premium_path(parsed.path):
             return self._premium("GET")
+        if self._is_outcomes(parsed.path):
+            return self._outcomes("GET")
         if parsed.path.rstrip("/") == "/v1/reports":
             return self._reports("GET")
         params = parse_qs(parsed.query, keep_blank_values=True)
@@ -78,7 +111,11 @@ class handler(BaseHTTPRequestHandler):
             return self._send_json(400, {"error": "missing_game_time"})
 
         try:
-            payload = build_status_result(field_query=field_query, game_time=game_time)
+            from rainout_agent.venue_profile import parse_override
+
+            payload = build_status_result(field_query=field_query, game_time=game_time, venue_override=parse_override(params),
+                                          snapshot=snapshot_mode(dict(getattr(self, "headers", None).items())
+                                                                 if getattr(self, "headers", None) is not None else {}))
         except Exception as exc:  # pragma: no cover - live host safety net
             return self._send_json(
                 502,

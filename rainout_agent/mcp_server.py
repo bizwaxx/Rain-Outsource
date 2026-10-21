@@ -119,6 +119,11 @@ TOOLS: list[dict[str, Any]] = [
             "properties": {
                 "venue": {"type": "string"},
                 "game_time": {"type": "string", "description": "ISO-8601 with offset"},
+                "venue_maintenance": {"type": "string", "enum": ["yes", "no", "unknown"],
+                                      "description": "Optional league override: the venue has a tarp or grounds crew."},
+                "venue_level": {"type": "string", "enum": ["college_pro", "rec"], "description": "Optional league override."},
+                "venue_surface": {"type": "string", "enum": ["turf", "grass", "dirt_infield", "motocross_dirt"],
+                                  "description": "Optional league override."},
             },
             "required": ["venue", "game_time"],
         },
@@ -417,10 +422,33 @@ TOOLS.append({
         },
     },
 })
+TOOLS.append({
+    "name": "report_outcome",
+    "title": "Was it on? (report what happened)",
+    "description": (
+        "After an event, share whether it went ahead: outcome='played', 'delayed' (still played), 'cancelled' or 'unknown'. "
+        "Only report what the user told you, after they agree to share it. field_id from find_venue/find_team venues (or "
+        "an alias); date is the event's local date YYYY-MM-DD (today or up to 7 days back). Reports are anonymous (no IPs "
+        "or personal data), feed the venue's drainage memory, the public outcomes feed and the accuracy scoreboard. "
+        "Limited to 3 reports per venue and 10 in total per hour."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "field_id": {"type": "string", "description": "Venue field_id or alias."},
+            "date": {"type": "string", "description": "Event's local date, YYYY-MM-DD (default today)."},
+            "game_time": {"type": "string", "description": "Optional start time, ISO 8601 with offset (picks the game)."},
+            "outcome": {"type": "string", "enum": ["played", "delayed", "cancelled", "unknown"]},
+            "note": {"type": "string", "maxLength": 280},
+        },
+        "required": ["field_id", "outcome"],
+    },
+})
+WRITE_TOOLS = {"report_cancellation", "report_outcome"}
 for _tool in TOOLS:
     _tool["annotations"] = {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": True, "openWorldHint": True}
-_REPORT = next(t for t in TOOLS if t["name"] == "report_cancellation")
-_REPORT["annotations"] = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True}
+    if _tool["name"] in WRITE_TOOLS:
+        _tool["annotations"] = {"readOnlyHint": False, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True}
 _CLIENT: contextvars.ContextVar[str | None] = contextvars.ContextVar("rainout_mcp_client", default=None)
 
 
@@ -469,7 +497,9 @@ def _venue_status(args: dict[str, Any]) -> dict[str, Any]:
     from rainout_agent.status_api import build_status_result
 
     venue, game_time = _require(args, "venue"), _require(args, "game_time")
-    result = build_status_result(field_query=venue, game_time=game_time)
+    from rainout_agent.venue_profile import parse_override
+
+    result = build_status_result(field_query=venue, game_time=game_time, venue_override=parse_override(args), snapshot="real")
     if result.get("error") == "unknown_field":
         raise ToolError(result.get("spoken_answer") or "Unknown venue.")
     return result
@@ -592,6 +622,15 @@ def _should_we_cancel(args: dict[str, Any]) -> dict[str, Any]:
                        pick=args.get("pick"), time=args.get("time") or args.get("date"), duration_hours=args.get("duration_hours"))
 
 
+def _report_outcome(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent import outcomes, reports
+
+    try:
+        return outcomes.submit_outcome(dict(args), client=_CLIENT.get())
+    except reports.ReportError as exc:
+        raise ToolError(str(exc)) from exc
+
+
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -637,6 +676,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "check_materials_risk": _check_materials_risk,
     "go_no_go": _go_no_go,
     "should_we_cancel": _should_we_cancel,
+    "report_outcome": _report_outcome,
 }
 
 

@@ -208,6 +208,21 @@ paths:
           schema:
             type: string
           example: "2026-06-06T20:20:00-05:00"
+        - in: query
+          name: venue_maintenance
+          required: false
+          schema: {type: string, enum: ["yes", "no", "unknown"]}
+          description: League override. The venue has a tarp or grounds crew. Labelled unverified in venue_profile.sources.
+        - in: query
+          name: venue_level
+          required: false
+          schema: {type: string, enum: [college_pro, rec]}
+          description: League override for the venue level (default rec without evidence).
+        - in: query
+          name: venue_surface
+          required: false
+          schema: {type: string, enum: [turf, grass, dirt_infield, motocross_dirt]}
+          description: League override for the playing surface.
       responses:
         "200":
           description: Agent-readable status result
@@ -483,6 +498,53 @@ paths:
                       $ref: '#/components/schemas/CancellationReport'
         "404":
           description: Unknown field_id.
+  /v1/outcomes:
+    post:
+      operationId: reportOutcome
+      summary: "Was it on? Report whether an event went ahead (played, delayed, cancelled or unknown)."
+      description: >-
+        After the event, for today or up to 7 days back. Anonymous (no IPs or personal data), unverified, rate limited
+        (3 per venue and 10 in total per client per hour). Only report what the user told you, after they agree to share it.
+        Feeds the venue's drainage memory, the outcomes feed and the accuracy scoreboard. Test entries (test=true) are
+        kept in local memory only and excluded everywhere.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [field_id, outcome]
+              properties:
+                field_id: {type: string}
+                date: {type: string, description: "Event's local date, YYYY-MM-DD (default today)."}
+                game_time: {type: string, description: "Optional start, ISO 8601 with offset."}
+                outcome: {type: string, enum: [played, delayed, cancelled, unknown]}
+                note: {type: string, maxLength: 280}
+                test: {type: boolean}
+      responses:
+        "201": {description: Stored; includes the pre-event odds we had on record for that game, if any.}
+        "400": {description: Invalid input (invalid_outcome, invalid_date, date_out_of_range, note_too_long, ...).}
+        "404": {description: Unknown field.}
+        "429": {description: Rate limited.}
+    get:
+      operationId: listOutcomes
+      summary: Public outcomes feed (JSON), or one venue's events and drainage memory with field_id.
+      parameters:
+        - {in: query, name: field_id, required: false, schema: {type: string}}
+      responses:
+        "200": {description: Reported outcomes (majority per event) with the pre-event odds.}
+  /v1/outcomes/feed.atom:
+    get:
+      operationId: outcomesAtomFeed
+      summary: Reported outcomes as an Atom feed.
+      responses:
+        "200": {description: Atom XML.}
+  /v1/outcomes/scoreboard:
+    get:
+      operationId: outcomesScoreboard
+      summary: Accuracy of our pre-event odds against reported outcomes (directional, confident wrong, Brier, by surface).
+      responses:
+        "200": {description: Scoreboard JSON. The same numbers are at /scoreboard as a web page.}
   /v1/schedule/check:
     get:
       operationId: checkScheduleByUrl

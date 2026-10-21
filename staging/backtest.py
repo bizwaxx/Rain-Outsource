@@ -38,7 +38,7 @@ from zoneinfo import ZoneInfo
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "known_outcomes.json"
 HIST_FORECAST = "https://historical-forecast-api.open-meteo.com/v1/forecast"
 ARCHIVE = "https://archive-api.open-meteo.com/v1/archive"
-HOURLY = "precipitation_probability,precipitation,weather_code,temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_gusts_10m"
+HOURLY = "precipitation_probability,precipitation,weather_code,cape,temperature_2m,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_gusts_10m"
 THUNDER = {95, 96, 99}
 # Rain amount in the hour -> stand-in rain chance when no archived probability exists.
 PROXY_POP = ((0.1, 5), (0.5, 35), (2.5, 60), (7.6, 80), (float("inf"), 95))
@@ -126,6 +126,7 @@ def _rows(payload: dict) -> dict[datetime, dict[str, Any]]:
         code = col("weather_code")[i]
         r = rows.setdefault(t, {})
         r.update({"pop": col("precipitation_probability")[i], "code": code, "thunder": code in THUNDER if code is not None else False,
+                  "cape": col("cape")[i],
                   "temp_f": col("temperature_2m")[i], "rh": col("relative_humidity_2m")[i], "dew_f": col("dew_point_2m")[i],
                   "wind_mph": col("wind_speed_10m")[i], "gust_mph": col("wind_gusts_10m")[i]})
         rows.setdefault(t - timedelta(hours=1), {})["mm"] = col("precipitation")[i]
@@ -147,7 +148,23 @@ def fetch_weather(lat: float, lon: float, d0: date, d1: date, fetch: Fetch = htt
         out["sources"].append(url)
     except Exception as exc:
         out["observed_error"] = str(exc)[:200]
+    try:
+        # Ground-wetness inputs: ERA5 rain and FAO-56 reference evapotranspiration for the week before.
+        url = _om_url(ARCHIVE, lat, lon, d0 - timedelta(days=4), d1, "precipitation,et0_fao_evapotranspiration")
+        out["wet"] = wet_rows(fetch(url))
+        out["sources"].append(url)
+    except Exception as exc:
+        out["wet_error"] = str(exc)[:200]
     return out
+
+
+def wet_rows(payload: dict) -> dict[datetime, dict[str, Any]]:
+    """{utc hour start: {mm, et0}}; both Open-Meteo sums are for the hour before the timestamp."""
+    h = payload.get("hourly") or {}
+    times = h.get("time") or []
+    pr = h.get("precipitation") or [None] * len(times)
+    et = h.get("et0_fao_evapotranspiration") or [None] * len(times)
+    return {datetime.fromtimestamp(int(ts), timezone.utc) - timedelta(hours=1): {"mm": pr[i], "et0": et[i]} for i, ts in enumerate(times)}
 
 
 def _hours(start: datetime, end: datetime) -> list[datetime]:
@@ -254,6 +271,54 @@ def score_construction(fx: dict[str, Any], wx: dict[str, Any]) -> dict[str, Any]
             "model": "concrete.evaluate (default mix, 24 h cure, no protection)"}
 
 
+def event_inputs(fx: dict[str, Any], wx: dict[str, Any], track: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    """Inputs for rainout_agent.event_risk (the v2 whole-event model), from the weather already fetched."""
+    from rainout_agent import event_risk as er
+    from rainout_agent import motocross as mx
+
+    if fx["field_type"] == "construction":
+        return None
+    if fx["field_type"] == "motocross":
+        tz = ZoneInfo("America/Chicago")
+        start = _local(fx, "start", tz)
+        duration = (_local(fx, "end", tz) - start).total_seconds() / 3600
+        soil = mx.SOIL_FACTORS.get((track or {}).get("soil") or "unknown", 1.0)
+    else:
+        start = _local(fx, "start", ZoneInfo(fx["tz"]))
+        duration, soil = float(fx.get("duration_h", 3)), 1.0
+    rows, wgrade = pick_rows(wx, start - timedelta(hours=2), start + timedelta(hours=duration))
+    if not rows:
+        return None
+    feat = er.features(wx.get("observed") or {}, rows, start, duration)
+    for k in ("earlier_today_in", "prior_24h_in", "prior_48h_in"):
+        if feat.get(k) is not None:
+            feat[k] = round(feat[k] / soil, 3)   # sandy motocross soil drains faster
+    from rainout_agent import venue_profile as vp
+    prof = vp.build({"venue_profile": fx.get("venue_profile") or {}, "surface": fx["field_type"],
+                     "surface_source": "fixture field_type"})
+    drainage = er.drainage_class(field_type=fx["field_type"])
+    maintained = prof["maintained"]
+    ball = fx["field_type"] != "motocross"
+    series = er.wet_series(wx.get("wet") or {}, start, soil)
+    er.add_wetness(feat, series, drainage, ball)
+    return {"id": fx["id"], "field_type": fx["field_type"], "outcome": fx["outcome"], "grade": wgrade, "features": feat,
+            "drainage": drainage, "ball_sport": ball, "series": series, "maintained": maintained, "venue_profile": prof}
+
+
+def score_event_risk(inp: dict[str, Any], params: dict[str, Any] | None = None) -> dict[str, Any]:
+    from rainout_agent import event_risk as er
+
+    feat = inp["features"]
+    maintained = bool(inp.get("maintained"))
+    drainage = er.effective_drainage(inp["drainage"], maintained, params)
+    if params is not None and inp.get("series") is not None and params.get("soak_model") in ("wetness", "hybrid"):
+        feat = {**feat, "wetness_in": er.wetness_in(inp["series"], drainage if inp["ball_sport"] else "mx", params)}
+    base = er.base_percent(feat.get("window_pop") or 0, drainage, params)
+    out = er.adjust(base, feat, drainage, params, inp["ball_sport"], maintained)
+    return {"p": out["play_probability_percent"], "base_percent": base, "features": feat, "drainage": drainage,
+            "reasons": out["reasons"], "model": "event_risk v2 (window rain, soak by drainage, storms, wind, cold, humility cap)"}
+
+
 # ---------------------------------------------------------------- behaviour checks
 def behaviour_checks(fx: dict[str, Any], scored: dict[str, Any]) -> list[dict[str, Any]]:
     """Status precedence and player-report handling for this fixture's weather."""
@@ -339,6 +404,10 @@ def notice_replay(fx: dict[str, Any], track: dict[str, Any], wp_payload: Any) ->
                 "detail": f"post is dated after the event ({posted.date()}), so it could not help on race day (parser: '{st['status']}')"}
     st = mx.official_status(track, ev, notices, max(ws - timedelta(hours=2), posted or ws))
     status = st["status"]
+    if fx.get("outcome") == "played":
+        # A race that ran: the parser must NOT turn its posts (results, live broadcasts) into a cancellation.
+        ok = status not in ("cancelled", "postponed")
+        return {"check": "mx_notice_parser", "ok": ok, "detail": f"race ran; parser says '{status}'"}
     ok = status in ("cancelled", "postponed", "uncertain")
     detail = f"parser says '{status}'" + (" (flagged as uncertain, odds capped at 50%)" if status == "uncertain" else "")
     if not ok:
@@ -353,7 +422,7 @@ def run(fixtures: dict[str, Any] | None = None, fetch: Fetch = http_json, fetch_
 
     fixtures = fixtures or load_fixtures()
     tracks = {t["short_id"]: t for t in mx.tracks()}
-    results = []
+    results, inputs = [], []
     for fx in fixtures["fixtures"]:
         log(f"backtest {fx['id']}")
         if fx["field_type"] == "motocross":
@@ -370,10 +439,19 @@ def run(fixtures: dict[str, Any] | None = None, fetch: Fetch = http_json, fetch_
             scored = score_construction(fx, wx)
         else:
             scored = score_sports(fx, wx)
+        inp = event_inputs(fx, wx, track)
+        if inp is not None and scored.get("p") is not None:
+            inputs.append(inp)
+            v1 = {"p_v1": scored["p"], "model_v1": scored.get("model")}
+            v2 = score_event_risk(inp)
+            scored = {**scored, **v1, "p": v2["p"], "model": v2["model"], "event_risk": {k: v2[k] for k in ("base_percent", "features", "drainage", "reasons")}}
         if scored.get("skipped"):
             g = {"decision": None, "result": "skipped", "directional_ok": None, "confident_wrong": False}
         else:
             g = grade(fx["outcome"], scored.get("p"), scored.get("decision"))
+            if scored.get("p_v1") is not None:
+                g1 = grade(fx["outcome"], scored["p_v1"])
+                g["v1"] = {"result": g1["result"], "directional_ok": g1["directional_ok"], "confident_wrong": g1["confident_wrong"]}
         behaviour = behaviour_checks(fx, scored)
         if fx["field_type"] == "motocross":
             wp = wp_post_url(fx["source_url"])
@@ -385,7 +463,16 @@ def run(fixtures: dict[str, Any] | None = None, fetch: Fetch = http_json, fetch_
         results.append({"id": fx["id"], "field_type": fx["field_type"], "activity": fx["activity"], "outcome": fx["outcome"],
                         "cause": fx["cause"], "source_url": fx["source_url"], "start": fx["start"], "assumptions": fx.get("assumptions", []),
                         **scored, **g, "behaviour": behaviour, "weather_sources": wx.get("sources", [])})
-    return {"results": results, "summary": summarize(results), "precedence": report_precedence_check(),
+    summary = summarize(results)
+    if inputs:
+        log("backtest: leave-one-out calibration")
+        from staging import calibrate
+        cal = calibrate.calibrate(inputs)
+        summary["held_out"] = {"leave_one_out": cal["leave_one_out"], "in_sample": cal["in_sample"], "chosen": cal["chosen"],
+                               "grid_points": cal["grid_points"], "loo_distinct_choices": cal["loo_distinct_choices"],
+                               "note": "event_risk scored on sports + motocross fixtures; each fixture predicted with parameters "
+                                       "chosen on the others only (construction is scored by concrete.evaluate and not included)"}
+    return {"results": results, "summary": summary, "precedence": report_precedence_check(),
             "excluded": fixtures.get("excluded", [])}
 
 
@@ -408,6 +495,13 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     by_grade: dict[str, list] = {}
     for r in results:
         by_grade.setdefault(r.get("weather_grade") or "none", []).append(r)
+    def agg_v1(rs: list[dict[str, Any]]) -> dict[str, Any]:
+        v = [r["v1"] for r in rs if r.get("v1")]
+        d = [x for x in v if x["directional_ok"] is not None]
+        return {"scored": len(v), "directional_accuracy": round(100 * sum(1 for x in d if x["directional_ok"]) / len(d)) if d else None,
+                "confident_wrong": sum(1 for x in v if x["confident_wrong"])}
+
     return {"overall": agg(results), "by_field_type": {k: agg(v) for k, v in by_type.items()},
+            "v1_overall": agg_v1(results), "v1_by_field_type": {k: agg_v1(v) for k, v in by_type.items()},
             "by_weather_grade": {k: agg(v) for k, v in by_grade.items()},
             "mismatches": [r["id"] for r in results if r["result"] in ("wrong", "hedged")]}
