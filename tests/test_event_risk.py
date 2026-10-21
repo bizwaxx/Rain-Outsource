@@ -36,6 +36,7 @@ def test_drainage_class_mapping():
     assert er.drainage_class(field_type="turf") == "fast"
     assert er.drainage_class(field_type="dirt_infield") == "slow"
     assert er.drainage_class(field_type="dirt_infield", maintained=True) == "medium"
+    assert er.effective_drainage("slow", True) == "slow"  # maintained venues now use maint_soak_factor
     assert er.drainage_class({"sport": "softball", "surface": "unknown"}) == "slow"
     assert er.drainage_class({"sport": "soccer", "surface": "unknown"}) == "medium"
 

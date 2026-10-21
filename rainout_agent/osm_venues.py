@@ -223,6 +223,13 @@ def search(q: str | None = None, *, states: list[str] | None = None, sports: lis
     return [(s, v) for s, v, _ in out]
 
 
+@lru_cache(maxsize=1)
+def surfaces() -> dict[str, list[str]]:
+    """{venue_id: [profile surface, raw OSM tag, element URL]} from data/osm/surfaces.json (scripts/osm_surfaces.py)."""
+    path = OSM_DIR / "surfaces.json"
+    return json.loads(path.read_text(encoding="utf-8")).get("venues", {}) if path.exists() else {}
+
+
 # ------------------------------------------------------------------ shapes
 def primary_sport(v: dict[str, Any]) -> str:
     if v["kind"] == "motocross_track":
@@ -252,9 +259,19 @@ def to_field(v: dict[str, Any]) -> dict[str, Any]:
         "status_source_type": "none", "ownership_type": "unknown", "surface": "unknown", "drainage": "unknown",
         "source_reliability": "low", "aliases": [v["name"]], "verification_level": "osm_only",
         "rain_to_cancel_threshold_in": SPORT_THRESHOLDS_IN.get(sport, 0.5),
-        "osm": {"elements": [osm_url(r) for r in v["osm"][:3]], "pitches": v.get("pitches"), "attribution": ATTRIBUTION},
+        "osm": {"elements": [osm_url(r) for r in v["osm"][:3]], "pitches": v.get("pitches"), "attribution": ATTRIBUTION,
+                "surface": _surface(v)},
         "noaa_station_id": v.get("station"),
     }
+
+
+def _surface(v: dict[str, Any]) -> dict[str, str] | None:
+    hit = surfaces().get(v["id"])
+    if hit:
+        return {"value": hit[0], "tag": f"{hit[1]}", "element": hit[2]}
+    if v["kind"] == "motocross_track":
+        return {"value": "motocross_dirt", "tag": "(sport=motocross)", "element": osm_url(v["osm"][0]) if v.get("osm") else "OpenStreetMap"}
+    return None
 
 
 def public(v: dict[str, Any], score: float | None = None, distance_km: float | None = None) -> dict[str, Any]:
