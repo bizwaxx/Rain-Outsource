@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy: Rain-Outsource</title>
+<meta name="description" content="What Rain-Outsource logs and keeps: aggregate counts only, no raw IP addresses, no accounts needed. Plain-words privacy policy.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://rainout-agent-source.vercel.app/privacy">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" href="/icon.svg" type="image/svg+xml">
+<style>body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1a2433;background:#f5f7fa}main{max-width:760px;margin:0 auto;padding:24px 18px 50px}a{color:#0b63ce}.draft{background:#fff4d6;border:2px solid #c47d00;border-radius:12px;padding:12px 16px;font-weight:700}h1{font-size:28px;margin:18px 0 4px}h2{font-size:20px;margin:26px 0 6px}.meta{color:#5b6776;font-size:14px}header a{font-weight:600;text-decoration:none}</style>
+</head>
+<body>
+<main>
+<header><a href="/">← Rain-Outsource</a></header>
+<p class="draft">DRAFT FOR JIMMY'S REVIEW. Not final. Not legal advice. Wording may change before it's approved.</p>
+<h1>Privacy</h1>
+<p class="meta">Draft dated October 20, 2026. Applies to the Rain-Outsource API and MCP server at rainout-agent-source.vercel.app and the docs at bizwaxx.github.io/Rain-Outsource.</p>
+
+<h2>The short version</h2>
+<p>You don't need an account, a key or an email to use Rain-Outsource. We don't sell data, and we don't build profiles of people. We keep counts of how much the service is used, not who used it.</p>
+
+<h2>What we keep</h2>
+<ul>
+<li><strong>Usage counts.</strong> Totals like "how many calls each tool or endpoint got per day," kept for about 400 days. To estimate how many different clients used the service on a day, the network address is turned into a keyed one-way hash (HMAC-SHA256 with a secret key that changes every day) and added to an approximate counter (a HyperLogLog) that keeps only the total. We also keep one record of the very first outside request: its time, the endpoint or tool, a broad client type (like "curl") and the country our host reports. No raw IP address or User-Agent is stored.</li>
+<li><strong>Rainout reports you choose to share.</strong> If you or your agent send a report (for example "cancelled" at a field), we store the field, the status, the game time, the time of the report and any short note you add (up to 280 characters). Reports are public: anyone can read recent ones at <code>/v1/reports</code>. They are anonymous and are deleted automatically after 24 hours. Please don't put names or contact details in the note.</li>
+<li><strong>Rate limits.</strong> To stop spam on rainout reports, the sender's network address is turned into a keyed one-way hash (HMAC-SHA256 with a secret key that changes every day) and used as an hourly counter key. It expires within an hour and is never written into the report. Without the secret key, nobody can work out an address from the hash by trying addresses. We hold the key, so during that hour we could check whether a particular address matches. We don't do that.</li>
+<li><strong>Weather cache.</strong> We save weather forecasts for places so we don't ask the weather services the same thing over and over. This is weather data, not data about you.</li>
+</ul>
+
+<h2>What we send to others</h2>
+<ul>
+<li>To answer a question, we send the place or coordinates (never your identity) to weather and map services: the US National Weather Service, NOAA and Open-Meteo (forecasts and place-name search).</li>
+<li>If you give us a schedule or event link, we fetch that link to read the games on it.</li>
+<li>We read public official status pages from leagues, venues and tracks.</li>
+</ul>
+
+<h2>Hosting</h2>
+<p>The service runs on Vercel, and its shared storage is Upstash. Like any web host, Vercel may keep short-lived technical request logs (which can include IP addresses) under its own privacy policy. We use those logs only to fix problems, not to track people. The docs site is hosted on GitHub Pages.</p>
+
+<h2>Cookies</h2>
+<p>The API and these pages don't set cookies or use ad trackers.</p>
+
+<h2>Calendars</h2>
+<p>Rain-Outsource never reads or writes your calendar. It gives your agent a ready-made event, and your agent should ask you before adding it.</p>
+
+<h2>Children</h2>
+<p>The service doesn't ask for personal information, and it isn't meant to collect any from anyone, including children.</p>
+
+<h2>Changes and contact</h2>
+<p>If this page changes, the update will be in the public GitHub history. Questions or a request about a report you sent? Open an issue at <a href="https://github.com/bizwaxx/Rain-Outsource/issues">github.com/bizwaxx/Rain-Outsource/issues</a>.</p>
+<p><a href="/terms">Terms</a> · <a href="/">Home</a></p>
+</main>
+</body>
+</html>
