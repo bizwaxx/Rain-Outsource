@@ -15,7 +15,7 @@ Each (trigger, game) pair goes out once. Changes are compared with the last stor
 | Channel | What happens today |
 |---|---|
 | `email` | **Stub.** Double opt-in: the confirmation email and every alert are rendered, logged and stored in the outbox. **Nothing is sent.** The sender is pluggable (`alerts.set_email_sender(obj)` with a `send(message) -> dict` method). |
-| `webhook` | HMAC-signed JSON POST. **Test mode by default:** the signed payload is stored in the outbox, not POSTed. With `RAINOUT_ALERTS_LIVE=1` it's really POSTed, with retries (3 tries; 5xx, 408, 429 and network errors are retried) and URL safety: https only, port 443, no credentials, no private or reserved IPs, a pinned IP (no DNS rebinding) and no redirects. |
+| `webhook` | HMAC-signed JSON POST. **Test mode by default:** the signed payload is stored in the outbox, not POSTed. With `RAINOUT_ALERTS_LIVE=1` it's really POSTed, with retries (3 tries; 5xx, 408, 429 and network errors are retried) and URL safety: https only, standard ports only, no credentials, no private or reserved IPs, a pinned IP (no DNS rebinding) and no redirects. |
 | `calendar` | A per-subscription ICS feed at `/v1/alerts/{id}/calendar.ics?token=…`, recomputed on every fetch, with the odds in titles and descriptions (reuses `schedule.build_risk_ics`). It works fully today and needs nothing extra. |
 
 ### Webhook signature
