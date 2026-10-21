@@ -1,4 +1,5 @@
-/* One-field widget for league websites: /switch/embed?field_id=...&time=HH:MM (viewer's time zone, default next hour). */
+/* One-field widget for league websites: /switch/embed?field_id=...&time=HH:MM (viewer's time zone, default next hour).
+   After the game time (or with &ask=1) it shows a "Was it on?" row that posts to /v1/outcomes after a confirmation. */
 (function () {
   "use strict";
   function pad(n) { return String(n).padStart(2, "0"); }
@@ -34,6 +35,23 @@
       var al = line("hint", "Estimate, not an official call. "); al.appendChild(acc); box.appendChild(al);
       var r = (d.community_reports || {}).count;
       if (r) box.appendChild(line("hint", r + " player report(s) recently."));
+      if (when <= new Date() || q.get("ask") === "1") {        // after the game: "Was it on?"
+        var row = line("hint", "Was it on? "), msg = line("hint", "");
+        [["played", "Yes, played"], ["cancelled", "Called off"]].forEach(function (o) {
+          var b = document.createElement("button"); b.textContent = o[1]; b.type = "button";
+          b.addEventListener("click", function () {
+            var day = when.getFullYear() + "-" + pad(when.getMonth() + 1) + "-" + pad(when.getDate());
+            if (!window.confirm("Share an anonymous report that the game on " + day + " " + (o[0] === "played" ? "went ahead" : "was called off") + "?")) return;
+            b.disabled = true;
+            fetch("/v1/outcomes", {method: "POST", headers: {"Content-Type": "application/json", Accept: "application/json"},
+                                   body: JSON.stringify({field_id: d.field_id || id, date: day, outcome: o[0]})})
+              .then(function (r) { return r.json().then(function (j) { msg.textContent = r.status === 404 ? "Not live yet." : j.error ? (j.message || j.error) : "Thanks!"; }); })
+              .catch(function () { msg.textContent = "Couldn't send."; b.disabled = false; });
+          });
+          row.appendChild(b);
+        });
+        box.appendChild(row); box.appendChild(msg);
+      }
       var a = document.createElement("a");
       a.href = "/switch?fields=" + encodeURIComponent(d.field_id || id); a.target = "_blank"; a.rel = "noopener";
       a.textContent = "Details and free alerts · Rain-Outsource";
