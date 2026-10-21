@@ -5,7 +5,7 @@ Rule: nothing is posted, submitted or paid for until the step that says so, and 
 
 Short version: 1) Jimmy logs into Vercel and checks the secrets. 2) Jimmy OKs the merges, group by group. 3) The staging checklist says GREEN LIGHT. 4) Jimmy does the listing logins. 5) The licence and paid-plan items are done before we charge anyone.
 
-Each PR is green on its own branch. The launch group (steps 1–13 of the order below, with #47, #51 and #52) merges into main with one conflict: #51 vs #33, where #33's pages win. 577 tests pass, with 12 Vercel functions (the Hobby limit). With every PR merged, including #49 and #50 (checked locally on Oct 21), 726 tests pass, with 2 skipped and 11 functions. Without #49 the full stack is 13 functions, so #49 has to land with the construction group. The reference branch `integration/launch-stack` isn't a PR and won't be merged.
+Each PR is green on its own branch. The launch group (steps 1–13 of the order below, with #47, #51 and #52) merges into main with one conflict: #51 vs #33, where #33's pages win. 577 tests pass, with 12 Vercel functions (the Hobby limit). With every PR merged, including #49 and #50 (the reference branch `integration/launch-stack-v2`, Oct 21), 726 tests pass, with 2 skipped and 11 functions. Without #49 the full stack is 13 functions, so #49 has to land with the construction group. `integration/launch-stack-v2` isn't a PR and won't be merged. The old `integration/launch-stack` is kept as is and is no longer the reference.
 
 ---
 
