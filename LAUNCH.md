@@ -5,7 +5,7 @@ Rule: nothing is posted, submitted or paid for until the step that says so, and 
 
 Short version: 1) Jimmy logs into Vercel and checks the secrets. 2) Jimmy OKs the merges, group by group. 3) The staging checklist says GREEN LIGHT. 4) Jimmy does the listing logins. 5) The licence and paid-plan items are done before we charge anyone.
 
-Each PR is green on its own branch. The launch group (steps 1–13 of the order below) merges cleanly into main, with 567 tests passing and 12 Vercel functions (the Hobby limit). With every PR merged, the reference branch `integration/launch-stack` passes 736 tests with 11 functions. That branch isn't a PR and won't be merged.
+Each PR is green on its own branch. The launch group (steps 1–13 of the order below, with #47, #51 and #52) merges into main with one conflict: #51 vs #33, where #33's pages win. 577 tests pass, with 12 Vercel functions (the Hobby limit). With every PR merged, including #49 and #50 (checked locally on Oct 21), 726 tests pass, with 2 skipped and 11 functions. Without #49 the full stack is 13 functions, so #49 has to land with the construction group. The reference branch `integration/launch-stack` isn't a PR and won't be merged.
 
 ---
 
@@ -32,7 +32,7 @@ Each PR is a draft. When a group gets his OK, Dev marks it ready, merges it, and
 |---|---|---|---|
 | A. Checklist + small fixes | #38, #39, #40, #52 | Checklist tool; Krieg/Cedar Park link-only; motocross date reading; keyed daily HMAC for the report rate-limit hash (#51 and #33 are stacked on #52) | Safe first. Live answers only change for unreadable pages and motocross notices. |
 | B. Front door | #51 or #33 → #37 → #34 | Landing page, icon, SEO, MCP server card, `server.json`, draft privacy and terms, the "switch free" page, README and llms.txt. #51 serves the privacy/terms/icon/server-card pages from the existing index function; #33 serves them from a new `api/site.py` | **Merge only one copy of the pages, #51's or #33's.** **Jimmy:** read the draft privacy and terms pages and the "free promise" wording first. After this group main has 12 functions, the Hobby limit. |
-| C. Model v2 + "Was it on?" + alerts | #42 → #43 → #44 → #46 → #45 → #48 | Better odds (soak, storms, venue profile), outcome reports and scoreboard, the buttons, free alerts in test mode | #43 changes live odds, so it needs a GREEN LIGHT backtest. No new Vercel functions. |
+| C. Model v2 + "Was it on?" + alerts | #42 → #43 → #44 → #46 → #47 → #45 → #48 | Better odds (soak, storms, venue profile), outcome reports and scoreboard, 68 more past events with honest odds caps, the buttons, free alerts in test mode | #43 and #47 change live odds. Held out, #47 scores 84% with 2 confident-wrong calls (gate: 0), so they need Jimmy's launch decision. No new Vercel functions. |
 | D. This doc | #41 | LAUNCH.md | Last, so it matches what merged. |
 | E. Construction v2 + lightning (parked) | #26 → #28 → #30 → #31 → #35 → #36, plus #49 | Nowcast, concrete, materials, go/no-go, should-we-cancel, agent docs, advisory lightning | #26 adds a 13th function. #49 moves llms.txt and openapi.yaml into the site function, so it must land in the same OK, before this group deploys. |
 | F. Paid tier (parked, test mode only) | #25 → #27 → #29, plus #50 | API keys, usage dashboard, Stripe test mode, crypto testnet, NWS/MET Norway-only data for paid answers | With no Stripe keys, billing answers "not set up". #50 ships off; turn it on before the first paying customer. |
