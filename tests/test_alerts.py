@@ -332,9 +332,42 @@ def test_vercel_route_and_handler():
     import re
     from pathlib import Path
 
-    from api.alerts import handler
+    from api.fields import handler
 
     routes = json.loads((Path(__file__).resolve().parents[1] / "vercel.json").read_text())["routes"]
     for p in ("/v1/alerts", "/v1/alerts/subscribe", "/v1/alerts/dispatch", "/v1/alerts/abc/calendar.ics"):
-        assert next(r["dest"] for r in routes if re.fullmatch(r["src"], p)) == "/api/alerts.py"
+        assert next(r["dest"] for r in routes if re.fullmatch(r["src"], p)) == "/api/fields.py"
     assert hasattr(handler, "do_POST") and hasattr(handler, "do_DELETE")
+    builds = json.loads((Path(__file__).resolve().parents[1] / "vercel.json").read_text())["builds"]
+    assert not any(b["src"] == "api/alerts.py" for b in builds)  # alerts share api/fields.py (Hobby: 12 functions)
+
+
+def test_fields_function_serves_alerts_and_fields_locally():
+    """One Vercel function answers both /v1/fields and /v1/alerts/* (loopback only, no network)."""
+    import threading
+    import urllib.error
+    import urllib.request
+    from http.server import ThreadingHTTPServer
+
+    from api.fields import handler
+
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{srv.server_address[1]}"
+    try:
+        with urllib.request.urlopen(f"{base}/v1/fields?sport=softball&limit=1", timeout=10) as r:
+            assert r.status == 200 and "fields" in json.loads(r.read())
+        try:
+            with urllib.request.urlopen(f"{base}/v1/alerts/outbox", timeout=10) as r:
+                code = r.status
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+        assert code == 403  # handled by the alerts code (internal-only), not a 404/405
+        req = urllib.request.Request(f"{base}/v1/fields", data=b"{}", method="POST")
+        try:
+            urllib.request.urlopen(req, timeout=10)
+            raise AssertionError("POST /v1/fields should be 405")
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 405
+    finally:
+        srv.shutdown()

@@ -1,4 +1,4 @@
-"""HTTP glue for /v1/alerts/*, shared by the Vercel function (api/alerts.py) and tests."""
+"""HTTP glue for /v1/alerts/*, shared by the Vercel function (api/fields.py, which also serves /v1/fields) and tests."""
 from __future__ import annotations
 
 import html

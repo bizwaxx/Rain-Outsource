@@ -44,10 +44,6 @@
     {
       "src": "api/llms.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "api/alerts.py",
-      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -145,7 +141,7 @@
     },
     {
       "src": "/v1/alerts(/.*)?",
-      "dest": "/api/alerts.py"
+      "dest": "/api/fields.py"
     }
   ]
 }
