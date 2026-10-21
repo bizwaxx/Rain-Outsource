@@ -116,6 +116,6 @@ Free keys signed up: 4
 |---|---|
 | `RAINOUT_INTERNAL_TOKEN` | Secret that marks our own traffic (`X-Rainout-Internal`) |
 | `RAINOUT_ADMIN_TOKEN` | Protects `/v1/admin/usage` (16+ characters) |
-| `RAINOUT_METRICS_SALT` | Base salt for the daily-rotating client hash |
+| `RAINOUT_METRICS_SALT` | Base salt for the daily-rotating client hash (also keys the report rate-limit hash) |
 | `RAINOUT_METRICS` | Optional; `off` disables counting |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_*`) | Already set by the Vercel Marketplace integration |

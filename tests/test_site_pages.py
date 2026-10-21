@@ -178,3 +178,17 @@ def test_site_pages_have_bounded_metrics_labels():
     assert metrics.endpoint_for("/privacy") == "site.privacy"
     assert metrics.endpoint_for("/icon.png") == "site.icon"
     assert getattr(SiteHandler.do_GET, "__name__") == "do_GET"
+
+
+def test_privacy_describes_keyed_rate_limit_hash_accurately():
+    import hashlib
+
+    from rainout_agent import reports
+
+    from rainout_agent.site_pages import SITE_DIR
+
+    html = (SITE_DIR / "privacy.html").read_text()
+    assert "keyed one-way hash" in html and "changes every day" in html and "within an hour" in html
+    assert "We can't turn it back into the address" not in html
+    assert "/v1/reports" in html and "400 days" in html
+    assert reports.client_key("203.0.113.9") != hashlib.sha256(b"203.0.113.9").hexdigest()[:16]
