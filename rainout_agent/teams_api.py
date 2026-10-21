@@ -16,6 +16,8 @@ ICS_CACHE = "public, max-age=900, s-maxage=900"
 
 
 def _json(status: int, payload: dict[str, Any], cache: str = http_cache.NO_STORE) -> tuple[int, str, bytes, str]:
+    from rainout_agent import odds_label
+    odds_label.apply(payload)
     return status, "application/json", json.dumps(payload).encode("utf-8"), cache
 
 

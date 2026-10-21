@@ -542,7 +542,9 @@ def build_status_result(
             outcomes.snapshot_prediction(response, field, _parse_time(game_time), test=snapshot == "test")
         except Exception:  # pragma: no cover - snapshots must never break a status answer
             pass
-    return response
+    from rainout_agent import odds_label
+
+    return odds_label.apply(response)
 
 
 def _drainage_memory(field: dict[str, Any]) -> dict[str, Any]:
@@ -600,7 +602,8 @@ def _apply_event_risk(field: dict[str, Any], game_time: str, official_status: st
         probability["risk_level"], probability["recommendation"] = "medium", "check again before leaving"
     return {"version": "v2", "v1_play_probability_percent": v1, "drainage": v2["drainage"], "features": v2["features"],
             "soak_penalty": v2["soak_penalty"], "storm_window": v2["storm_window"], "storm_day": v2["storm_day"],
-            "reasons": v2["reasons"], "source": v2["source"], "drainage_memory": memory}
+            "reasons": v2["reasons"], "source": v2["source"], "drainage_memory": memory,
+            "forecast_cancel_note": v2.get("forecast_cancel_note")}
 
 
 def _weather_label(weather_data: dict[str, Any]) -> str:
