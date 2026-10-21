@@ -18,3 +18,11 @@ def _isolated_weather_cache(monkeypatch):
     cache.set_cache(cache.MemoryCache())
     yield
     cache.set_cache(None)
+
+
+@pytest.fixture(autouse=True)
+def _no_live_lightning(monkeypatch):
+    """Status / go_no_go answers never call GLM or NWS alerts in tests (lightning tests set their own CHECK)."""
+    from rainout_agent import lightning
+
+    monkeypatch.setattr(lightning, "CHECK", lambda *a, **k: None)

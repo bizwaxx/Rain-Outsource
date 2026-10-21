@@ -179,6 +179,18 @@ def application(environ, start_response):
                         ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache_control)])
         return [payload]
 
+    if path.rstrip("/") in ("/v1/lightning", "/v1/lightning/ingest"):
+        from http import HTTPStatus
+
+        from rainout_agent.lightning_api import handle_lightning_request
+
+        hdrs = {k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")}
+        status, content_type, payload, cache_control = handle_lightning_request(method, path, environ.get("QUERY_STRING", ""), hdrs)
+        start_response(f"{status} {HTTPStatus(status).phrase}",
+                       [("Content-Type", content_type), ("Content-Length", str(len(payload))),
+                        ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache_control)])
+        return [payload]
+
     if path.rstrip("/") == "/v1/rain":
         from rainout_agent.rain_api import handle_rain_request
 

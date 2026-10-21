@@ -400,10 +400,134 @@ def for_point(lat: float, lon: float, start: datetime | None, now: datetime | No
     if start is not None and not relevant(start, now):
         return None
     try:
-        return summary(check_lightning(lat, lon, now=now, **kw))
+        result = check_lightning(lat, lon, now=now, **kw)
+        return with_warnings(summary(result), result)
     except Exception:
         return {"lightning_status": "unknown", "reason": "Lightning check failed.", "advisory": ADVISORY}
 
 
-def _checker() -> Callable[..., dict[str, Any] | None]:
-    return for_point  # monkeypatched in tests
+
+
+# --- wiring into play answers ---------------------------------------------------------------------
+# CHECK is the hook every caller uses (tests replace it; set RAINOUT_LIGHTNING=off to disable).
+CHECK: Callable[..., dict[str, Any] | None] = for_point
+
+
+def _enabled() -> bool:
+    import os
+
+    return (os.environ.get("RAINOUT_LIGHTNING") or "on").lower() not in ("off", "0", "false")
+
+
+def _parse(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def hold_until(block: dict[str, Any] | None) -> datetime | None:
+    """When an active lightning hold ends if nothing new happens (all-clear, or the NWS warning end)."""
+    if not block or block.get("lightning_status") != "active":
+        return None
+    ends = [_parse(block.get("all_clear_at"))] + [_parse(a.get("ends")) for a in block.get("nws_warnings") or []]
+    ends = [e for e in ends if e]
+    return max(ends) if ends else None
+
+
+def blocks_start(block: dict[str, Any] | None, start: datetime | None, now: datetime) -> bool:
+    """Active lightning delays an event that is under way or starts before the hold ends."""
+    if not block or block.get("lightning_status") != "active":
+        return False
+    if start is None or start <= now:
+        return True
+    until = hold_until(block)
+    return until is None or start <= until
+
+
+def lookup(lat: Any, lon: Any, start: datetime | None, now: datetime | None = None) -> dict[str, Any] | None:
+    if not _enabled() or lat in (None, "") or lon in (None, ""):
+        return None
+    try:
+        return CHECK(float(lat), float(lon), start, now=now)
+    except Exception:
+        return None
+
+
+def with_warnings(summary_block: dict[str, Any], result: dict[str, Any]) -> dict[str, Any]:
+    summary_block["nws_warnings"] = [{"event": a["event"], "ends": a["ends"]} for a in result.get("nws", {}).get("alerts", [])
+                                     if a.get("level") == "active"]
+    return summary_block
+
+
+def apply_to_status(response: dict[str, Any], field: dict[str, Any], game_time: datetime | None,
+                    now: datetime | None = None) -> None:
+    """Attach `lightning` to /v1/status near game time; an active hold turns the answer into a delay."""
+    now = now or datetime.now(timezone.utc)
+    if game_time is not None and game_time.tzinfo is None:
+        try:
+            from rainout_agent.schedule import venue_timezone
+
+            game_time = game_time.replace(tzinfo=venue_timezone(field))
+        except Exception:
+            return
+    c = field.get("coordinates") or {}
+    block = lookup(c.get("lat"), c.get("lon"), game_time, now)
+    if not block:
+        return
+    response["lightning"] = block
+    official = str(response.get("official_status") or "unknown").lower()
+    if official in ("cancelled", "canceled", "closed", "field_closed"):
+        return
+    if blocks_start(block, game_time, now):
+        before = response.get("recommendation")
+        until = hold_until(block)
+        when = f" until at least {_iso(until)}" if until else ""
+        response["recommendation"] = "lightning delay: stay off the field"
+        response["lightning_delay"] = {"active": True, "recommendation_before": before, "until": _iso(until)}
+        msg = (f"Lightning delay{when}: {block['reason']} {ADVISORY}")
+        response["reason"] = f"{msg} {response.get('reason') or ''}".strip()
+        if response.get("spoken_answer"):
+            response["spoken_answer"] = f"{msg} {response['spoken_answer']}"
+
+
+def _point_for(result: dict[str, Any]) -> tuple[Any, Any]:
+    loc = result.get("location") or {}
+    if loc.get("lat") is not None:
+        return loc.get("lat"), loc.get("lon")
+    try:
+        from rainout_agent.status_api import load_field
+
+        fid = loc.get("field_id")
+        if not fid and loc.get("track_id"):
+            from rainout_agent import motocross
+
+            fid = motocross.resolve_track(loc["track_id"])["field_id"]
+        c = load_field(fid).get("coordinates") or {} if fid else {}
+        return c.get("lat"), c.get("lon")
+    except Exception:
+        return None, None
+
+
+def apply_to_decision(result: dict[str, Any], now: datetime | None = None) -> dict[str, Any]:
+    """go_no_go: attach `lightning` near the start; an active hold turns "go" into "wait"."""
+    if not isinstance(result, dict) or result.get("ambiguous") or "decision" not in result:
+        return result
+    now = now or datetime.now(timezone.utc)
+    start = _parse((result.get("time") or {}).get("start"))
+    lat, lon = _point_for(result)
+    block = lookup(lat, lon, start, now)
+    if not block:
+        return result
+    result["lightning"] = block
+    if result["decision"] == "go" and blocks_start(block, start, now):
+        until = hold_until(block)
+        result["decision"] = "wait"
+        result["lightning_delay"] = {"active": True, "decision_before": "go", "until": _iso(until)}
+        result["recheck_at"] = _iso(until) if until else result.get("recheck_at")
+        when = f" until at least {_iso(until)}" if until else ""
+        result["reason"] = f"Lightning delay{when}: {block['reason']} {ADVISORY} {result.get('reason') or ''}".strip()
+    return result
