@@ -54,6 +54,8 @@ adjusted.
   reports shared across instances, configure an optional shared backend
   (`UPSTASH_REDIS_REST_URL`/`KV_REST_API_URL` and so on, see `docs/weather-cache.md`).
 - Reports are anonymous and unverified. No IP address is stored: the client address
-  (`X-Forwarded-For`) is only hashed into a rate-limit key.
+  (`X-Forwarded-For`) is only used as a rate-limit key, after a keyed hash: HMAC-SHA256 under the
+  daily salt from `RAINOUT_METRICS_SALT` (the same daily rotation as the usage counters). The key expires after 1 hour.
+  If the salt is unset, each instance uses a random salt, so limits apply per instance.
 - Rate limits per client: 3 reports per venue and 10 in total per clock hour. With the
   memory backend these are per instance, so they're a speed bump, not a guarantee.
