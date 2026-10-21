@@ -81,7 +81,16 @@ PARAMS: dict[str, Any] = {
     # ``pro_rain_factor`` and the soak at ``pro_soak_factor`` (None = off). Storm, wind and cold rules are unchanged.
     "pro_rain_factor": None,
     "pro_soak_factor": None,
+    # NWS watches/warnings (rainout_agent.nws_alerts; feature-flagged by RAINOUT_NWS_ALERTS, OFF by default). With the
+    # feature present, cap the odds at these (None = off): a warning at the start, a watch at the start, tropical storm
+    # or hurricane alerts in the 24 h before.
+    "alert_warn_cap": None,
+    "alert_watch_cap": None,
+    "alert_tropical_cap": None,
 }
+ALERT_RULES = (("alert_tropical", "alert_tropical_cap", "A tropical storm or hurricane watch or warning covers this area"),
+               ("alert_warn", "alert_warn_cap", "A National Weather Service warning covers this area at the start"),
+               ("alert_watch", "alert_watch_cap", "A National Weather Service watch covers this area at the start"))
 RAIN_TOLERANT_NOTE = "College and pro soccer usually play through rain (lightning still stops play)."
 RAIN_TOLERANT_SPORTS = {"soccer"}
 
@@ -386,6 +395,12 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
     if p.get("turf_floor") is not None and drainage == "fast" and not (storm_win or storm_day) and pct < p["turf_floor"]:
         pct = p["turf_floor"]
         reasons.append(f"Artificial turf stays playable in rain without lightning, so we don't go below {p['turf_floor']}%.")
+    for fkey, pkey, why in ALERT_RULES:
+        cap = p.get(pkey)
+        if cap is not None and feat.get(fkey) and pct > cap:
+            pct = cap
+            names = ", ".join(feat.get("alert_names") or [])
+            reasons.append(f"{why}{f' ({names})' if names else ''}: not above {cap}%.")
     cape_hi = max(feat.get("cape_window") or 0, feat.get("cape_day") or 0)
     if p.get("unstable_cape") is not None and cape_hi >= p["unstable_cape"] and pct > UNSTABLE_CAP:
         pct = UNSTABLE_CAP

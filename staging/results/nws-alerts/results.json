@@ -1,0 +1,589 @@
+{
+ "rule_settings": 81,
+ "base_points": 82944,
+ "combinations": 6718464,
+ "before": {
+  "all": {
+   "n": 175,
+   "dir": 82,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 71
+  },
+  "soccer": {
+   "n": 25,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 72
+  },
+  "baseball": {
+   "n": 82,
+   "dir": 85,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 73
+  },
+  "softball": {
+   "n": 35,
+   "dir": 86,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 69
+  },
+  "motocross": {
+   "n": 33,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 67
+  },
+  "any_alert": {
+   "n": 25,
+   "dir": 80,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 76
+  }
+ },
+ "after": {
+  "all": {
+   "n": 175,
+   "dir": 82,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 71
+  },
+  "soccer": {
+   "n": 25,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 72
+  },
+  "baseball": {
+   "n": 82,
+   "dir": 85,
+   "cw": 2,
+   "cw_ids": [
+    "ut-baseball-2023-04-23",
+    "cbb-bobcat-2019-02-19"
+   ],
+   "band": 73
+  },
+  "softball": {
+   "n": 35,
+   "dir": 86,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 69
+  },
+  "motocross": {
+   "n": 33,
+   "dir": 76,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 67
+  },
+  "any_alert": {
+   "n": 25,
+   "dir": 80,
+   "cw": 0,
+   "cw_ids": [],
+   "band": 76
+  }
+ },
+ "fold_choices": {
+  "(None, None, None, (None, None))": 175
+ },
+ "in_sample_best": {
+  "loss": 30,
+  "setting": [
+   null,
+   null,
+   null,
+   [
+    null,
+    null
+   ]
+  ],
+  "point": {
+   "soak_model": "window",
+   "humble_cap": 79,
+   "humble_soak_in": 0.15,
+   "turf_floor": null,
+   "gust_mph": 45,
+   "cold_f": 35,
+   "storm_cape": null,
+   "turf_rain_factor": 0.7,
+   "fast": 0.3,
+   "medium": 0.6,
+   "slow": 1.2,
+   "w24": 0.6,
+   "w48": 0.3,
+   "maint": 0.2,
+   "threat_cap": 79,
+   "mx_forecast_cap": null,
+   "unstable_cape": 2500,
+   "cancel_floor": 21
+  }
+ },
+ "conf_play": {
+  "before": [
+   40,
+   38
+  ],
+  "after": [
+   40,
+   38
+  ]
+ },
+ "changed": [],
+ "soccer": [
+  {
+   "id": "atxfc-lafc-2025-07-05",
+   "outcome": "not_played",
+   "before": 22,
+   "after": 22,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flash Flood Warning",
+    "Flood Watch"
+   ]
+  },
+  {
+   "id": "atxfc-galaxy-2023-09-24",
+   "outcome": "played",
+   "before": 96,
+   "after": 96,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "ntx-statecup-richland-2024-05-12",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flood Watch"
+   ]
+  },
+  {
+   "id": "brownwood-wylie-2024-08-30",
+   "outcome": "not_played",
+   "before": 42,
+   "after": 42,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-austin-fc-2021-08-18",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-red-bull-new-york-2024-03-23",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flood Watch"
+   ]
+  },
+  {
+   "id": "mls-fc-dallas-2024-04-27",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flood Watch"
+   ]
+  },
+  {
+   "id": "nwsl-racing-louisville-2022-05-14",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-orlando-city-sc-2022-08-28",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "nwsl-houston-dash-2021-05-23",
+   "outcome": "played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-inter-miami-cf-2022-09-13",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "nwsl-chicago-stars-fc-2022-04-30",
+   "outcome": "played",
+   "before": 73,
+   "after": 73,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Tornado Watch"
+   ]
+  },
+  {
+   "id": "mls-new-england-revolu-2022-03-12",
+   "outcome": "played",
+   "before": 45,
+   "after": 45,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-chicago-fire-fc-2022-03-19",
+   "outcome": "played",
+   "before": 74,
+   "after": 74,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-new-york-city-fc-2023-03-11",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-portland-timbers-2024-03-02",
+   "outcome": "played",
+   "before": 79,
+   "after": 79,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-la-galaxy-2023-08-20",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flash Flood Warning",
+    "Flood Watch",
+    "Tropical Storm Warning"
+   ]
+  },
+  {
+   "id": "mls-lafc-2023-08-20",
+   "outcome": "not_played",
+   "before": 28,
+   "after": 28,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flash Flood Warning",
+    "Flood Watch",
+    "Tropical Storm Warning"
+   ]
+  },
+  {
+   "id": "mls-houston-dynamo-2024-07-07",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Tropical Storm Warning"
+   ]
+  },
+  {
+   "id": "mls-philadelphia-union-2024-03-09",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flood Watch"
+   ]
+  },
+  {
+   "id": "nwsl-racing-louisville-2025-05-16",
+   "outcome": "not_played",
+   "before": 36,
+   "after": 36,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Tornado Watch"
+   ]
+  },
+  {
+   "id": "nwsl-nc-courage-2018-09-16",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "mls-red-bulls-2021-08-21",
+   "outcome": "not_played",
+   "before": 21,
+   "after": 21,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Flood Watch",
+    "Tropical Storm Warning",
+    "Tropical Storm Watch"
+   ]
+  },
+  {
+   "id": "mls-real-salt-lake-2024-03-02",
+   "outcome": "played",
+   "before": 45,
+   "after": 45,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": []
+  },
+  {
+   "id": "nwsl-san-diego-wave-2023-08-19",
+   "outcome": "played",
+   "before": 96,
+   "after": 96,
+   "setting": [
+    null,
+    null,
+    null,
+    [
+     null,
+     null
+    ]
+   ],
+   "alerts": [
+    "Tropical Storm Warning",
+    "Tropical Storm Watch"
+   ]
+  }
+ ],
+ "two_cw": {
+  "ut-baseball-2023-04-23": [],
+  "cbb-bobcat-2019-02-19": []
+ }
+}
