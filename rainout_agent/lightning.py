@@ -330,8 +330,6 @@ def check_lightning(lat: Any, lon: Any, *, radius_mi: Any = None, now: datetime 
         reason = "Satellite lightning data is missing or late right now, so I can't say it's clear. Use your eyes and ears and the official call."
     if status == "active" and warning and within:
         reason += f" NWS {warning['event']} also in effect."
-    if warning and all_clear is None:
-        all_clear = None  # a warning has no flash clock; wait for it to end and then 30 minutes without lightning
 
     data_age = (now - win["newest_end"]).total_seconds() if win.get("newest_end") else None
     return {

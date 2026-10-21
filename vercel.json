@@ -132,6 +132,10 @@
       "dest": "/api/rain.py"
     },
     {
+      "src": "/v1/lightning(/ingest)?/?",
+      "dest": "/api/rain.py"
+    },
+    {
       "src": "/v1/nowcast/?",
       "dest": "/api/construction.py"
     },
