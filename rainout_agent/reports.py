@@ -3,7 +3,8 @@
 Reports live in the existing cache layer (``rainout_agent.cache``): in-memory per
 serverless instance by default, or shared when a backend such as Upstash/Vercel KV is
 configured. Nothing is persisted elsewhere and no personal data is stored: the client
-address is only used, hashed, as a rate-limit key.
+address is only used as a rate-limit key, after a keyed hash (HMAC-SHA256 under the daily
+salt from ``RAINOUT_METRICS_SALT``, see ``client_key``). Rate-limit keys expire after an hour.
 
 Recent reports nudge the play odds only while the official status is unknown; a
 known official status always wins.
@@ -11,6 +12,7 @@ known official status always wins.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import re
 import threading
 import time
@@ -92,8 +94,26 @@ def client_from_headers(headers: dict[str, str], fallback: str | None = None) ->
     return forwarded or (h.get("x-real-ip") or "").strip() or fallback
 
 
-def client_key(client: str | None) -> str:
-    return hashlib.sha256((client or "anonymous").encode()).hexdigest()[:16]
+def client_key(client: str | None, now_s: float | None = None) -> str:
+    """Rate-limit key for a client address: HMAC-SHA256 under a salt that rotates every day.
+
+    The salt is the same daily salt the usage counters use (``metrics._salt``:
+    HMAC(RAINOUT_METRICS_SALT, America/Chicago date)), read from the environment only and
+    never logged. A purpose prefix keeps these keys distinct from the metrics hashes, so the
+    two can't be matched to each other. Without the secret, a key can't be turned back into
+    an address by trying candidate IPs.
+
+    Fallback: if RAINOUT_METRICS_SALT is unset (local runs, tests, a misconfigured deploy),
+    ``metrics._salt`` uses a random per-instance salt. Nothing breaks, but each serverless
+    instance then keeps its own limits, so the shared limit gets looser. The keys still can't
+    be reversed. Around midnight CT the key changes, so a client's hourly count can restart
+    early once a day; that's accepted for a spam limit.
+    """
+    from rainout_agent import metrics
+
+    day = metrics.today(datetime.fromtimestamp(now_s if now_s is not None else time.time(), timezone.utc))
+    msg = b"reports-rl:" + (client or "anonymous").encode()
+    return hmac.new(metrics._salt(day), msg, hashlib.sha256).hexdigest()[:24]
 
 
 def _check_rate(store: Cache, client: str, field_id: str, now_s: float) -> None:
@@ -141,7 +161,8 @@ def submit_report(data: dict[str, Any], client: str | None = None, now: datetime
 
     store = _store()
     with _LOCK:
-        _check_rate(store, client_key(client), field_id, (clock or time.time)())
+        now_s = (clock or time.time)()
+        _check_rate(store, client_key(client, now_s), field_id, now_s)
         report = {
             "id": uuid.uuid4().hex[:12],
             "field_id": field_id,
