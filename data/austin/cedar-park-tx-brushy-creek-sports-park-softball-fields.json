@@ -19,7 +19,7 @@
   "venue_type": "ball_field",
   "ownership_type": "public",
   "status_source_type": "official_field_status_page",
-  "poll_official_status": true,
+  "poll_official_status": false,
   "official_status_match": [
     "Brushy Creek Sports Park Softball"
   ],
@@ -45,5 +45,6 @@
   "agent_rule": "Official source wins. Weather gives drive risk and game-time play probability. Use the Cedar Park athletic field status page for official open/closed signals. If unclear, tell the user to check the official field status page before leaving.",
   "operator": null,
   "surface": "unknown",
-  "drainage": "unknown"
+  "drainage": "unknown",
+  "official_status_note": "Checked 2026-10-20: cedarparktexas.gov answers automated requests with HTTP 403, so this venue is link-only. Agents should send users to the athletic field status page."
 }

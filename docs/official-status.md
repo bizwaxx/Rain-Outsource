@@ -47,7 +47,7 @@ single organization also counts as the whole venue.
 | `undated` | A status is shown but with no posting date |
 | `not_posted_yet` | The game is more than 36 hours away; today's posting isn't about it |
 | `no_game_listed`, `not_posted`, `needs_game_time` | Per-game-day pages (AMBL) with no game or nothing posted for that day, or no game time given |
-| `blocked` | The site blocks automated requests (e.g. a Cloudflare 403). Not worked around |
+| `blocked` | The site blocks automated requests (e.g. a Cloudflare 403). Not worked around. Reported as "Official source unreadable" plus the link (`readable: false`), never as an error |
 | `unavailable` | Network error or HTTP error |
 | `not_polled`, `no_source` | Information page that isn't a status feed, or no official source on file |
 
@@ -55,6 +55,19 @@ In all of these, `official_status` is `unknown`, `message` is a sentence an agen
 aloud (for example "The official page blocks automated checks (HTTP 403). Call the rainout
 line (512-978-2680) or check https://…"), `fallback` says where to check, and
 `posted_status`/`posted_at` show what the page said when it was too old or undated.
+
+## Link-only venues
+
+A venue with `poll_official_status: false` is link-only. We never fetch its page, `official_status_check.outcome` is
+`not_polled` (`link_only: true`), and the message gives the rainout line and/or link. `official_status_note` says why.
+
+- **Krieg Field Softball Complex** (checked 2026-10-20). Austin PARD posts rainouts only on the rainout line
+  (512-978-2680). The austintexas.gov athletics page and the Capital City Athletics "Field/Park Conditions" page have no
+  field status to parse, so there is nothing an adapter could read.
+- **Brushy Creek Sports Park and Elizabeth Milburn Park (Cedar Park)**. cedarparktexas.gov returns HTTP 403 to
+  automated requests, and we don't work around blocks.
+
+`/health` and the root example use NWLL, whose SportsConnect field-status widget can be read.
 
 ## Adding a status page to a venue
 
