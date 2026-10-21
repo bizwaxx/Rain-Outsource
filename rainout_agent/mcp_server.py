@@ -622,15 +622,6 @@ def _should_we_cancel(args: dict[str, Any]) -> dict[str, Any]:
                        pick=args.get("pick"), time=args.get("time") or args.get("date"), duration_hours=args.get("duration_hours"))
 
 
-def _report_outcome(args: dict[str, Any]) -> dict[str, Any]:
-    from rainout_agent import outcomes, reports
-
-    try:
-        return outcomes.submit_outcome(dict(args), client=_CLIENT.get())
-    except reports.ReportError as exc:
-        raise ToolError(str(exc)) from exc
-
-
 def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[str, Any]:
     try:
         return fn(*a, **kw)
@@ -639,6 +630,15 @@ def _place_call(fn: Callable[..., dict[str, Any]], *a: Any, **kw: Any) -> dict[s
     except rain.PlaceNotFound as exc:
         names = "; ".join(s["label"] for s in exc.suggestions) or "none"
         raise ToolError(f"No place matched '{exc.query}'. Similar names: {names}. Ask the user for a state or lat/lon.") from exc
+
+
+def _report_outcome(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent import outcomes, reports
+
+    try:
+        return outcomes.submit_outcome(dict(args), client=_CLIENT.get())
+    except reports.ReportError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def _report_cancellation(args: dict[str, Any]) -> dict[str, Any]:
@@ -656,6 +656,45 @@ def _require(args: dict[str, Any], key: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ToolError(f"{key} is required.")
     return value.strip()
+
+
+TOOLS.append({
+    "name": "get_lightning",
+    "title": "Lightning near a venue (advisory)",
+    "description": (
+        "ADVISORY ONLY. Not a safety device. Follow the official call and your league's lightning policy. When thunder roars, "
+        "go indoors. Lightning in the last 30 minutes near a venue (field_id from find_venue, track_id from find_track) or "
+        "lat/lon, from NOAA GOES-R GLM satellite flashes and NWS warnings. Returns lightning_status (clear | nearby | active | "
+        "unknown), last_flash (time, distance_mi), all_clear_at (30-minute rule: each flash within radius_mi, default 10, "
+        "restarts the clock), reason (read aloud with the advisory), and sources. unknown means data is missing; never call it clear."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "field_id": {"type": "string", "description": "Venue field_id or alias (find_venue)."},
+            "track_id": {"type": "string", "description": "Motocross track_id (find_track)."},
+            "lat": {"type": "number", "minimum": -90, "maximum": 90},
+            "lon": {"type": "number", "minimum": -180, "maximum": 180},
+            "radius_mi": {"type": "number", "minimum": 3, "maximum": 15, "description": "Hold radius in miles (default 10; many leagues use 8)."},
+        },
+    },
+    "annotations": {"readOnlyHint": True, "destructiveHint": False, "idempotentHint": False, "openWorldHint": True},
+})
+
+
+def _get_lightning(args: dict[str, Any]) -> dict[str, Any]:
+    from rainout_agent import lightning
+    from rainout_agent.lightning_api import resolve_point
+
+    params = {k: str(args[k]) for k in ("field_id", "track_id", "lat", "lon") if args.get(k) not in (None, "")}
+    try:
+        lat, lon, label = resolve_point(params)
+        out = lightning.check_lightning(lat, lon, radius_mi=args.get("radius_mi"), label=label)
+    except lightning.LightningError as exc:
+        raise ToolError(str(exc)) from exc
+    if params.get("field_id"):
+        out["location"]["field_id"] = params["field_id"]
+    return out
 
 
 HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
@@ -676,6 +715,7 @@ HANDLERS: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "check_materials_risk": _check_materials_risk,
     "go_no_go": _go_no_go,
     "should_we_cancel": _should_we_cancel,
+    "get_lightning": _get_lightning,
     "report_outcome": _report_outcome,
 }
 

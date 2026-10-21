@@ -14,10 +14,6 @@
       "use": "@vercel/python"
     },
     {
-      "src": "api/openapi.py",
-      "use": "@vercel/python"
-    },
-    {
       "src": "api/stats.py",
       "use": "@vercel/python"
     },
@@ -43,10 +39,6 @@
     },
     {
       "src": "api/construction.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "api/llms.py",
       "use": "@vercel/python"
     },
     {
@@ -85,7 +77,7 @@
     },
     {
       "src": "/openapi.yaml",
-      "dest": "/api/openapi.py"
+      "dest": "/api/site.py"
     },
     {
       "src": "/v1/fields",
@@ -144,6 +136,10 @@
       "dest": "/api/rain.py"
     },
     {
+      "src": "/v1/lightning(/ingest)?/?",
+      "dest": "/api/rain.py"
+    },
+    {
       "src": "/v1/nowcast/?",
       "dest": "/api/construction.py"
     },
@@ -165,7 +161,7 @@
     },
     {
       "src": "/llms\\.txt",
-      "dest": "/api/llms.py"
+      "dest": "/api/site.py"
     },
     {
       "src": "/v1/stats",

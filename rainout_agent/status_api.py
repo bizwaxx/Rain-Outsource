@@ -535,6 +535,12 @@ def build_status_result(
         reports.apply_to_status(response, field, _parse_time(game_time))
     except Exception:  # pragma: no cover - reports must never break a status answer
         pass
+    try:
+        from rainout_agent import lightning
+
+        lightning.apply_to_status(response, field, _parse_time(game_time))
+    except Exception:  # pragma: no cover - lightning must never break a status answer
+        pass
     if snapshot:
         try:
             from rainout_agent import outcomes

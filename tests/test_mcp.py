@@ -53,7 +53,7 @@ def test_tools_list_with_calendar_rule():
     tools = {t["name"]: t for t in rpc("tools/list")[2]["result"]["tools"]}
     assert set(tools) == {"find_team", "get_games", "check_game", "get_venue_status", "check_schedule",
                           "find_track", "find_venue", "get_track_events", "check_race", "get_track_history", "get_rain_chance",
-                          "report_cancellation", "get_precipitation_nowcast", "check_concrete_pour", "check_materials_risk", "go_no_go", "should_we_cancel", "report_outcome"}
+                          "report_cancellation", "get_precipitation_nowcast", "check_concrete_pour", "check_materials_risk", "go_no_go", "should_we_cancel", "get_lightning", "report_outcome"}
     for name, t in tools.items():
         assert t["inputSchema"]["type"] == "object"
         assert "anyOf" not in t["inputSchema"] and "oneOf" not in t["inputSchema"]
@@ -154,7 +154,7 @@ def test_vercel_mcp_handler_and_routes():
 
     cfg = json.loads((Path(__file__).parents[1] / "vercel.json").read_text())
     srcs = {r["src"]: r["dest"] for r in cfg["routes"]}
-    assert srcs["/mcp/?"] == "/api/mcp.py" and srcs["/llms\\.txt"] == "/api/llms.py"
+    assert srcs["/mcp/?"] == "/api/mcp.py" and srcs["/llms\\.txt"] == "/api/site.py"
     body = b'{"jsonrpc":"2.0","id":7,"method":"tools/list"}'
     h = mod.handler.__new__(mod.handler)
     h.headers = {"Content-Length": str(len(body)), "Content-Type": "application/json"}
@@ -164,7 +164,7 @@ def test_vercel_mcp_handler_and_routes():
     h.end_headers = lambda: None
     h.do_POST()
     assert sent["code"] == 200 and sent["Cache-Control"] == "no-store"
-    assert len(json.loads(h.wfile.getvalue())["result"]["tools"]) == len(mcp_server.TOOLS) == 18
+    assert len(json.loads(h.wfile.getvalue())["result"]["tools"]) == len(mcp_server.TOOLS) == 19
 
 
 def test_wsgi_mcp_and_llms_txt():

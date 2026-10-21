@@ -748,6 +748,39 @@ paths:
       responses:
         "200": {description: iCalendar feed (last 7 days through the next 180 days), content: {text/calendar: {schema: {type: string}}}}
         "404": {description: Unknown track_id, content: {application/json: {schema: {$ref: "#/components/schemas/TracksError"}}}}
+  /v1/lightning:
+    get:
+      operationId: getLightning
+      summary: "ADVISORY lightning near a venue or point (NOAA GOES-R GLM + NWS warnings). Not a safety device. Follow the official call and your league's lightning policy. When thunder roars, go indoors."
+      description: >-
+        Flashes within radius_mi (default 10) in the last 30 minutes. Each one restarts the 30-minute all-clear clock.
+        lightning_status is clear | nearby (within 30 mi) | active | unknown (satellite data missing or late; never treated as clear).
+      parameters:
+        - {name: field_id, in: query, schema: {type: string}, description: Venue field_id or alias (from /v1/fields).}
+        - {name: track_id, in: query, schema: {type: string}, description: Motocross track_id.}
+        - {name: lat, in: query, schema: {type: number, minimum: -90, maximum: 90}}
+        - {name: lon, in: query, schema: {type: number, minimum: -180, maximum: 180}}
+        - {name: radius_mi, in: query, schema: {type: number, minimum: 3, maximum: 15, default: 10}}
+      responses:
+        "200":
+          description: Lightning status with last_flash, all_clear_at, flashes counts, glm coverage, nws alerts, sources, advisory.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lightning_status: {type: string, enum: [clear, nearby, active, unknown]}
+                  advisory: {type: string}
+                  reason: {type: string}
+                  last_flash: {type: object, nullable: true, properties: {time: {type: string, format: date-time}, distance_mi: {type: number}}}
+                  all_clear_at: {type: string, format: date-time, nullable: true}
+                  radius_mi: {type: number}
+                  flashes: {type: object, additionalProperties: {type: integer}}
+                  glm: {type: object}
+                  nws: {type: object}
+                  sources: {type: array, items: {type: object}}
+        "400":
+          description: Missing or invalid location.
   /v1/rain:
     get:
       operationId: getRainChance

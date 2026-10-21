@@ -1,0 +1,271 @@
+{
+    "@context": [
+        "https://geojson.org/geojson-ld/geojson-context.jsonld",
+        {
+            "@version": "1.1",
+            "wx": "https://api.weather.gov/ontology#",
+            "@vocab": "https://api.weather.gov/ontology#"
+        }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6658c7b5f8ebf5d0fa039d585dbbc57de1bc651d.001.1",
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [
+                            -112.67,
+                            34.12
+                        ],
+                        [
+                            -112.92,
+                            34.28
+                        ],
+                        [
+                            -112.87,
+                            34.56
+                        ],
+                        [
+                            -112.34,
+                            34.43
+                        ],
+                        [
+                            -112.67,
+                            34.12
+                        ]
+                    ]
+                ]
+            },
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6658c7b5f8ebf5d0fa039d585dbbc57de1bc651d.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.6658c7b5f8ebf5d0fa039d585dbbc57de1bc651d.001.1",
+                "areaDesc": "Yavapai, AZ",
+                "geocode": {
+                    "SAME": [
+                        "004025"
+                    ],
+                    "UGC": [
+                        "AZC025"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/county/AZC025"
+                ],
+                "references": [
+                    {
+                        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.cd8760d8bac781ade4d98fb4ee3beab6601cc10b.001.1",
+                        "identifier": "urn:oid:2.49.0.1.840.0.cd8760d8bac781ade4d98fb4ee3beab6601cc10b.001.1",
+                        "sender": "w-nws.webmaster@noaa.gov",
+                        "sent": "2026-10-21T06:59:00-07:00"
+                    }
+                ],
+                "sent": "2026-10-21T07:10:00-07:00",
+                "effective": "2026-10-21T07:10:00-07:00",
+                "onset": "2026-10-21T07:10:00-07:00",
+                "expires": "2026-10-21T07:30:00-07:00",
+                "ends": "2026-10-21T07:30:00-07:00",
+                "status": "Actual",
+                "messageType": "Update",
+                "category": "Met",
+                "severity": "Severe",
+                "certainty": "Observed",
+                "urgency": "Immediate",
+                "event": "Severe Thunderstorm Warning",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Flagstaff AZ",
+                "headline": "Severe Thunderstorm Warning issued October 21 at 7:10AM MST until October 21 at 7:30AM MST by NWS Flagstaff AZ",
+                "description": "At 710 AM MST, a severe thunderstorm was located 6 miles east of\nYarnell, or 23 miles southwest of Prescott, moving northeast at 50\nmph.\n\nHAZARD...Two inch hail and 60 mph wind gusts.\n\nSOURCE...Radar indicated.\n\nIMPACT...People and animals outdoors will be injured. Expect hail\ndamage to roofs, siding, windows, and vehicles. Expect wind\ndamage to roofs, siding, and trees.\n\nLocations impacted include...\nYarnell, Wilhoit, Peeples Valley, Kirkland, Potato Patch, Skull\nValley, Copper Basin, Hawkins, Palace Station, Stanton, Kirkland\nJunction, Walnut Grove, Granite Mountain Hotshots Memorial State\nPark, Mt. Union and Weaver Peak.\n\nThis includes State Route 89 between mile markers 272 and 304.\n\nThis includes the following recreation areas and campgrounds...\nUpper Wolf Creek Group Campground, Lower Wolf Creek Campground and\nWolf Creek Falls.\n\nThis includes the following swimming holes...\nWolf Creek Falls.",
+                "instruction": "Anyone outdoors should move to shelter inside a well-built structure\nand stay away from windows. This storm is capable of producing\ndangerous hail and damaging winds.",
+                "response": "Shelter",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "SVSFGZ"
+                    ],
+                    "WMOidentifier": [
+                        "WWUS55 KFGZ 211410"
+                    ],
+                    "NWSheadline": [
+                        "SEVERE THUNDERSTORM WARNING REMAINS IN EFFECT UNTIL 730 AM MST FOR YAVAPAI COUNTY"
+                    ],
+                    "eventMotionDescription": [
+                        "2026-10-21T13:59:00-00:00...storm...205DEG...42KT...34.14,-112.72"
+                    ],
+                    "windThreat": [
+                        "RADAR INDICATED"
+                    ],
+                    "maxWindGust": [
+                        "60 MPH"
+                    ],
+                    "hailThreat": [
+                        "RADAR INDICATED"
+                    ],
+                    "maxHailSize": [
+                        "2.00"
+                    ],
+                    "thunderstormDamageThreat": [
+                        "CONSIDERABLE"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ],
+                    "VTEC": [
+                        "/O.CON.KFGZ.SV.W.0148.000000T0000Z-261021T1430Z/"
+                    ],
+                    "eventEndingTime": [
+                        "2026-10-21T07:30:00-07:00"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "SVS"
+                    ],
+                    "NationalWeatherService": [
+                        "SVW"
+                    ]
+                }
+            }
+        },
+        {
+            "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.9e019df735095f98a794e97754b1754a73098dfd.001.1",
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.9e019df735095f98a794e97754b1754a73098dfd.001.1",
+                "@type": "wx:Alert",
+                "id": "urn:oid:2.49.0.1.840.0.9e019df735095f98a794e97754b1754a73098dfd.001.1",
+                "areaDesc": "Kaibab Plateau; Marble and Glen Canyons; Grand Canyon Country; Coconino Plateau; Yavapai County Mountains; Northeast Plateaus and Mesas Hwy 264 Northward; Chinle Valley; Chuska Mountains and Defiance Plateau; Little Colorado River Valley in Coconino County; Little Colorado River Valley in Navajo County; Little Colorado River Valley in Apache County; Western Mogollon Rim; Eastern Mogollon Rim; White Mountains; Northern Gila County; Yavapai County Valleys and Basins; Oak Creek and Sycamore Canyons; Black Mesa Area; Northeast Plateaus and Mesas South of Hwy 264",
+                "geocode": {
+                    "SAME": [
+                        "004005",
+                        "004025",
+                        "004001",
+                        "004017",
+                        "004007"
+                    ],
+                    "UGC": [
+                        "AZZ004",
+                        "AZZ005",
+                        "AZZ006",
+                        "AZZ007",
+                        "AZZ008",
+                        "AZZ009",
+                        "AZZ010",
+                        "AZZ011",
+                        "AZZ012",
+                        "AZZ013",
+                        "AZZ014",
+                        "AZZ015",
+                        "AZZ016",
+                        "AZZ017",
+                        "AZZ018",
+                        "AZZ037",
+                        "AZZ038",
+                        "AZZ039",
+                        "AZZ040"
+                    ]
+                },
+                "affectedZones": [
+                    "https://api.weather.gov/zones/forecast/AZZ004",
+                    "https://api.weather.gov/zones/forecast/AZZ005",
+                    "https://api.weather.gov/zones/forecast/AZZ006",
+                    "https://api.weather.gov/zones/forecast/AZZ007",
+                    "https://api.weather.gov/zones/forecast/AZZ008",
+                    "https://api.weather.gov/zones/forecast/AZZ009",
+                    "https://api.weather.gov/zones/forecast/AZZ010",
+                    "https://api.weather.gov/zones/forecast/AZZ011",
+                    "https://api.weather.gov/zones/forecast/AZZ012",
+                    "https://api.weather.gov/zones/forecast/AZZ013",
+                    "https://api.weather.gov/zones/forecast/AZZ014",
+                    "https://api.weather.gov/zones/forecast/AZZ015",
+                    "https://api.weather.gov/zones/forecast/AZZ016",
+                    "https://api.weather.gov/zones/forecast/AZZ017",
+                    "https://api.weather.gov/zones/forecast/AZZ018",
+                    "https://api.weather.gov/zones/forecast/AZZ037",
+                    "https://api.weather.gov/zones/forecast/AZZ038",
+                    "https://api.weather.gov/zones/forecast/AZZ039",
+                    "https://api.weather.gov/zones/forecast/AZZ040"
+                ],
+                "references": [
+                    {
+                        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.a49f2701253648ae1f1419957046785dbff77a4e.001.1",
+                        "identifier": "urn:oid:2.49.0.1.840.0.a49f2701253648ae1f1419957046785dbff77a4e.001.1",
+                        "sender": "w-nws.webmaster@noaa.gov",
+                        "sent": "2026-10-20T00:37:00-07:00"
+                    }
+                ],
+                "sent": "2026-10-21T05:53:00-07:00",
+                "effective": "2026-10-21T05:53:00-07:00",
+                "onset": "2026-10-21T05:53:00-07:00",
+                "expires": "2026-10-22T23:00:00-07:00",
+                "ends": "2026-10-22T23:00:00-07:00",
+                "status": "Actual",
+                "messageType": "Update",
+                "category": "Met",
+                "severity": "Severe",
+                "certainty": "Possible",
+                "urgency": "Future",
+                "event": "Flood Watch",
+                "sender": "w-nws.webmaster@noaa.gov",
+                "senderName": "NWS Flagstaff AZ",
+                "headline": "Flood Watch issued October 21 at 5:53AM MST until October 22 at 11:00PM MST by NWS Flagstaff AZ",
+                "description": "* WHAT...Flash flooding caused by excessive rainfall is possible.\n\n* WHERE...All of northern and central Arizona.\n\n* WHEN...Through Thursday evening.\n\n* IMPACTS...Flash flooding will be possible in creeks, normally dry\nwashes, swimming holes, and over recently burned areas. Low-water\ncrossings may be flooded.\n\n* ADDITIONAL DETAILS...\n- An upper-level trough will bring a deep surge of subtropical and\ntropical moisture into our region. Showers and thunderstorms will\ndevelop across much of northern and central Arizona early\nWednesday morning and continue through Thursday evening. Stronger\nthunderstorms will bring threats of Flash Flooding, while more\nprolonged rainfall could lead to elevated flow in streams,\nrivers, and washes.\n- Additional information is available at weather.gov/flagstaff.",
+                "instruction": "Have a way to receive Flash Flood Warnings and be prepared to take\naction should warnings be issued.",
+                "response": "Prepare",
+                "note": null,
+                "parameters": {
+                    "AWIPSidentifier": [
+                        "FFAFGZ"
+                    ],
+                    "WMOidentifier": [
+                        "WGUS65 KFGZ 211253"
+                    ],
+                    "NWSheadline": [
+                        "FLOOD WATCH REMAINS IN EFFECT THROUGH THURSDAY EVENING"
+                    ],
+                    "BLOCKCHANNEL": [
+                        "EAS",
+                        "NWEM",
+                        "CMAS"
+                    ],
+                    "EAS-ORG": [
+                        "WXR"
+                    ],
+                    "VTEC": [
+                        "/O.CON.KFGZ.FA.A.0011.000000T0000Z-261023T0600Z/"
+                    ],
+                    "eventEndingTime": [
+                        "2026-10-22T23:00:00-07:00"
+                    ]
+                },
+                "scope": "Public",
+                "code": "IPAWSv1.0",
+                "language": "en-US",
+                "web": "http://www.weather.gov",
+                "eventCode": {
+                    "SAME": [
+                        "FFA"
+                    ],
+                    "NationalWeatherService": [
+                        "FAA"
+                    ]
+                }
+            }
+        }
+    ],
+    "title": "Current watches, warnings, and advisories for 34.302 N, 112.694 W",
+    "updated": "2026-10-21T14:15:16+00:00"
+}
