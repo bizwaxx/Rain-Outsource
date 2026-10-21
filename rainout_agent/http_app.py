@@ -70,6 +70,24 @@ def application(environ, start_response):
         start_response(f"{status} {HTTPStatus(status).phrase}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
         return [payload]
 
+    if path.rstrip("/") in ("/v1/outcomes", "/v1/outcomes/feed.atom", "/v1/outcomes/scoreboard", "/scoreboard"):
+        from http import HTTPStatus
+
+        from rainout_agent.outcomes_api import MAX_BODY as OUT_MAX, handle_outcomes_request
+
+        try:
+            length = int(environ.get("CONTENT_LENGTH") or 0)
+        except ValueError:
+            length = 0
+        body = environ["wsgi.input"].read(min(length, OUT_MAX + 1)) if length > 0 else b""
+        headers = {k[5:].replace("_", "-").title(): v for k, v in environ.items() if k.startswith("HTTP_")}
+        status, out_headers, payload = handle_outcomes_request(method, path, environ.get("QUERY_STRING", ""), body,
+                                                               environ.get("CONTENT_TYPE", ""), headers,
+                                                               client=environ.get("REMOTE_ADDR"))
+        out_headers = {**out_headers, "Access-Control-Allow-Origin": "*"}
+        start_response(f"{status} {HTTPStatus(status).phrase}", list(out_headers.items()) + [("Content-Length", str(len(payload)))])
+        return [payload]
+
     if path == "/llms.txt":
         from pathlib import Path
 
@@ -215,7 +233,10 @@ def application(environ, start_response):
     try:
         from rainout_agent.venue_profile import parse_override
 
-        payload = build_status_result(field_query=field_query, game_time=game_time, venue_override=parse_override(params))
+        from rainout_agent.outcomes_api import snapshot_mode
+
+        payload = build_status_result(field_query=field_query, game_time=game_time, venue_override=parse_override(params),
+                                      snapshot=snapshot_mode({"User-Agent": environ.get("HTTP_USER_AGENT", "")}))
     except Exception as exc:  # pragma: no cover - safety net for live hosting
         return _json_response(
             start_response,
