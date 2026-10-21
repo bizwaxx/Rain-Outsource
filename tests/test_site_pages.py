@@ -192,3 +192,11 @@ def test_privacy_describes_keyed_rate_limit_hash_accurately():
     assert "We can't turn it back into the address" not in html
     assert "/v1/reports" in html and "400 days" in html
     assert reports.client_key("203.0.113.9") != hashlib.sha256(b"203.0.113.9").hexdigest()[:16]
+
+
+def test_landing_says_estimate_official_first_and_links_accuracy():
+    from rainout_agent.site_pages import landing_html
+    html = landing_html().decode()
+    assert "<strong>estimate</strong>" in html and "official status always comes first" in html
+    assert html.count('href="/accuracy"') >= 3
+    assert "37 were right and 2 were wrong" in html
