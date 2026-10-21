@@ -30,8 +30,8 @@ Each PR is a draft. When a group gets his OK, Dev marks it ready, merges it, and
 
 | Group | PRs, in order | What it does | Notes |
 |---|---|---|---|
-| A. Checklist + small fixes | #38, #39, #40 | Checklist tool; Krieg/Cedar Park link-only; motocross date reading | Safe first. Live answers only change for unreadable pages and motocross notices. |
-| B. Front door | #33 → #37 → #34 | Landing page, icon, SEO, MCP server card, `server.json`, draft privacy and terms, the "switch free" page, README and llms.txt | **Jimmy:** read the draft privacy and terms pages and the "free promise" wording first. After this group main has 12 functions, the Hobby limit. |
+| A. Checklist + small fixes | #38, #39, #40, #52 | Checklist tool; Krieg/Cedar Park link-only; motocross date reading; keyed daily HMAC for the report rate-limit hash (#51 and #33 are stacked on #52) | Safe first. Live answers only change for unreadable pages and motocross notices. |
+| B. Front door | #51 or #33 → #37 → #34 | Landing page, icon, SEO, MCP server card, `server.json`, draft privacy and terms, the "switch free" page, README and llms.txt. #51 serves the privacy/terms/icon/server-card pages from the existing index function; #33 serves them from a new `api/site.py` | **Merge only one copy of the pages, #51's or #33's.** **Jimmy:** read the draft privacy and terms pages and the "free promise" wording first. After this group main has 12 functions, the Hobby limit. |
 | C. Model v2 + "Was it on?" + alerts | #42 → #43 → #44 → #46 → #45 → #48 | Better odds (soak, storms, venue profile), outcome reports and scoreboard, the buttons, free alerts in test mode | #43 changes live odds, so it needs a GREEN LIGHT backtest. No new Vercel functions. |
 | D. This doc | #41 | LAUNCH.md | Last, so it matches what merged. |
 | E. Construction v2 + lightning (parked) | #26 → #28 → #30 → #31 → #35 → #36, plus #49 | Nowcast, concrete, materials, go/no-go, should-we-cancel, agent docs, advisory lightning | #26 adds a 13th function. #49 moves llms.txt and openapi.yaml into the site function, so it must land in the same OK, before this group deploys. |
