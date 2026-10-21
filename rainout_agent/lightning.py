@@ -154,7 +154,7 @@ def glm_window(sat: str, now: datetime, *, source: Any = None, store: Cache | No
                clock: Callable[[], float] = _time.monotonic) -> dict[str, Any]:
     """All kept flashes for the window ending at ``now`` from one satellite, plus honest coverage info."""
     source = source or S3GLMSource()
-    store = store or _store()
+    store = _store() if store is None else store  # an empty MemoryCache is falsy
     start = now - timedelta(minutes=window_min)
     t0 = clock()
     try:
