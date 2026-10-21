@@ -51,7 +51,7 @@ class handler(BaseHTTPRequestHandler):
         self._send_json(200, payload, http_cache.INDEX)
 
     def _send_page(self, head=False):
-        """Serve /privacy, /terms, /icon.png and the MCP server card from this function."""
+        """Serve /privacy, /terms, /accuracy, /icon.png and the MCP server card from this function."""
         page = discovery_pages.lookup(self.path)
         if page is None:
             return False

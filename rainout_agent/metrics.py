@@ -93,7 +93,7 @@ def endpoint_for(path: str) -> str:
              "/v1/tracks": "tracks.list", "/v1/rain": "rain", "/mcp": "mcp", "/v1/admin/usage": "admin.usage",
              "/v1/plans": "plans", "/v1/account": "account", "/v1/batch": "batch", "/v1/keys": "keys",
              "/v1/premium/batch": "premium.batch", "/privacy": "privacy", "/privacy.html": "privacy",
-             "/terms": "terms", "/terms.html": "terms", "/icon.png": "icon",
+             "/terms": "terms", "/terms.html": "terms", "/accuracy": "accuracy", "/accuracy.html": "accuracy", "/icon.png": "icon",
              "/.well-known/mcp/server-card.json": "server_card", "/.well-known/mcp/server-card": "server_card",
              "/robots.txt": "robots", "/sitemap.xml": "sitemap", "/switch": "site.switch", "/switch/embed": "site.embed"}
     if p in fixed:
