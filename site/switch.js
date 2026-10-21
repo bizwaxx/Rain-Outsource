@@ -167,12 +167,14 @@
     return el("div", {class: "card"}, [
       el("div", {class: "top"}, [
         el("div", {}, [el("div", {class: "name", text: d.field || fieldId}),
-                       el("div", {class: "hint", text: d.verification_level === "confirmed" ? "Hand-checked venue" : "Map venue (weather-based odds, no official feed)"})]),
-        el("div", {class: "pct " + pctClass(pct, official), text: pct == null ? "?" : pct + "%"})
+                       el("div", {class: "hint", text: d.verification_level === "confirmed" ? "Hand-checked venue" : "Map venue (weather-based odds, no official feed)"})])
       ]),
       el("div", {}, [el("strong", {text: "Official status: "}), WORDS[official] || official, src ? " · " : "", src]),
       el("div", {class: "hint", text: fresh.length ? fresh.join("; ") + "." : (chk.message || "No freshness info for this source.")}),
       fresh.length && chk.message ? el("div", {class: "hint", text: chk.message}) : null,
+      el("div", {}, [el("span", {class: "pct " + pctClass(pct, official), text: pct == null ? "?" : pct + "%"}),
+                     el("span", {class: "hint", text: " estimate, not an official call · "}),
+                     el("a", {href: "/accuracy", target: "_blank", rel: "noopener", text: "How accurate is this?"})]),
       el("div", {text: "Rain chance at game time: " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + ". " + (d.reason || "")}),
       el("div", {class: "hint", text: repText}),
       el("div", {class: "row"}, [b1, b2, embed])
@@ -237,7 +239,7 @@
     var s = d.summary || {};
     out.appendChild(el("p", {text: (s.evaluated || 0) + " game(s) checked in the next " + ((d.window || {}).days || 14) + " days, " + (s.at_risk || 0) + " at risk" +
       (s.unmatched_venue ? ", " + s.unmatched_venue + " with a venue we couldn't match" : "") + "."}));
-    var tbl = el("table", {}, [el("tr", {}, [el("th", {text: "When"}), el("th", {text: "Game"}), el("th", {text: "Field"}), el("th", {text: "Odds"}), el("th", {text: "Why"})])]);
+    var tbl = el("table", {}, [el("tr", {}, [el("th", {text: "When"}), el("th", {text: "Game"}), el("th", {text: "Field"}), el("th", {text: "Odds (estimate)"}), el("th", {text: "Why"})])]);
     var ids = [];
     (d.games || []).forEach(function (g) {
       var v = g.venue || {};
@@ -249,6 +251,8 @@
         el("td", {class: "hint", text: g.reason || (g.risk_reasons || []).join("; ")})]));
     });
     out.appendChild(tbl);
+    out.appendChild(el("p", {class: "hint"}, ["Odds are estimates; an official status always comes first. ",
+      el("a", {href: "/accuracy", target: "_blank", rel: "noopener", text: "How accurate is this?"})]));
     if (subscribe) out.appendChild(subscribe);
     if (ids.length) {
       var add = el("button", {class: "secondary", text: "Add these " + ids.length + " field(s) to my board"});

@@ -23,11 +23,15 @@
       var p = d.game_time_play_probability_percent, off = String(d.official_status || "unknown");
       var cls = /cancel|closed|postpon/.test(off) ? "stop" : p == null ? "unk" : p >= 75 ? "go" : p >= 45 ? "warn" : "stop";
       box.appendChild(line("name", d.field || id));
-      box.appendChild(line("pct " + cls, (p == null ? "?" : p + "%") + " chance of play"));
-      box.appendChild(line("", "Official: " + (off === "unknown" ? "not posted / couldn't read" : off) + ". Rain chance " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + " at " + when.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) + "."));
+      box.appendChild(line("", "Official: " + (off === "unknown" ? "not posted / couldn't read" : off) + "."));
       var chk = d.official_status_check || {};
       if (chk.posted_at) box.appendChild(line("hint", "Official call posted " + ago(chk.posted_at) + "."));
       if (d.official_status_last_checked && d.official_status_source_url) box.appendChild(line("hint", "Official source checked " + ago(d.official_status_last_checked) + "."));
+      box.appendChild(line("pct " + cls, (p == null ? "?" : p + "%") + " chance of play (estimate)"));
+      box.appendChild(line("hint", "Rain chance " + (d.rain_chance_percent == null ? "?" : d.rain_chance_percent + "%") + " at " + when.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}) + "."));
+      var acc = document.createElement("a");
+      acc.href = "/accuracy"; acc.target = "_blank"; acc.rel = "noopener"; acc.textContent = "How accurate is this?";
+      var al = line("hint", "Estimate, not an official call. "); al.appendChild(acc); box.appendChild(al);
       var r = (d.community_reports || {}).count;
       if (r) box.appendChild(line("hint", r + " player report(s) recently."));
       var a = document.createElement("a");
