@@ -192,3 +192,10 @@ def test_privacy_describes_keyed_rate_limit_hash_accurately():
     assert "We can't turn it back into the address" not in html
     assert "/v1/reports" in html and "400 days" in html
     assert reports.client_key("203.0.113.9") != hashlib.sha256(b"203.0.113.9").hexdigest()[:16]
+
+
+def test_accuracy_page_served_by_the_site_function():
+    from rainout_agent.site_pages import lookup
+    for path in ("/accuracy", "/accuracy.html"):
+        found = lookup(path)
+        assert found and found[0] == 200 and b"37 were right and 2 were wrong" in found[2]

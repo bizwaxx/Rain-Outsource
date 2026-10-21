@@ -56,7 +56,7 @@
       "dest": "/api/site.py"
     },
     {
-      "src": "/(privacy|terms|switch)(\\.html)?/?",
+      "src": "/(privacy|terms|switch|accuracy)(\\.html)?/?",
       "dest": "/api/site.py"
     },
     {

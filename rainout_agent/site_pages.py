@@ -35,12 +35,13 @@ STATIC_FILES: dict[str, tuple[str, str, str]] = {
     "/sitemap.xml": ("sitemap.xml", "application/xml; charset=utf-8", STATIC_CACHE),
     "/privacy": ("privacy.html", "text/html; charset=utf-8", STATIC_CACHE),
     "/terms": ("terms.html", "text/html; charset=utf-8", STATIC_CACHE),
+    "/accuracy": ("accuracy.html", "text/html; charset=utf-8", STATIC_CACHE),
     "/switch": ("switch.html", "text/html; charset=utf-8", STATIC_CACHE),
     "/switch/embed": ("embed.html", "text/html; charset=utf-8", STATIC_CACHE),
     "/switch.js": ("switch.js", "application/javascript; charset=utf-8", STATIC_CACHE),
     "/switch-embed.js": ("switch-embed.js", "application/javascript; charset=utf-8", STATIC_CACHE),
 }
-ALIASES = {"/privacy.html": "/privacy", "/terms.html": "/terms", "/switch.html": "/switch"}
+ALIASES = {"/privacy.html": "/privacy", "/terms.html": "/terms", "/accuracy.html": "/accuracy", "/switch.html": "/switch"}
 
 
 def _parse_accept(accept: str) -> dict[str, float]:
