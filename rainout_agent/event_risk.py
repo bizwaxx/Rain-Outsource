@@ -53,7 +53,14 @@ PARAMS: dict[str, Any] = {
     # Venue maintenance (rainout_agent.venue_profile): soak at maintained venues (tarp or grounds crew, college/pro)
     # is multiplied by this. None = the older rule (maintained dirt infields count as "medium" drainage).
     "maint_soak_factor": 0.35,
+    # Forecast-threat caps (cancellations on a storm threat that never arrives). With any threat signal from the
+    # day before through the event (see ``threat_signal``), never say more than this (None = off).
+    "threat_cap": None,
+    # Motocross organizers often cancel on the forecast alone: with any threat signal, cap at this (None = off).
+    "mx_forecast_cap": None,
 }
+THREAT_SIGNALS = {"pop": 30, "prev_pop": 40}
+FORECAST_CANCEL_NOTE = "Organizers here sometimes cancel on the forecast alone, even if the storm never arrives."
 WET_CAP_MM = 75.0
 WET_DAYS = 7
 SOAK_PENALTY = ((0.0, 0), (0.1, 0), (0.3, 12), (0.6, 30), (1.0, 45), (2.0, 65), (3.0, 75))
@@ -133,6 +140,7 @@ def features(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
     win = [forecast[h] for h in _hours(start - timedelta(hours=1), end) if h in forecast]
     near = [forecast[h] for h in _hours(start - timedelta(hours=2), end) if h in forecast]
     day = [forecast.get(h) or observed.get(h) or {} for h in _hours(start - timedelta(hours=18), end + timedelta(hours=3))]
+    prev = [forecast.get(h) or observed.get(h) or {} for h in _hours(start - timedelta(hours=36), start - timedelta(hours=1))]
     first = forecast.get(start.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)) or {}
     to_in = lambda mm: None if mm is None else round(mm / MM_PER_IN, 2)
 
@@ -147,6 +155,8 @@ def features(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
         "thunder_window": any(r.get("thunder") for r in near), "thunder_day": any(r.get("thunder") for r in day),
         "cape_window": unstable(near), "cape_day": unstable(day),
         "gust_mph": _max(win, "gust_mph"), "temp_f": first.get("temp_f"),
+        "prev_pop": int(_max(prev, "pop")) if _max(prev, "pop") is not None else None,
+        "thunder_prev": any(r.get("thunder") for r in prev), "cape_prev": unstable(prev),
     }
 
 
@@ -244,6 +254,21 @@ def storm_flags(feat: dict[str, Any], params: dict[str, Any] | None = None) -> t
     return win, day and not win
 
 
+def threat_signal(feat: dict[str, Any], params: dict[str, Any] | None = None) -> bool:
+    """Any storm or rain threat from the day before through the event (forecast chance, thunder or instability),
+    or a start temperature at or below ``cold_f`` (snow/ice threat)."""
+    p = params or PARAMS
+    cape = p.get("storm_cape") or 1500
+    cold = p.get("cold_f")
+    if cold is not None and feat.get("temp_f") is not None and feat["temp_f"] <= cold:
+        return True
+    storm_win, storm_day = storm_flags(feat, p)
+    return bool(storm_win or storm_day or feat.get("thunder_prev")
+                or (feat.get("window_pop") or 0) >= THREAT_SIGNALS["pop"]
+                or (feat.get("prev_pop") or 0) >= THREAT_SIGNALS["prev_pop"]
+                or (feat.get("cape_prev") or 0) >= cape)
+
+
 def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None = None) -> int:
     """Unknown-status odds from the window's rain chance (same curve as play_probability)."""
     from rainout_agent.play_probability import unknown_status_play_percent
@@ -300,12 +325,30 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
         if signal and pct > p["humble_cap"]:
             pct = p["humble_cap"]
             reasons.append(f"Some weather risk is present, so we don't go above {p['humble_cap']}%.")
+    threat = None
+    for key, applies, why in (("threat_cap", True, "A storm or rain threat is in the forecast for the day before or the day of the event"),
+                              ("mx_forecast_cap", not ball_sport, FORECAST_CANCEL_NOTE)):
+        cap = p.get(key)
+        if cap is None or not applies:
+            continue
+        threat = threat_signal(feat, p) if threat is None else threat
+        if threat and pct > cap:
+            pct = cap
+            reasons.append(f"{why.rstrip('.')}: not above {cap}%.")
+    forecast_note = None
+    if not ball_sport and p.get("mx_forecast_cap") is not None:
+        threat = threat_signal(feat, p) if threat is None else threat
+        if threat:
+            forecast_note = FORECAST_CANCEL_NOTE
+            if not any(FORECAST_CANCEL_NOTE.rstrip('.') in r for r in reasons):
+                reasons.append(FORECAST_CANCEL_NOTE)
     if p.get("turf_floor") is not None and drainage == "fast" and not (storm_win or storm_day) and pct < p["turf_floor"]:
         pct = p["turf_floor"]
         reasons.append(f"Artificial turf stays playable in rain without lightning, so we don't go below {p['turf_floor']}%.")
     pct = int(max(0, min(100, round(pct))))
     return {"play_probability_percent": pct, "soak_index_in": soak, "soak_raw_in": raw, "soak_penalty": soak_pts,
-            "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons}
+            "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons,
+            "threat_signal": threat, "forecast_cancel_note": forecast_note}
 
 
 def evaluate(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, dict[str, Any]], start: datetime,

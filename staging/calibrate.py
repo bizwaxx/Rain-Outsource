@@ -48,12 +48,16 @@ GRID: dict[str, tuple] = {
     "w48": (0.3, 0.15),
     # Venue maintenance: soak multiplier at maintained venues (None = older "maintained infield counts as medium").
     "maint": (None, 0.6, 0.35, 0.2),
+    # Forecast-threat caps (event_risk.threat_signal): any threat the day before or day of -> not "confident".
+    "threat_cap": (None, 79),
+    "mx_forecast_cap": (None, 79),
 }
 
 
 # Ground-wetness family (7-day bucket minus FAO-56 ET0, by surface, motocross dry-out curve). The window
 # family above stays in the search, so the wetness model has to beat it to be chosen.
-COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor", "maint")
+COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor", "maint",
+          "threat_cap", "mx_forecast_cap")
 GRID_WET: dict[str, tuple] = {
     **{k: GRID[k] for k in COMMON},
     "d_fast": (1.0, 0.5, 2.0),
@@ -136,7 +140,7 @@ def params_from(point: dict[str, Any]) -> dict[str, Any]:
         if k == "maint":
             p["maint_soak_factor"] = point.get("maint")
         else:
-            p[k] = point[k]
+            p[k] = point.get(k)
     return p
 
 
@@ -206,7 +210,10 @@ def calibrate(inputs: list[dict[str, Any]], families: tuple[str, ...] | None = N
             "grid_points": len(points), "simplest_point_in_sample": score(inputs, [predict(i, default) for i in inputs]),
             "families": {f: family_loo(fam(f)) for f in (families or FAMILIES)},
             "maintenance": {str(m): family_loo([k for k, pt in enumerate(points) if pt.get("maint") == m])
-                            for m in GRID["maint"]}}
+                            for m in GRID["maint"]},
+            "threat_caps": {f"threat_cap={a},mx_forecast_cap={b}": family_loo(
+                [k for k, pt in enumerate(points) if pt.get("threat_cap") == a and pt.get("mx_forecast_cap") == b])
+                for a in GRID["threat_cap"] for b in GRID["mx_forecast_cap"]}}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -224,7 +231,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         Path(args.json).write_text(json.dumps(res, indent=1, default=str))
     print(json.dumps({k: res[k] for k in ("chosen", "in_sample", "leave_one_out", "loo_distinct_choices", "grid_points",
-                                          "simplest_point_in_sample", "families", "maintenance")}, indent=1, default=str))
+                                          "simplest_point_in_sample", "families", "maintenance", "threat_caps")}, indent=1, default=str))
     return 0
 
 

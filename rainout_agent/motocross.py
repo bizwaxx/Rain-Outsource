@@ -679,7 +679,8 @@ def _apply_event_risk(track: dict[str, Any], entry: dict[str, Any], ws: datetime
                                        "sources": {"maintenance": "no evidence (default)", "level": "no evidence (default)",
                                                    "surface": f"motocross track record (soil: {soil})"}}
     entry["model"].update(version="v2", v1_play_probability=entry["play_probability"], reasons=v2["reasons"],
-                          soak_penalty=v2["soak_penalty"], storm_window=v2["storm_window"], features=v2["features"])
+                          soak_penalty=v2["soak_penalty"], storm_window=v2["storm_window"], features=v2["features"],
+                          forecast_cancel_note=v2.get("forecast_cancel_note"))
     entry["play_probability"] = max(MIN_ODDS, min(MAX_ODDS, v2["play_probability_percent"]))
 
 

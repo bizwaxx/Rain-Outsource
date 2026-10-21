@@ -52,3 +52,28 @@ def test_wetness_bucket_dries_with_et0_and_drainage():
     hyb = {**p, "soak_model": "hybrid", "wet_scale": 1.0}
     feat = {"earlier_today_in": 0.0, "prior_24h_in": 0.0, "prior_48h_in": 0.0, "wetness_in": 1.0}
     assert er.soak_index(feat, "slow", hyb)[0] == 1.0
+
+
+def _rows_prev(pop_prev: int):
+    rows = _rows()
+    for h in range(-30, -6):
+        rows[START + timedelta(hours=h)]["pop"] = pop_prev
+    return rows
+
+
+def test_threat_caps_day_before_forecast_and_motocross_note():
+    calm = _rows()
+    threat = _rows_prev(70)            # storms forecast the day before, the event day itself looks dry
+    params = {**er.PARAMS, "threat_cap": 79, "mx_forecast_cap": 79}
+    assert not er.threat_signal(er.features(calm, calm, START, 3), params)
+    assert er.threat_signal(er.features(threat, threat, START, 3), params)
+    off = {**er.PARAMS, "threat_cap": None, "mx_forecast_cap": None}
+    assert er.evaluate(threat, threat, START, 3, "slow", off)["play_probability_percent"] >= 90
+    capped = er.evaluate(threat, threat, START, 3, "slow", params)
+    assert capped["play_probability_percent"] <= 79
+    mx = er.evaluate(threat, threat, START, 3, "slow", {**off, "mx_forecast_cap": 79}, ball_sport=False)
+    assert mx["play_probability_percent"] <= 79
+    assert mx["forecast_cancel_note"] == er.FORECAST_CANCEL_NOTE
+    assert any("cancel on the forecast alone" in r for r in mx["reasons"])
+    ball = er.evaluate(threat, threat, START, 3, "slow", {**off, "mx_forecast_cap": 79})
+    assert ball["play_probability_percent"] >= 90 and ball["forecast_cancel_note"] is None
