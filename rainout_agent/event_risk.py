@@ -27,6 +27,11 @@ staging/calibrate.py and docs/model.md):
    window, a 40% chance the day before, unstable air the evening before, or cold), never say more than
    ``threat_cap``, because organizers cancel on threats that never arrive. Motocross answers with a threat also
    carry ``FORECAST_CANCEL_NOTE`` ("organizers here sometimes cancel on the forecast alone").
+8. Unstable-air cap: with very unstable air in the window or that day (CAPE >= ``unstable_cape``), never say more than
+   ``UNSTABLE_CAP``, because pop-up storms and cancels happen even when the rain chance is low.
+9. Cancel floor: weather alone never says less than ``cancel_floor`` (so never "confident cancel"), because organizers
+   sometimes play through a bad forecast. This model only runs when no official status is posted; a posted
+   cancellation still decides (0%).
 """
 from __future__ import annotations
 
@@ -34,12 +39,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-21 09:42 CT, 129 scored fixtures, 331,776 grid points, window family,
-    # venue maintenance profile, forecast-threat cap axes). In-sample: 83% directional, 2 confident wrong.
-    # Leave-one-out (honest, every axis re-chosen per fold): 80% directional, 5 confident wrong. Same set without the
-    # threat caps: 81% / 4 in-sample, 79% / 7 held out. Previous PARAMS (61 fixtures): 74% / 2 in-sample, 70% / 3 LOO.
-    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 0.8},
-    "soak_weights": (1.0, 0.3, 0.15),       # earlier today, prior 24 h, 24-48 h before
+    # Chosen by staging/calibrate.py (Oct 21 retest, 129 scored fixtures, 1,327,104 grid points, with the
+    # unstable-air cap and cancel-floor axes). Held out (leave-one-out) with the caps fixed as below: 84% directional,
+    # 2 confident wrong (new 68 alone: 93% / 0). Same set with every cap off: 79% / 7. Previous PARAMS: 80% / 5.
+    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.2},
+    "soak_weights": (1.0, 0.6, 0.3),       # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
     "turf_rain_factor": 0.7,
     "storm_cape": None,                     # None = only explicit thunder forecasts
@@ -56,13 +60,21 @@ PARAMS: dict[str, Any] = {
     "wet_scale": 1.0,
     # Venue maintenance (rainout_agent.venue_profile): soak at maintained venues (tarp or grounds crew, college/pro)
     # is multiplied by this. None = the older rule (maintained dirt infields count as "medium" drainage).
-    "maint_soak_factor": 0.35,
+    "maint_soak_factor": 0.2,
     # Forecast-threat caps (cancellations on a storm threat that never arrives). With any threat signal from the
     # day before through the event (see ``threat_signal``), never say more than this (None = off).
     "threat_cap": 79,
     # Motocross organizers often cancel on the forecast alone: with any threat signal, cap at this (None = off).
     "mx_forecast_cap": None,
+    # Unstable air (CAPE in the window or that day) at or above this caps at UNSTABLE_CAP (None = off).
+    "unstable_cape": 2500,
+    # Weather alone never goes below this (None = off); a posted official cancellation still gives 0%.
+    "cancel_floor": 21,
 }
+UNSTABLE_CAP = 79
+UNSTABLE_NOTE = "Unstable air: pop-up storms can form even with a low rain chance, and organizers may call it early."
+CANCEL_FLOOR_NOTE = ("Weather alone can't make a cancellation certain (organizers sometimes play through a bad "
+                     "forecast); check the official status.")
 THREAT_SIGNALS = {"pop": 30, "prev_pop": 40}
 FORECAST_CANCEL_NOTE = "Organizers here sometimes cancel on the forecast alone, even if the storm never arrives."
 WET_CAP_MM = 75.0
@@ -349,6 +361,13 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
     if p.get("turf_floor") is not None and drainage == "fast" and not (storm_win or storm_day) and pct < p["turf_floor"]:
         pct = p["turf_floor"]
         reasons.append(f"Artificial turf stays playable in rain without lightning, so we don't go below {p['turf_floor']}%.")
+    cape_hi = max(feat.get("cape_window") or 0, feat.get("cape_day") or 0)
+    if p.get("unstable_cape") is not None and cape_hi >= p["unstable_cape"] and pct > UNSTABLE_CAP:
+        pct = UNSTABLE_CAP
+        reasons.append(f"{UNSTABLE_NOTE.rstrip('.')}: not above {UNSTABLE_CAP}%.")
+    if p.get("cancel_floor") is not None and pct < p["cancel_floor"]:
+        pct = p["cancel_floor"]
+        reasons.append(f"{CANCEL_FLOOR_NOTE.rstrip('.')}: not below {p['cancel_floor']}%.")
     pct = int(max(0, min(100, round(pct))))
     return {"play_probability_percent": pct, "soak_index_in": soak, "soak_raw_in": raw, "soak_penalty": soak_pts,
             "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons,

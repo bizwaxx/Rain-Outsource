@@ -83,3 +83,19 @@ def test_threat_caps_day_before_forecast_and_motocross_note():
     assert any("cancel on the forecast alone" in r for r in mx["reasons"])
     ball = er.evaluate(threat, threat, START, 3, "slow", {**off, "mx_forecast_cap": 79})
     assert ball["play_probability_percent"] >= 90 and ball["forecast_cancel_note"] is None
+
+
+def test_unstable_air_cap_and_cancel_floor_carry_honest_notes():
+    off = {**er.PARAMS, "unstable_cape": None, "cancel_floor": None, "threat_cap": None, "humble_cap": None}
+    unstable = _rows(pop=20, cape=3000)          # low rain chance, very unstable air
+    assert er.evaluate(unstable, unstable, START, 3, "fast", off)["play_probability_percent"] > 79
+    capped = er.evaluate(unstable, unstable, START, 3, "fast", {**off, "unstable_cape": 2500})
+    assert capped["play_probability_percent"] <= er.UNSTABLE_CAP
+    assert any("pop-up storms" in r for r in capped["reasons"])
+    soaked = _rows({-4: 76.2}, pop=90)            # 3 inches this morning and a 90% chance: dirt looks hopeless
+    assert er.evaluate(soaked, soaked, START, 3, "slow", off)["play_probability_percent"] < 21
+    floored = er.evaluate(soaked, soaked, START, 3, "slow", {**off, "cancel_floor": 21})
+    assert floored["play_probability_percent"] == 21
+    assert any("check the official status" in r for r in floored["reasons"])
+    # Defaults: both rules on.
+    assert er.PARAMS["unstable_cape"] == 2500 and er.PARAMS["cancel_floor"] == 21

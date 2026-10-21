@@ -51,13 +51,16 @@ GRID: dict[str, tuple] = {
     # Forecast-threat caps (event_risk.threat_signal): any threat the day before or day of -> not "confident".
     "threat_cap": (None, 79),
     "mx_forecast_cap": (None, 79),
+    # Honest-label caps (Oct 21): unstable-air cap (CAPE in the window or that day) and a weather-only cancel floor.
+    "unstable_cape": (None, 2500),
+    "cancel_floor": (None, 21),
 }
 
 
 # Ground-wetness family (7-day bucket minus FAO-56 ET0, by surface, motocross dry-out curve). The window
 # family above stays in the search, so the wetness model has to beat it to be chosen.
 COMMON = ("humble_cap", "humble_soak_in", "turf_floor", "gust_mph", "cold_f", "storm_cape", "turf_rain_factor", "maint",
-          "threat_cap", "mx_forecast_cap")
+          "threat_cap", "mx_forecast_cap", "unstable_cape", "cancel_floor")
 GRID_WET: dict[str, tuple] = {
     **{k: GRID[k] for k in COMMON},
     "d_fast": (1.0, 0.5, 2.0),
