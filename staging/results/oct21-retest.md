@@ -79,5 +79,20 @@ On the 129 set before the new games, the same options gave: defaults 84% / 2, co
 
 **Selection optimism:** today I compared about 43 cap setups: 30 in the first Step 2 sweep, 7 fixed configurations in the Step 2 check, and 6 options here, re-run on the 154 set. So the best held-out numbers are slightly optimistic. The cold-wet cap and the ceiling were both set *before* the 25 new games were added, and those games test both.
 
+**Breakdown for the public accuracy note (current defaults, ceiling off, held out, 154 events: 117 played, 37 not).** "Confident" means 80%+ or 20%-. The cancel floor means weather alone never goes below 21%, so every confident call is a "play" call.
+
+| Slice | Events | Right direction | Confident calls | Confident misses |
+|---|---|---|---|---|
+| All | 154 | 85% | 39 | 2 |
+| Baseball | 82 | 88% | 17 | 2 |
+| Softball | 35 | 86% | 12 | 0 |
+| Motocross | 33 | 76% | 9 | 0 |
+| Soccer and football (grass) | 4 | 100% | 1 | 0 |
+| Artificial turf | 62 | 85% | 13 | 2 |
+| Dirt infield | 55 | 89% | 16 | 0 |
+| Motocross dirt | 33 | 76% | 9 | 0 |
+
+Answers of 70 to 79% (74 events) were right 85% of the time.
+
 **Commits on feat/more-fixtures (#47):** d4e0ee6 (25 cold-wet fixtures plus the selection script `staging/coldwet_select.py`) and 3bab619 (optional status ceiling, off). PARAMS are unchanged; the in-sample best point on 154 equals the current defaults (86% / 1). Full suite passes (474).
 
