@@ -49,7 +49,7 @@ def test_switch_page_content_and_honest_stubs():
 def test_switch_page_uses_only_existing_public_endpoints():
     js = (SITE / "switch.js").read_text() + (SITE / "switch-embed.js").read_text()
     used = set(re.findall(r'"(/v1/[a-z/]+)', js))
-    assert used <= {"/v1/fields", "/v1/status", "/v1/reports", "/v1/schedule/check"}, used
+    assert used <= {"/v1/fields", "/v1/status", "/v1/reports", "/v1/schedule/check", "/v1/outcomes"}, used
     assert "innerHTML" not in js  # all API text is rendered with textContent
     assert "http://" not in js.replace('"https://"', "")
 
@@ -89,3 +89,12 @@ console.log(JSON.stringify(out));
     assert lines[2]["lat"] == 30.2672 and lines[2]["lon"] == -97.7431
     assert [(x["name"], x["state"]) for x in out["csv"]] == [("Field, One", "TX"), ("Havins", "TX")]
     assert out["iso"] == "2026-10-23T19:00:00-05:00"
+
+
+def test_was_it_on_buttons_confirm_before_posting():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1] / "site"
+    for name in ("switch.js", "switch-embed.js"):
+        js = (root / name).read_text()
+        assert '"/v1/outcomes"' in js and "window.confirm(" in js and "Was it on?" in js
