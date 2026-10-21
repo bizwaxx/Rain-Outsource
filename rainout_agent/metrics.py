@@ -61,6 +61,11 @@ _LOCAL_SALT = secrets.token_bytes(32)  # only when RAINOUT_METRICS_SALT is unset
 
 
 def enabled() -> bool:
+    # Preview deploys (branch builds, the staging demo) may share prod's Redis env; never let
+    # their traffic land in the live usage counts or set the first-outside marker.
+    if (os.environ.get("VERCEL_ENV") or "").strip().lower() == "preview" and \
+            (os.environ.get("RAINOUT_METRICS_PREVIEW") or "").strip().lower() not in {"on", "1", "true", "yes"}:
+        return False
     return (os.environ.get("RAINOUT_METRICS") or "on").strip().lower() not in {"off", "0", "false", "no"}
 
 

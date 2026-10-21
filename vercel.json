@@ -52,6 +52,10 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/demo(/.*)?",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/health",
       "dest": "/api/index.py"
     },
