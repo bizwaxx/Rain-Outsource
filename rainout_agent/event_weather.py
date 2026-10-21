@@ -89,7 +89,19 @@ def evaluate(lat: float, lon: float, start: datetime, duration_h: float, drainag
     er.add_wetness(feat, er.wet_series(rows, start, soil_factor or 1.0), drainage, ball_sport)
     if thunder_forecast:
         feat["thunder_window"] = True    # the NWS text forecast mentions thunder for the game
+    alerts = None
+    try:
+        from rainout_agent import nws_alerts
+
+        alerts = nws_alerts.live_features(lat, lon, start, cache=cache)   # None unless RAINOUT_NWS_ALERTS=on
+    except Exception:
+        alerts = None
+    if alerts:
+        feat.update({k: v for k, v in alerts.items() if k != "alerts"})
     drainage = er.effective_drainage(drainage, maintained)
     base = er.base_percent(feat["window_pop"], drainage)
     out = er.adjust(base, feat, drainage, None, ball_sport, maintained, soak_memory)
-    return {**out, "base_percent": base, "features": feat, "source": SOURCE, "model": "event_risk v2"}
+    res = {**out, "base_percent": base, "features": feat, "source": SOURCE, "model": "event_risk v2"}
+    if alerts:
+        res["nws_alerts"] = alerts["alerts"]
+    return res
