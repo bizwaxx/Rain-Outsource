@@ -199,3 +199,9 @@ def test_accuracy_page_served_by_the_site_function():
     for path in ("/accuracy", "/accuracy.html"):
         found = lookup(path)
         assert found and found[0] == 200 and b"37 were right and 2 were wrong" in found[2]
+def test_landing_says_estimate_official_first_and_links_accuracy():
+    from rainout_agent.site_pages import landing_html
+    html = landing_html().decode()
+    assert "<strong>estimate</strong>" in html and "official status always comes first" in html
+    assert html.count('href="/accuracy"') >= 3
+    assert "37 were right and 2 were wrong" in html
