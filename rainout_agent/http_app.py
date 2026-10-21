@@ -69,6 +69,18 @@ def application(environ, start_response):
                                   ("Access-Control-Allow-Origin", "*"), ("Cache-Control", "public, max-age=3600, s-maxage=86400")])
         return [body]
 
+    if method in {"GET", "HEAD"}:
+        from rainout_agent import site_pages
+
+        found = site_pages.lookup(path)
+        if found is None and path == "/" and site_pages.wants_html(environ.get("HTTP_ACCEPT", ""), environ.get("QUERY_STRING", "")):
+            found = (200, "text/html; charset=utf-8", site_pages.landing_html(), site_pages.ROOT_CACHE)
+        if found is not None:
+            code, ctype, body, cache = found
+            start_response(f"{code} OK", [("Content-Type", ctype), ("Content-Length", str(len(body))),
+                                          ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache), ("Vary", "Accept")])
+            return [b"" if method == "HEAD" else body]
+
     if method == "OPTIONS":
         return _json_response(start_response, "200 OK", {"status": "ok"})
 
