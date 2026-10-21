@@ -1,28 +1,97 @@
-# Rainout Source
+<p align="center"><img src="site/icon.svg" alt="Rain-Outsource icon: a rain cloud over a ball field" width="96" height="96"></p>
 
-**Mission Statement:**  
-Rain-Outsource is building a free, open public API that delivers real-time weather and rainout status for any outdoor event across the United States.  
-Our mission is simple: Make it effortless for anyone to know whether their outdoor event is still happening — whether it’s a little league game, a concert, a festival, or any outdoor gathering.  
-We believe this information should be freely available to the public, voice assistants, apps, and developers with no restrictions.
+# Rain-Outsource
 
-Open agent-readable source for softball/baseball rainout status and game-time play probability.
+**Will the weather wreck it? Free odds that your game, race or outdoor plan happens, with the reason and the source. For AI agents and people. No key needed.**
+
+**Mission:** to be the default service for ALL AI agents and ALL humans, worldwide, for checking any prediction that depends on weather.
+
+[Website](https://rainout-agent-source.vercel.app/) · [MCP endpoint](https://rainout-agent-source.vercel.app/mcp) · [llms.txt](https://rainout-agent-source.vercel.app/llms.txt) · [OpenAPI](https://rainout-agent-source.vercel.app/openapi.yaml) · [Docs](https://bizwaxx.github.io/Rain-Outsource/) · [Privacy](https://rainout-agent-source.vercel.app/privacy) · [Terms](https://rainout-agent-source.vercel.app/terms)
+
+## What it does
+
+Ask a plain question, like "Is my softball game tonight still on?", "Will the motocross race happen Saturday?" or "Will it rain in Tokyo at 3 PM?" You get back a percent, one sentence saying why, and where the answer came from.
+
+- It checks the official league, venue or track status first. Official status always wins.
+- With no official word, it uses the forecast (NWS in the US, Open-Meteo elsewhere) and ten years of NOAA rain history at the nearest station. For dirt motocross tracks it also counts the rain from the day or two before.
+- It never makes up an official status. If the league hasn't said, it tells you so and gives the rainout line or page.
+
+## When should an agent call it?
+
+Whenever a user's plan depends on the weather: "is the game on?", "will the race happen?", "which games on our schedule might get rained out?", "will it rain there at that time?" Every tool is read-only except `report_cancellation`, which shares an anonymous rainout report, and only after the user agrees. It never writes to calendars. It returns a ready-made Google Calendar event and ICS text, and your agent asks the user before adding them.
+
+## Quick start (free, no key, no signup)
+
+```bash
+# Rain chance anywhere in the world
+curl "https://rainout-agent-source.vercel.app/v1/rain?q=London&hours=6"
+
+# Find a field, then get the play odds for a game time
+curl "https://rainout-agent-source.vercel.app/v1/fields?q=Zilker&state=TX"
+curl "https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-10-23T20:20:00-05:00"
+```
+
+**Claude Code**
+
+```bash
+claude mcp add --transport http rain-outsource https://rainout-agent-source.vercel.app/mcp
+```
+
+**Claude (desktop and web):** Settings → Connectors → Add custom connector → `https://rainout-agent-source.vercel.app/mcp`
+
+**Cursor, VS Code and other MCP clients** (`mcp.json`):
+
+```json
+{ "mcpServers": { "rain-outsource": { "url": "https://rainout-agent-source.vercel.app/mcp" } } }
+```
+
+**ChatGPT:** turn on developer mode under Settings → Apps and Connectors (plans that allow custom connectors), then create a connector with the MCP URL above and no authentication. For a custom GPT, import [`openapi.yaml`](https://rainout-agent-source.vercel.app/openapi.yaml) as an Action.
+
+## Tools (MCP, Streamable HTTP, no auth)
+
+| Tool | What it answers | Returns |
+|---|---|---|
+| `find_team` | Which team is the user on? | Candidates with `team_id` and confidence |
+| `get_games` | A team's games and the odds for each | `play_probability`, `reason`, `calendar_event`, `ics` |
+| `check_game` | Is my game on? | One game with odds, reason and official status |
+| `get_venue_status` | Odds at a field for a time | Official status, rain chance, play odds, rainout line |
+| `find_venue` | Find a field anywhere in the US | `field_id`, `verification_level` (`confirmed` or `osm_only`) |
+| `check_schedule` | Which games on this schedule are at risk? | Per-game odds and risk flags (ICS, CSV or JSON in) |
+| `find_track` | Find a motocross track | `track_id`, confidence, verification level |
+| `get_track_events` | Upcoming races and their odds | Events with odds, official status and sources |
+| `check_race` | Will the race happen? | One-sentence `answer` plus the event |
+| `get_track_history` | How often does it rain out there? | Monthly NOAA rain stats and documented rainouts |
+| `get_rain_chance` | Will it rain at this place and time? | Hourly or daily rain chance and amounts, `summary` |
+| `report_cancellation` | "We got rained out" | Stores an anonymous report for 24 hours |
+
+Every answer includes a plain sentence to read aloud (`reason`, `answer` or `summary`) and names its sources. Discovery files: [`/llms.txt`](https://rainout-agent-source.vercel.app/llms.txt), [`/openapi.yaml`](https://rainout-agent-source.vercel.app/openapi.yaml), [`/.well-known/mcp/server-card.json`](https://rainout-agent-source.vercel.app/.well-known/mcp/server-card.json), [`server.json`](server.json) (Official MCP Registry).
+
+## Coverage today, and limits
+
+- **Fields:** about 64,000 US softball, baseball and soccer fields, plus 162 US motocross tracks, from OpenStreetMap (`osm_only`: map data, weather-based odds, no official status source).
+- **Hand-checked:** 78 venues and tracks in Texas, Oklahoma, Louisiana and Florida are checked against official rainout pages and phone lines (`confirmed`).
+- **Leagues:** City of Austin adult softball and Austin Metro Baseball League schedules, or any schedule link a user provides.
+- **Rain chance:** worldwide.
+- **Not yet:** venue odds outside the US. Worldwide venues are the goal and are on the way.
+- **Limits:** odds are estimates, not promises. This isn't safety, engineering or emergency advice (lightning, flooding, severe weather), and it isn't an official NWS product. Fair-use rate limits apply. Reports are anonymous and unverified.
+
+## Free tier promise
+
+The public API and MCP server are free, with no key and no signup, and that free tier is staying. If paid plans come later, they'll add extras on top. They won't take away what's free today.
+
+## Data sources and licences
+
+US forecasts: National Weather Service API. Rain history: NOAA NCEI. Worldwide forecasts, fallback and place search: [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0). Venue data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) (ODbL). Code: MIT. Questions or problems: [open an issue](https://github.com/bizwaxx/Rain-Outsource/issues).
+
+---
+
+# Reference for developers
 
 **Creator:** JEEZ Labs
 
-## Important status
-The public docs and OpenAPI file are live on GitHub Pages. The first working backend is live on Vercel and also available in this repo as a Python app.
+## Backend status
 
-Live backend URL:
-
-```text
-https://rainout-agent-source.vercel.app
-```
-
-Live OpenAPI URL:
-
-```text
-https://rainout-agent-source.vercel.app/openapi.yaml
-```
+Live backend: `https://rainout-agent-source.vercel.app` (Vercel, Python). The same app runs locally (see "Run the backend locally" below). `GET /` returns the JSON service index to agents and API clients, and an HTML landing page to browsers (`?format=json` forces JSON).
 
 Current backend status:
 
