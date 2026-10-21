@@ -12,7 +12,9 @@ Sources (all free, no key):
   NWS has no hourly amounts, so amounts always come from Open-Meteo.
 
 Open-Meteo's free tier is for non-commercial use (under 10,000 calls a day);
-the caches keep us far below that.
+the caches keep us far below that. Commercial-only requests (paid answers with
+``RAINOUT_COMMERCIAL_SOURCES`` on, see ``source_policy``) skip Open-Meteo: NWS in the
+US and MET Norway elsewhere, and place names must be given as lat,lon.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from rainout_agent import weather
+from rainout_agent import source_policy, weather
 from rainout_agent.cache import Cache, get_cache
 
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
@@ -129,6 +131,8 @@ def geocode(query: str, *, cache: Cache | None = None, timeout: float = 6.0) -> 
         raise RainError("Place name is too long.")
     parts = [p.strip() for p in query.split(",") if p.strip()]
     name, quals = parts[0], parts[1:]
+    if source_policy.commercial_only():
+        raise RainError("Place-name lookup uses Open-Meteo geocoding, which paid answers do not use. Pass lat,lon instead.")
     results = _geo_search(name, cache, timeout)
     if not results and not quals and " " in name:
         # "Austin TX": try the last word as a qualifier.
@@ -257,21 +261,31 @@ def forecast(lat: float, lon: float, *, place: dict[str, Any] | None = None, hou
         raise RainError(f"days must be 1-{MAX_DAYS}.")
     us = (place.get("country_code") == "US") if place and place.get("country_code") else in_us(lat, lon)
 
+    commercial = source_policy.commercial_only()
     om, om_error = None, None
-    try:
-        om = open_meteo_payload(lat, lon, timeout=timeout * 0.6, cache=cache)
-    except Exception as exc:  # NWS may still answer
-        om_error = exc
+    if commercial:
+        om_error = source_policy.SourceNotAllowed("Open-Meteo is not used for paid answers")
+    else:
+        try:
+            om = open_meteo_payload(lat, lon, timeout=timeout * 0.6, cache=cache)
+        except Exception as exc:  # NWS may still answer
+            om_error = exc
     nws_hours: dict[datetime, dict[str, Any]] = {}
     nws_source = None
-    if us:
+    primary_id = "nws"
+    if us or commercial:
         try:
-            res = weather.get_hourly_forecast({"coordinates": {"lat": lat, "lon": lon}}, timeout=timeout, cache=cache)
-            if res["source_id"] in ("nws", "nws_stale"):
-                nws_hours, nws_source = _nws_by_hour(res["periods"]), res["source"]
+            res = weather.get_hourly_forecast({"coordinates": {"lat": lat, "lon": lon}}, timeout=timeout, cache=cache,
+                                              use_nws=us)
+            if res["source_id"] in ("nws", "nws_stale", "met_norway"):
+                nws_hours, nws_source, primary_id = _nws_by_hour(res["periods"]), res["source"], res["source_id"]
+                if primary_id == "nws_stale":
+                    primary_id = "nws"
         except Exception:
             pass
     if om is None and not nws_hours:
+        if commercial:
+            raise weather.WeatherUnavailable("NWS (US) / MET Norway gave no forecast; paid answers do not use Open-Meteo")
         raise weather.WeatherUnavailable(f"Open-Meteo failed ({om_error.__class__.__name__ if om_error else 'no data'})")
 
     tzname = (om or {}).get("timezone") or (place or {}).get("timezone")
@@ -292,18 +306,33 @@ def forecast(lat: float, lon: float, *, place: dict[str, Any] | None = None, hou
                 "pop": (h.get("precipitation_probability") or [None] * n)[i],
                 "mm": (h.get("precipitation") or [None] * n)[i], "code": (h.get("weather_code") or [None] * n)[i]}
 
+    def met_mm(t: datetime) -> float | None:
+        """Hourly amount from a MET Norway period (6-hour blocks are spread evenly)."""
+        nw = nws_hours.get(t)
+        if primary_id != "met_norway" or not nw or nw.get("precipitationAmountMm") is None:
+            return None
+        try:
+            span_h = max(1.0, (datetime.fromisoformat(nw["endTime"]) - datetime.fromisoformat(nw["startTime"])).total_seconds() / 3600)
+        except (KeyError, TypeError, ValueError):
+            span_h = 1.0
+        return float(nw["precipitationAmountMm"]) / span_h
+
     def hour_row(t: datetime) -> dict[str, Any] | None:
         o, nw = om_hours.get(t), nws_hours.get(t)
         nws_pop = ((nw or {}).get("probabilityOfPrecipitation") or {}).get("value") if nw else None
         if nw is not None:
-            prob, src = int(nws_pop or 0), "nws"
+            prob, src = int(nws_pop or 0), primary_id
             sky = nw.get("shortForecast") or _weather_text((o or {}).get("code"))
         elif o is not None and o["pop"] is not None:
             prob, src, sky = int(o["pop"]), "open_meteo", _weather_text(o["code"])
         else:
             return None
-        return {"time": t.astimezone(tz).isoformat(), "probability_percent": prob, **_amount((o or {}).get("mm")),
-                "weather": sky, "probability_source": src}
+        mm = (o or {}).get("mm") if o is not None else met_mm(t)
+        row = {"time": t.astimezone(tz).isoformat(), "probability_percent": prob, **_amount(mm),
+               "weather": sky, "probability_source": src}
+        if nw is not None and nw.get("probabilityKind") == "estimated_from_amount":
+            row["probability_kind"] = "estimated_from_amount"
+        return row
 
     start = _hour(now)
     hourly = []
@@ -338,16 +367,19 @@ def forecast(lat: float, lon: float, *, place: dict[str, Any] | None = None, hou
             if om_hours and k == 0:
                 vals = [om_hours[t]["mm"] for t in span if t in om_hours and om_hours[t]["mm"] is not None]
                 mm_left = sum(vals) if vals else None
+            elif primary_id == "met_norway":
+                vals = [v for v in (met_mm(t) for t in span) if v is not None]
+                mm_left = sum(vals) if vals else None
             om_left = [om_hours[t]["pop"] for t in span if t in om_hours and om_hours[t]["pop"] is not None] if k == 0 else []
             if span and len(nws_vals) == len(span):
-                prob, src = int(max(nws_vals)), "nws"
+                prob, src = int(max(nws_vals)), primary_id
             elif om_left:
                 prob, src = int(max(om_left)), "open_meteo"
             elif o.get("pop") is not None:
                 prob, src = int(o["pop"]), "open_meteo"
             else:
                 continue
-            mm = mm_left if k == 0 and mm_left is not None else o.get("mm")
+            mm = mm_left if (k == 0 or primary_id == "met_norway") and mm_left is not None else o.get("mm")
             daily.append({"date": d.isoformat(), "weekday": d.strftime("%a"), "max_probability_percent": prob, **_amount(mm),
                           "weather": _weather_text(o.get("code")), "probability_source": src,
                           **({"note": "rest of today"} if k == 0 else {})})
@@ -366,13 +398,24 @@ def forecast(lat: float, lon: float, *, place: dict[str, Any] | None = None, hou
     label = (place or {}).get("label")
     if not label:
         label = f"{lat:.4f}, {lon:.4f}" + (f" (near {near['city']}, {near['state']})" if near else "")
-    sources = {
-        "probability": (f"{nws_source} (US primary); Open-Meteo beyond NWS range" if nws_hours else
-                        ("Open-Meteo (NWS unavailable)" if us else "Open-Meteo")),
-        "amounts": "Open-Meteo" if om else "unavailable",
-        "nws_used": bool(nws_hours),
-        "attribution": "Weather data by Open-Meteo.com (CC BY 4.0)" + ("; National Weather Service" if nws_hours else ""),
-    }
+    if commercial:
+        met = primary_id == "met_norway"
+        sources = {
+            "probability": (f"{nws_source}" + (" (rain chance estimated from forecast amounts where MET gives none)" if met else "")
+                            if nws_hours else "unavailable"),
+            "amounts": "MET Norway" if met else "unavailable (NWS hourly forecasts have no amounts)",
+            "nws_used": bool(nws_hours) and not met,
+            "policy": "commercial: NWS/NOAA in the US, MET Norway elsewhere; no Open-Meteo",
+            "attribution": weather.MET_NORWAY_ATTRIBUTION if met else "National Weather Service (NOAA)",
+        }
+    else:
+        sources = {
+            "probability": (f"{nws_source} (US primary); Open-Meteo beyond NWS range" if nws_hours else
+                            ("Open-Meteo (NWS unavailable)" if us else "Open-Meteo")),
+            "amounts": "Open-Meteo" if om else "unavailable",
+            "nws_used": bool(nws_hours),
+            "attribution": "Weather data by Open-Meteo.com (CC BY 4.0)" + ("; National Weather Service" if nws_hours else ""),
+        }
     result = {
         "place": {**(place or {}), "label": label, "latitude": lat, "longitude": lon, "timezone": tzname,
                   "in_nws_coverage": us},

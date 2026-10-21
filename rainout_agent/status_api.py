@@ -418,6 +418,9 @@ def fetch_nws_weather(field: dict[str, Any], game_time: str) -> dict[str, Any]:
     weather = weather_from_periods(forecast["periods"], game_time, source=forecast["source"])
     weather["source_id"] = forecast["source_id"]
     weather["cache"] = forecast["cache"]
+    for key in ("source_policy", "attribution"):
+        if forecast.get(key):
+            weather[key] = forecast[key]
     weather["last_checked"] = forecast["fetched_at"]
     return weather
 
@@ -489,6 +492,8 @@ def build_status_result(
             "weather_source": weather_data["source"],
             "weather_source_id": weather_data.get("source_id", "nws"),
             "weather_cache": weather_data.get("cache"),
+            **({"weather_source_policy": weather_data["source_policy"]} if weather_data.get("source_policy") else {}),
+            **({"weather_attribution": weather_data["attribution"]} if weather_data.get("attribution") else {}),
             "answer_requirements": _answer_requirements(field),
             "last_checked": weather_data.get("last_checked"),
             "forecast": weather_data.get("forecast"),
@@ -526,6 +531,8 @@ def build_status_result(
 def _weather_label(weather_data: dict[str, Any]) -> str:
     if weather_data.get("source_id") == "open_meteo":
         return "Open-Meteo (National Weather Service unavailable)"
+    if weather_data.get("source_id") == "met_norway":
+        return "MET Norway"
     return "National Weather Service"
 
 
