@@ -56,6 +56,22 @@
       "dest": "/api/index.py"
     },
     {
+      "src": "/privacy(\\.html)?/?",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/terms(\\.html)?/?",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/icon\\.png",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/\\.well-known/mcp/server-card(\\.json)?",
+      "dest": "/api/index.py"
+    },
+    {
       "src": "/openapi.yaml",
       "dest": "/api/openapi.py"
     },
