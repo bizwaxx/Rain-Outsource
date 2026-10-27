@@ -1,0 +1,109 @@
+{
+ "collection": {
+  "version": "3.866.0",
+  "href": "https://api.teamsnap.com/v3/locations",
+  "rel": "locations",
+  "items": [
+   {
+    "href": "https://api.teamsnap.com/v3/locations/7001",
+    "data": [
+     {
+      "name": "id",
+      "value": 7001
+     },
+     {
+      "name": "type",
+      "value": "location"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Krieg Field Softball Complex"
+     },
+     {
+      "name": "address",
+      "value": "515 South Pleasant Valley Road, Austin, TX 78741"
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/locations/7002",
+    "data": [
+     {
+      "name": "id",
+      "value": 7002
+     },
+     {
+      "name": "type",
+      "value": "location"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Havins Softball Complex"
+     },
+     {
+      "name": "address",
+      "value": "12138 N Lamar Blvd, Austin, TX 78753"
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/locations/7003",
+    "data": [
+     {
+      "name": "id",
+      "value": 7003
+     },
+     {
+      "name": "type",
+      "value": "location"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Old Settlers Baseball Complex"
+     },
+     {
+      "name": "address",
+      "value": "3300 E Palm Valley Blvd, Round Rock, TX 78665"
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/locations/7004",
+    "data": [
+     {
+      "name": "id",
+      "value": 7004
+     },
+     {
+      "name": "type",
+      "value": "location"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Coach Dave's Backyard"
+     },
+     {
+      "name": "address",
+      "value": "123 Example St, Austin, TX"
+     }
+    ]
+   }
+  ]
+ }
+}
