@@ -30,10 +30,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-20, 61 fixtures, 207,360 grid points incl. the 7-day wetness and hybrid
-    # families). In-sample: 72% directional, 2 confident wrong. Leave-one-out (honest): 69% directional, 4 confident
-    # wrong. The wetness bucket alone scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so "window" stays.
-    "drainage": {"fast": 0.15, "medium": 0.6, "slow": 1.6},
+    # Chosen by staging/calibrate.py (2026-10-20 18:08 CT, 61 fixtures, 82,944 grid points, venue maintenance
+    # profile). In-sample: 74% directional, 2 confident wrong. Leave-one-out (honest): 70% directional, 3 confident
+    # wrong. Before the maintenance profile: 72% / 2 in-sample, 69% / 4 held out. The 7-day wetness bucket alone
+    # scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so the "window" soak stays.
+    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.6},
     "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
     "turf_rain_factor": 0.7,
@@ -49,6 +50,9 @@ PARAMS: dict[str, Any] = {
     "wet_drain_mm_h": {"fast": 1.0, "medium": 0.1, "slow": 0.05, "mx": 0.08},
     "wet_et_mult": 1.0,
     "wet_scale": 1.0,
+    # Venue maintenance (rainout_agent.venue_profile): soak at maintained venues (tarp or grounds crew, college/pro)
+    # is multiplied by this. None = the older rule (maintained dirt infields count as "medium" drainage).
+    "maint_soak_factor": 0.35,
 }
 WET_CAP_MM = 75.0
 WET_DAYS = 7
@@ -65,8 +69,15 @@ MM_PER_IN = 25.4
 
 def drainage_class(field: dict[str, Any] | None = None, field_type: str | None = None, maintained: bool = False) -> str:
     """'fast' | 'medium' | 'slow'. Tarped, crew-maintained infields (college/pro) count one step faster."""
-    if field_type:
-        cls = FIELD_TYPE_DRAINAGE.get(field_type, "slow")
+    prof_type = None
+    if field and isinstance(field.get("venue_profile_resolved"), dict):
+        from rainout_agent import venue_profile
+        prof_type = venue_profile.field_type(field["venue_profile_resolved"])
+        sport = " ".join(str(x) for x in (field.get("sports") or [field.get("sport") or ""])).lower()
+        if prof_type == "grass" and "ball" in sport and "foot" not in sport:
+            prof_type = "grass_with_dirt_infield"   # a grass ball field still has a skinned dirt infield
+    if field_type or prof_type:
+        cls = FIELD_TYPE_DRAINAGE.get(field_type or prof_type, "slow")
     else:
         field = field or {}
         surface = str(field.get("surface") or "unknown").lower()
@@ -180,16 +191,33 @@ def add_wetness(feat: dict[str, Any], series: dict[str, Any] | None, drainage: s
     return feat
 
 
-def soak_index(feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None) -> tuple[float | None, float]:
-    """(effective soak inches after drainage, raw weighted inches)."""
+def effective_drainage(cls: str, maintained: bool, params: dict[str, Any] | None = None) -> str:
+    """Surface drainage class, with the older maintained-infield bump when ``maint_soak_factor`` is None."""
     p = params or PARAMS
+    if maintained and p.get("maint_soak_factor") is None and cls == "slow":
+        return "medium"
+    return cls
+
+
+def soak_index(feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None,
+               maintained: bool = False) -> tuple[float | None, float]:
+    """(effective soak inches after drainage and venue maintenance, raw weighted inches)."""
+    p = params or PARAMS
+    soak, raw = _soak_index(feat, drainage, p)
+    f = p.get("maint_soak_factor")
+    if soak is not None and maintained and f is not None:
+        soak = round(soak * f, 2)
+    return soak, raw
+
+
+def _soak_index(feat: dict[str, Any], drainage: str, p: dict[str, Any]) -> tuple[float | None, float]:
     model = p.get("soak_model")
     if model == "wetness" and feat.get("wetness_in") is not None:
         w = feat["wetness_in"]
         return round(w * p.get("wet_scale", 1.0), 2), w
     if model == "hybrid" and feat.get("wetness_in") is not None:
         p_win = {**p, "soak_model": "window"}
-        win_soak, win_raw = soak_index(feat, drainage, p_win)
+        win_soak, win_raw = _soak_index(feat, drainage, p_win)
         w = feat["wetness_in"]
         return round(max(win_soak or 0.0, w * p.get("wet_scale", 1.0)), 2), max(win_raw, w)
     parts = (feat.get("earlier_today_in"), feat.get("prior_24h_in"), feat.get("prior_48h_in"))
@@ -226,17 +254,19 @@ def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None =
 
 
 def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None,
-           ball_sport: bool = True) -> dict[str, Any]:
+           ball_sport: bool = True, maintained: bool = False) -> dict[str, Any]:
     """Apply soak, storm, wind, cold and humility rules to a base play probability."""
     p = params or PARAMS
     pct = float(base)
     reasons: list[str] = []
-    soak, raw = soak_index(feat, drainage, p)
+    soak, raw = soak_index(feat, drainage, p, maintained)
     soak_pts = round(interp(soak, SOAK_PENALTY)) if soak is not None else 0
     if soak_pts:
         pct -= soak_pts
         surface = {"fast": "turf drains fast", "medium": "grass or a tarped infield drains slowly",
                    "slow": "dirt holds water"}[drainage]
+        if maintained and p.get("maint_soak_factor") is not None:
+            surface += "; a maintained venue with a tarp or grounds crew, so it counts much less"
         if p.get("soak_model") in ("wetness", "hybrid") and feat.get("wetness_in") is not None:
             et = feat.get("et0_7d_in")
             reasons.append(f"{feat.get('rain_72h_in') or 0:.2f} in of rain in the last 72 h ({feat.get('rain_7d_in') or 0:.2f} in over 7 days"
@@ -275,10 +305,12 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
 
 
 def evaluate(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, dict[str, Any]], start: datetime,
-             duration_h: float, drainage: str, params: dict[str, Any] | None = None, ball_sport: bool = True) -> dict[str, Any]:
+             duration_h: float, drainage: str, params: dict[str, Any] | None = None, ball_sport: bool = True,
+             maintained: bool = False) -> dict[str, Any]:
     """features -> base -> adjust, in one call."""
+    drainage = effective_drainage(drainage, maintained, params)
     feat = features(observed, forecast, start, duration_h)
     add_wetness(feat, wet_series(observed, start), drainage, ball_sport, params)
     base = base_percent(feat.get("window_pop") or 0, drainage, params)
-    out = adjust(base, feat, drainage, params, ball_sport)
+    out = adjust(base, feat, drainage, params, ball_sport, maintained)
     return {**out, "base_percent": base, "features": feat}
