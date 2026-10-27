@@ -92,9 +92,13 @@ def endpoint_for(path: str) -> str:
              "/v1/stats": "stats", "/v1/schedule/check": "schedule", "/v1/teams/search": "teams.search",
              "/v1/tracks": "tracks.list", "/v1/rain": "rain", "/mcp": "mcp", "/v1/admin/usage": "admin.usage",
              "/v1/plans": "plans", "/v1/account": "account", "/v1/batch": "batch", "/v1/keys": "keys",
-             "/v1/premium/batch": "premium.batch"}
+             "/v1/premium/batch": "premium.batch",
+             "/.well-known/mcp/server-card.json": "server_card", "/robots.txt": "robots", "/sitemap.xml": "sitemap",
+             "/privacy": "site.privacy", "/terms": "site.terms", "/switch": "site.switch", "/switch/embed": "site.embed"}
     if p in fixed:
         return fixed[p]
+    if p in {"/icon.svg", "/icon.png", "/icon-400.png", "/favicon.ico", "/favicon.svg", "/apple-touch-icon.png"}:
+        return "site.icon"
     m = re.fullmatch(r"/v1/teams/[^/]+/(games|calendar\.ics)", p)
     if m:
         return "teams." + ("games" if m.group(1) == "games" else "calendar")
