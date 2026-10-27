@@ -29,6 +29,15 @@ def application(environ, start_response):
     method = environ.get("REQUEST_METHOD", "GET")
     path = environ.get("PATH_INFO", "/")
 
+    from rainout_agent import discovery_pages
+
+    page = discovery_pages.lookup(path)
+    if page is not None and method in {"GET", "HEAD"}:
+        _status, ctype, body, cache_control = page
+        start_response("200 OK", [("Content-Type", ctype), ("Content-Length", str(len(body))),
+                                  ("Access-Control-Allow-Origin", "*"), ("Cache-Control", cache_control)])
+        return [b"" if method == "HEAD" else body]
+
     if path.rstrip("/") == "/mcp":
         from rainout_agent.mcp_server import MAX_BODY, handle_http
 
