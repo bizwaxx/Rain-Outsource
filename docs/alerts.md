@@ -65,7 +65,7 @@ Auth, any one of:
 Limits change, so check each provider's current free tier before relying on it.
 
 ## Email providers that would work (Jimmy must sign up; nothing is integrated)
-Free tiers seen on their pricing pages (check before relying on them): **Resend** (about 3,000 a month, 100 a day), **Brevo** (about 300 a day), **Mailjet** (about 6,000 a month, 200 a day), **Postmark** (about 100 a month for developers). **Amazon SES** is cheap but not free after the trial. Any of them needs a verified sending domain (SPF/DKIM), so a custom domain helps. Adding one is a small `send()` class plus an API key in Vercel. Until then the stub stays the default.
+Free tiers seen on their pricing pages (check before relying on them): **Resend** (about 3,000 a month, 100 a day), **Brevo** (about 300 a day), **Mailjet** (about 6,000 a month, 200 a day), **Postmark** (about 100 a month for developers). **Amazon SES** is cheap but not free after the trial. Any of them needs a sending domain set up with SPF/DKIM, so a custom domain helps. Adding one is a small `send()` class plus an API key in Vercel. Until then the stub stays the default.
 
 ## Env vars
 `RAINOUT_ALERTS_LIVE=1` (real webhook POSTs; leave unset), `RAINOUT_INTERNAL_TOKEN`, `CRON_SECRET`, `RAINOUT_DISPATCH_KEY`, `RAINOUT_PUBLIC_URL` (links in messages). Subscriptions are stored in the shared cache (Upstash). Without it they live in one instance's memory and the dispatcher may not see them.
