@@ -31,7 +31,7 @@ INSTRUCTIONS = (
     "event body with a stable iCalUID) using your calendar tool. Official league or venue status always wins over odds. "
     "Motocross: find_track (confirm the track with the user), then get_track_events or check_race for race-day odds, "
     "and get_track_history for monthly rain stats and documented rain cancellations. "
-    "Venues not in the hand-verified list: find_venue searches tens of thousands of OpenStreetMap fields, soccer complexes "
+    "Venues not in the hand-checked list: find_venue searches tens of thousands of OpenStreetMap fields, soccer complexes "
     "and motocross tracks nationwide (verification_level osm_only: community map data, no official status source); pass its "
     "field_id as venue to get_venue_status, or as track_id to check_race. "
     "If the user says their game was rained out, delayed, the field is closed or they are playing, offer to share it with "
@@ -130,7 +130,7 @@ TOOLS: list[dict[str, Any]] = [
         "description": (
             "Search ball fields, soccer complexes and motocross tracks across the US by name and/or location, e.g. "
             "query='Zilker', state='TX' or near='30.27,-97.74'. Returns field_id, address, sport and verification_level "
-            "('confirmed' = hand-verified with official sources; 'osm_only' = OpenStreetMap data, no official status). "
+            "('confirmed' = hand-checked against official sources; 'osm_only' = OpenStreetMap data, no official status). "
             "Confirm the venue with the user, then call get_venue_status with venue=field_id."
         ),
         "inputSchema": {
