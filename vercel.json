@@ -178,6 +178,10 @@
     {
       "src": "/api",
       "dest": "/api/index.py"
+    },
+    {
+      "src": "/v1/alerts(/.*)?",
+      "dest": "/api/fields.py"
     }
   ]
 }
