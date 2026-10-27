@@ -214,7 +214,7 @@ def main():
     host = "127.0.0.1"
     port = 8000
     print(f"Rainout Source API running at http://{host}:{port}")
-    print("Try: /v1/status?field_id=Krieg&game_time=2026-06-05T20:20:00-05:00")
+    print("Try: /v1/status?field_id=NWLL&game_time=2026-06-05T19:00:00-05:00")
     with make_server(host, port, application) as server:
         server.serve_forever()
 
