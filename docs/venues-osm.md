@@ -4,7 +4,7 @@ Rainout Source has two tiers of venues:
 
 | verification_level | What it means | Where it lives |
 | --- | --- | --- |
-| `confirmed` | Hand-verified: name, address, coordinates, operator, official rainout source or phone where one exists, documented history. | `data/<city>/*.json`, `data/motocross/tracks.json` |
+| `confirmed` | Hand-checked: name, address, coordinates, operator, official rainout source or phone where one exists, documented history. | `data/<city>/*.json`, `data/motocross/tracks.json` |
 | `osm_only` | Built automatically from OpenStreetMap. Name and location are community map data. No official status source, phone, surface or drainage is known, so answers are weather and NOAA history only. | `data/osm/<ST>.json` |
 
 Every API response that includes an OSM venue labels it `verification_level: "osm_only"`, adds a
@@ -121,7 +121,7 @@ database: everything is static files bundled with the Vercel functions.
   for 2016-2025, about 750 bytes a station. Venues store just the station id. At request time the
   sport's threshold (ball 0.5 in, soccer 0.75 in, motocross 1.0 in) turns the station's monthly stats into the
   same `noaa_history` calibration block the confirmed venues use, so play odds are computed the same way.
-* Hand-verified venues and their own NOAA files are unchanged and always win over OSM duplicates.
+* Hand-checked venues and their own NOAA files are unchanged and always win over OSM duplicates.
 
 No Supabase or other paid service is needed: the whole dataset is a few MB of JSON.
 

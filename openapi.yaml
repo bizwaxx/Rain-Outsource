@@ -38,10 +38,10 @@ paths:
   /v1/fields:
     get:
       operationId: listFields
-      summary: List or search venues (hand-verified plus nationwide OpenStreetMap venues).
+      summary: List or search venues (hand-checked plus nationwide OpenStreetMap venues).
       description: >-
         Discover field IDs, status URLs and official rainout sources before asking for status. Without q or near
-        this lists the hand-verified ("confirmed") venues. Search with q (name) and/or near (lat,lon) to include
+        this lists the hand-checked ("confirmed") venues. Search with q (name) and/or near (lat,lon) to include
         tens of thousands of OpenStreetMap venues (verification_level "osm_only": community map data, no official
         status source; map data (c) OpenStreetMap contributors, ODbL). OSM venues need state, q or near.
       parameters:
@@ -153,7 +153,7 @@ paths:
                         operator:
                           type: string
                           nullable: true
-                          description: Operator, owner or league; null when not verified.
+                          description: Operator, owner or league; null when no public source names one.
                         surface:
                           type: string
                           enum: [grass, artificial_turf, dirt, grass_with_dirt_infield, mixed, unknown]
@@ -671,7 +671,7 @@ paths:
       summary: Monthly NOAA rain stats and documented past rain cancellations or postponements.
       description: >-
         Monthly rain frequency and climatology race odds from NOAA, plus publicly documented cancelled or moved events
-        with source links. Coverage notes say what could not be read; an empty list is not proof of no rainouts.
+        with source links. Coverage notes say what could not be read; an empty list doesn't mean there were no rainouts.
       parameters:
         - {in: path, name: track_id, required: true, schema: {type: string}, example: freestone}
       responses:

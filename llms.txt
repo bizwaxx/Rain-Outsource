@@ -1,8 +1,24 @@
-# Rainout Source
+# Rain-Outsource
 
-> Free public API and MCP server that tells people whether an outdoor game (softball, baseball, soccer, motocross) will be played. It covers 68 verified venues in TX, OK, LA and FL, and finds teams in public league schedules (City of Austin adult softball, Austin Metro Baseball League) or in a schedule link the user provides. Answers combine official league/venue status, the NWS forecast (with an Open-Meteo fallback) and 10 years of NOAA rain history.
+> Free MCP server and REST API that tells AI agents and people the odds that a weather-dependent plan happens (an outdoor game, a motocross race, an event), with a one-sentence reason and the source. No key, no signup. Today: about 64,000 US softball, baseball and soccer fields and 162 US motocross tracks from OpenStreetMap, 78 of them hand-checked against official rainout pages (TX, OK, LA, FL), public league schedules (City of Austin adult softball, Austin Metro Baseball League) or any schedule link the user gives, and hourly or daily rain chance anywhere in the world. Venue odds outside the US are not available yet. Answers combine official league/venue status, the NWS forecast (Open-Meteo outside the US and as fallback) and 10 years of NOAA rain history. Mission: to be the default service for ALL AI agents and ALL humans, worldwide, for checking any prediction that depends on weather.
 
 Base URL: https://rainout-agent-source.vercel.app
+MCP (Streamable HTTP, no auth): https://rainout-agent-source.vercel.app/mcp
+
+## When to call it
+
+- The user asks whether a game, practice, race or outdoor plan will happen ("is my game tonight still on?", "will the race at Swan MX happen Saturday?").
+- The user wants to know which games on a schedule are at risk of a rainout.
+- The user asks whether it will rain at a place and time, anywhere in the world.
+- The user says their game was rained out, delayed, or is on (offer to share a report).
+- Don't use it for safety decisions (lightning, flooding, severe weather): it is not safety, engineering or emergency advice and not an official NWS product.
+
+## Connect
+
+- Claude Code: `claude mcp add --transport http rain-outsource https://rainout-agent-source.vercel.app/mcp`
+- mcp.json (Cursor, VS Code, others): `{"mcpServers":{"rain-outsource":{"url":"https://rainout-agent-source.vercel.app/mcp"}}}`
+- Claude and ChatGPT: add a custom connector with the MCP URL, no authentication.
+- REST: plain GET requests, JSON responses, CORS open. `GET /` returns a JSON service index (HTML only for browsers).
 
 ## For agents
 
@@ -21,7 +37,7 @@ Base URL: https://rainout-agent-source.vercel.app
 - [Team games](https://rainout-agent-source.vercel.app/v1/teams/tsl-340-744621-4306365/games?date=today): `GET /v1/teams/{team_id}/games?date=today|YYYY-MM-DD` or `from=&to=` returns games with play_probability, reason, calendar_event and ics; `next_game` when the range is empty
 - `GET /v1/teams/{team_id}/calendar.ics`: subscribable feed with odds in each event
 - [Game status](https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-10-16T20:20:00-05:00): `GET /v1/status?field_id=&game_time=` for one venue and time
-- [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=` lists hand-verified venues (verification_level `confirmed`)
+- [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=` lists hand-checked venues (verification_level `confirmed`)
 - [Venue search, nationwide](https://rainout-agent-source.vercel.app/v1/fields?q=Zilker&state=TX): `GET /v1/fields?q=&near=lat,lon&radius_km=&state=&sport=&verification=confirmed|osm_only|all&limit=&offset=` adds OpenStreetMap ball fields, soccer complexes and motocross tracks (verification_level `osm_only`: community map data, no official status source). Pass the field_id to /v1/status. Map data (c) OpenStreetMap contributors, ODbL
 - `POST /v1/reports` `{field_id, status: cancelled|delayed|field_closed|playing, game_time?, note?}` stores a user report (rate limited); `GET /v1/reports?field_id=&game_time=` lists recent ones
 - `GET|POST /v1/schedule/check`: score a whole schedule (ICS URL, JSON, CSV); repeating ICS events (RRULE) are expanded per occurrence
@@ -31,6 +47,14 @@ Base URL: https://rainout-agent-source.vercel.app
 - [Race check](https://rainout-agent-source.vercel.app/v1/tracks/swan/check?date=saturday): `GET /v1/tracks/{track_id}/check?date=|event_id=` returns `answer` (one sentence), the event and next_step
 - [Track history](https://rainout-agent-source.vercel.app/v1/tracks/freestone/history): `GET /v1/tracks/{track_id}/history` monthly NOAA rain stats plus documented past rain cancellations with sources and coverage gaps
 - `GET /v1/tracks/{track_id}/calendar.ics`: subscribable race feed with odds
+
+## Discovery and policies
+
+- MCP server card: https://rainout-agent-source.vercel.app/.well-known/mcp/server-card.json
+- Official MCP Registry entry: `io.github.bizwaxx/rain-outsource` (server.json in the repo)
+- Landing page: https://rainout-agent-source.vercel.app/ · Privacy: https://rainout-agent-source.vercel.app/privacy · Terms: https://rainout-agent-source.vercel.app/terms
+- Free tier: no key, no signup, fair-use rate limits. Feedback and problems: https://github.com/bizwaxx/Rain-Outsource/issues
+- Attribution: weather from NWS/NOAA (US) and Open-Meteo.com (CC BY 4.0); venue data (c) OpenStreetMap contributors, ODbL.
 
 ## Docs
 

@@ -1,4 +1,4 @@
-# Venue schema and verified venues
+# Venue schema and hand-checked venues
 
 Every venue Rainout Source supports is one JSON file under `data/`. The legacy
 Texas ball fields live in metro folders (`data/austin/`, `data/dallas/`, ...);
@@ -21,7 +21,7 @@ mirrored by a dependency-free validator in `rainout_agent/venue_schema.py`.
 | `city`, `state`, `address` | yes | `state` is a 2-letter USPS code |
 | `coordinates` | yes | `{lat, lon}` inside the US |
 | `coordinates_source` | yes | `method` (`official_venue_source`, `openstreetmap_cross_checked`, `place_listing_cross_checked`, `legacy`), plus `sources` (public URLs) and `verified_on` for every non-legacy method |
-| `operator` | yes | Operator, owner or league; `null` when not verified |
+| `operator` | yes | Operator, owner or league; `null` when no public source names one |
 | `surface` | yes | `grass`, `artificial_turf`, `dirt`, `grass_with_dirt_infield`, `mixed`, `unknown` |
 | `drainage` | yes | `poor`, `average`, `good`, `unknown`; scales the rain-to-cancel threshold (0.75x / 1x / 1.5x) |
 | `official_status_source_url` | yes | Official status or info page, or `null` |
@@ -67,7 +67,7 @@ stays `unknown` and agents are told to check the official source.
 | TX | 34 | 1 | 12 | 5 | 52 |
 | **All** | 34 | 1 | 23 | 10 | **68** |
 
-## Verified venues (added with the schema)
+## Hand-checked venues (added with the schema)
 
 | Venue | Type | City | Lat, Lon | Method | Sources |
 | --- | --- | --- | --- | --- | --- |

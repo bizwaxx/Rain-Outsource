@@ -58,4 +58,4 @@ adjusted.
   daily salt from `RAINOUT_METRICS_SALT` (the same daily rotation as the usage counters). The key expires after 1 hour.
   If the salt is unset, each instance uses a random salt, so limits apply per instance.
 - Rate limits per client: 3 reports per venue and 10 in total per clock hour. With the
-  memory backend these are per instance, so they're a speed bump, not a guarantee.
+  memory backend these are per instance, so they're a speed bump, not a hard limit.
