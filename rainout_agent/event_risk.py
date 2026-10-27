@@ -23,6 +23,19 @@ staging/calibrate.py and docs/model.md):
 5. Humility cap: with any real risk signal present (``humble_soak_in`` of rain already fell, a 30% rain chance,
    storms or 35 mph gusts), never say more than ``humble_cap`` (so not "confident").
 6. Turf floor: artificial turf without any storm signal never drops below ``turf_floor``.
+7. Forecast-threat cap: with any threat signal from the day before through the event (storms, a 30% chance in the
+   window, a 40% chance the day before, unstable air the evening before, or cold), never say more than
+   ``threat_cap``, because organizers cancel on threats that never arrive. Motocross answers with a threat also
+   carry ``FORECAST_CANCEL_NOTE`` ("organizers here sometimes cancel on the forecast alone").
+8. Unstable-air cap: with very unstable air in the window or that day (CAPE >= ``unstable_cape``), never say more than
+   ``UNSTABLE_CAP``, because pop-up storms and cancels happen even when the rain chance is low.
+9. Cancel floor: weather alone never says less than ``cancel_floor`` (so never "confident cancel"), because organizers
+   sometimes play through a bad forecast. This model only runs when no official status is posted; a posted
+   cancellation still decides (0%).
+10. Status ceiling (optional, off by default): with no official status yet, never say more than ``status_ceiling``,
+   because organizers can still cancel for reasons the weather doesn't show. Held out on 154 fixtures it removes the
+   last 2 confident wrong calls, but answers at 80%+ were right 95% of the time (37 of 39), so it is a policy
+   choice, not a calibration fix.
 """
 from __future__ import annotations
 
@@ -30,15 +43,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-20 18:08 CT, 61 fixtures, 82,944 grid points, venue maintenance
-    # profile). In-sample: 74% directional, 2 confident wrong. Leave-one-out (honest): 70% directional, 3 confident
-    # wrong. Before the maintenance profile: 72% / 2 in-sample, 69% / 4 held out. The 7-day wetness bucket alone
-    # scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so the "window" soak stays.
-    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.6},
-    "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
+    # Chosen by staging/calibrate.py (Oct 21 retest, 129 scored fixtures, 1,327,104 grid points, with the
+    # unstable-air cap and cancel-floor axes). Held out (leave-one-out) with the caps fixed as below: 84% directional,
+    # 2 confident wrong (new 68 alone: 93% / 0). Same set with every cap off: 79% / 7. Previous PARAMS: 80% / 5.
+    "drainage": {"fast": 0.3, "medium": 0.6, "slow": 1.2},
+    "soak_weights": (1.0, 0.6, 0.3),       # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
     "turf_rain_factor": 0.7,
-    "storm_cape": 1500,                     # None = only explicit thunder forecasts
+    "storm_cape": None,                     # None = only explicit thunder forecasts
     "gust_mph": 45,                         # None = off
     "cold_f": 35,                           # None = off
     "humble_cap": 79,                       # None = off
@@ -52,8 +64,26 @@ PARAMS: dict[str, Any] = {
     "wet_scale": 1.0,
     # Venue maintenance (rainout_agent.venue_profile): soak at maintained venues (tarp or grounds crew, college/pro)
     # is multiplied by this. None = the older rule (maintained dirt infields count as "medium" drainage).
-    "maint_soak_factor": 0.35,
+    "maint_soak_factor": 0.2,
+    # Forecast-threat caps (cancellations on a storm threat that never arrives). With any threat signal from the
+    # day before through the event (see ``threat_signal``), never say more than this (None = off).
+    "threat_cap": 79,
+    # Motocross organizers often cancel on the forecast alone: with any threat signal, cap at this (None = off).
+    "mx_forecast_cap": None,
+    # Unstable air (CAPE in the window or that day) at or above this caps at UNSTABLE_CAP (None = off).
+    "unstable_cape": 2500,
+    # Weather alone never goes below this (None = off); a posted official cancellation still gives 0%.
+    "cancel_floor": 21,
+    # Optional ceiling for weather-only answers while no official status is posted (None = off; Jimmy's call).
+    "status_ceiling": None,
 }
+UNSTABLE_CAP = 79
+UNSTABLE_NOTE = "Unstable air: pop-up storms can form even with a low rain chance, and organizers may call it early."
+STATUS_CEILING_NOTE = "No official status yet; organizers can still cancel for non-weather reasons."
+CANCEL_FLOOR_NOTE = ("Weather alone can't make a cancellation certain (organizers sometimes play through a bad "
+                     "forecast); check the official status.")
+THREAT_SIGNALS = {"pop": 30, "prev_pop": 40}
+FORECAST_CANCEL_NOTE = "Organizers here sometimes cancel on the forecast alone, even if the storm never arrives."
 WET_CAP_MM = 75.0
 WET_DAYS = 7
 SOAK_PENALTY = ((0.0, 0), (0.1, 0), (0.3, 12), (0.6, 30), (1.0, 45), (2.0, 65), (3.0, 75))
@@ -133,6 +163,7 @@ def features(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
     win = [forecast[h] for h in _hours(start - timedelta(hours=1), end) if h in forecast]
     near = [forecast[h] for h in _hours(start - timedelta(hours=2), end) if h in forecast]
     day = [forecast.get(h) or observed.get(h) or {} for h in _hours(start - timedelta(hours=18), end + timedelta(hours=3))]
+    prev = [forecast.get(h) or observed.get(h) or {} for h in _hours(start - timedelta(hours=36), start - timedelta(hours=1))]
     first = forecast.get(start.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)) or {}
     to_in = lambda mm: None if mm is None else round(mm / MM_PER_IN, 2)
 
@@ -147,6 +178,8 @@ def features(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
         "thunder_window": any(r.get("thunder") for r in near), "thunder_day": any(r.get("thunder") for r in day),
         "cape_window": unstable(near), "cape_day": unstable(day),
         "gust_mph": _max(win, "gust_mph"), "temp_f": first.get("temp_f"),
+        "prev_pop": int(_max(prev, "pop")) if _max(prev, "pop") is not None else None,
+        "thunder_prev": any(r.get("thunder") for r in prev), "cape_prev": unstable(prev),
     }
 
 
@@ -244,6 +277,21 @@ def storm_flags(feat: dict[str, Any], params: dict[str, Any] | None = None) -> t
     return win, day and not win
 
 
+def threat_signal(feat: dict[str, Any], params: dict[str, Any] | None = None) -> bool:
+    """Any storm or rain threat from the day before through the event (forecast chance, thunder or instability),
+    or a start temperature at or below ``cold_f`` (snow/ice threat)."""
+    p = params or PARAMS
+    cape = p.get("storm_cape") or 1500
+    cold = p.get("cold_f")
+    if cold is not None and feat.get("temp_f") is not None and feat["temp_f"] <= cold:
+        return True
+    storm_win, storm_day = storm_flags(feat, p)
+    return bool(storm_win or storm_day or feat.get("thunder_prev")
+                or (feat.get("window_pop") or 0) >= THREAT_SIGNALS["pop"]
+                or (feat.get("prev_pop") or 0) >= THREAT_SIGNALS["prev_pop"]
+                or (feat.get("cape_prev") or 0) >= cape)
+
+
 def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None = None) -> int:
     """Unknown-status odds from the window's rain chance (same curve as play_probability)."""
     from rainout_agent.play_probability import unknown_status_play_percent
@@ -300,12 +348,40 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
         if signal and pct > p["humble_cap"]:
             pct = p["humble_cap"]
             reasons.append(f"Some weather risk is present, so we don't go above {p['humble_cap']}%.")
+    threat = None
+    for key, applies, why in (("threat_cap", True, "A storm or rain threat is in the forecast for the day before or the day of the event"),
+                              ("mx_forecast_cap", not ball_sport, FORECAST_CANCEL_NOTE)):
+        cap = p.get(key)
+        if cap is None or not applies:
+            continue
+        threat = threat_signal(feat, p) if threat is None else threat
+        if threat and pct > cap:
+            pct = cap
+            reasons.append(f"{why.rstrip('.')}: not above {cap}%.")
+    forecast_note = None
+    if not ball_sport:
+        threat = threat_signal(feat, p) if threat is None else threat
+        if threat:
+            forecast_note = FORECAST_CANCEL_NOTE
+            if not any(FORECAST_CANCEL_NOTE.rstrip('.') in r for r in reasons):
+                reasons.append(FORECAST_CANCEL_NOTE)
     if p.get("turf_floor") is not None and drainage == "fast" and not (storm_win or storm_day) and pct < p["turf_floor"]:
         pct = p["turf_floor"]
         reasons.append(f"Artificial turf stays playable in rain without lightning, so we don't go below {p['turf_floor']}%.")
+    cape_hi = max(feat.get("cape_window") or 0, feat.get("cape_day") or 0)
+    if p.get("unstable_cape") is not None and cape_hi >= p["unstable_cape"] and pct > UNSTABLE_CAP:
+        pct = UNSTABLE_CAP
+        reasons.append(f"{UNSTABLE_NOTE.rstrip('.')}: not above {UNSTABLE_CAP}%.")
+    if p.get("cancel_floor") is not None and pct < p["cancel_floor"]:
+        pct = p["cancel_floor"]
+        reasons.append(f"{CANCEL_FLOOR_NOTE.rstrip('.')}: not below {p['cancel_floor']}%.")
+    if p.get("status_ceiling") is not None and pct > p["status_ceiling"]:
+        pct = p["status_ceiling"]
+        reasons.append(f"{STATUS_CEILING_NOTE.rstrip('.')}: not above {p['status_ceiling']}%.")
     pct = int(max(0, min(100, round(pct))))
     return {"play_probability_percent": pct, "soak_index_in": soak, "soak_raw_in": raw, "soak_penalty": soak_pts,
-            "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons}
+            "storm_window": storm_win, "storm_day": storm_day, "drainage": drainage, "reasons": reasons,
+            "threat_signal": threat, "forecast_cancel_note": forecast_note}
 
 
 def evaluate(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, dict[str, Any]], start: datetime,
