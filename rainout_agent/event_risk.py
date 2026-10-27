@@ -30,8 +30,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
 PARAMS: dict[str, Any] = {
-    # Chosen by staging/calibrate.py (2026-10-20, 61 fixtures, 20,736 grid points). In-sample: 72% directional,
-    # 2 confident wrong. Leave-one-out (honest): 69% directional, 4 confident wrong.
+    # Chosen by staging/calibrate.py (2026-10-20, 61 fixtures, 207,360 grid points incl. the 7-day wetness and hybrid
+    # families). In-sample: 72% directional, 2 confident wrong. Leave-one-out (honest): 69% directional, 4 confident
+    # wrong. The wetness bucket alone scored 61% / 12 CW held out and the hybrid 70% / 6 CW, so "window" stays.
     "drainage": {"fast": 0.15, "medium": 0.6, "slow": 1.6},
     "soak_weights": (1.0, 0.6, 0.3),        # earlier today, prior 24 h, 24-48 h before
     "soak_scale": 1.0,
@@ -42,7 +43,15 @@ PARAMS: dict[str, Any] = {
     "humble_cap": 79,                       # None = off
     "humble_soak_in": 0.15,                 # raw weighted rain that counts as a risk signal for the humility cap
     "turf_floor": None,                     # turf without storms never drops below this (None = off; not chosen)
+    # Ground-wetness bucket (PlayCondition / DryLies style): hourly over the 7 days before the start,
+    # W = max(0, W + rain - et_mult x ET0 - drain), capped at WET_CAP_MM. "soak_model" picks which soak is used.
+    "soak_model": "window",                 # "window" (2.5-day weighted rain), "wetness" (7-day bucket) or "hybrid" (max)
+    "wet_drain_mm_h": {"fast": 1.0, "medium": 0.1, "slow": 0.05, "mx": 0.08},
+    "wet_et_mult": 1.0,
+    "wet_scale": 1.0,
 }
+WET_CAP_MM = 75.0
+WET_DAYS = 7
 SOAK_PENALTY = ((0.0, 0), (0.1, 0), (0.3, 12), (0.6, 30), (1.0, 45), (2.0, 65), (3.0, 75))
 STORM_WINDOW_CAP, STORM_WINDOW_DROP, STORM_DAY_DROP = 45, 10, 10
 CAP_OTHER = 45                               # wind / cold cap
@@ -130,9 +139,59 @@ def features(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
     }
 
 
+def wet_series(observed: dict[datetime, dict[str, Any]], start: datetime, soil_factor: float = 1.0) -> dict[str, Any] | None:
+    """Hourly rain and ET0 (mm) for the WET_DAYS before the start (to 1 h before it), or None if rain is missing."""
+    hrs = list(_hours(start - timedelta(days=WET_DAYS), start - timedelta(hours=1)))
+    rain = [observed.get(h, {}).get("mm") for h in hrs]
+    if not rain or sum(v is None for v in rain) > len(rain) * 0.05:
+        return None
+    et0 = [observed.get(h, {}).get("et0") for h in hrs]
+    sf = soil_factor or 1.0
+    return {"rain": [(v or 0.0) / sf for v in rain], "et0": [v or 0.0 for v in et0], "has_et0": any(v is not None for v in et0)}
+
+
+def wet_totals(series: dict[str, Any] | None) -> dict[str, Any]:
+    if not series:
+        return {"rain_72h_in": None, "rain_7d_in": None, "et0_72h_in": None, "et0_7d_in": None}
+    r, e = series["rain"], series["et0"]
+    to_in = lambda mm: round(mm / MM_PER_IN, 2)
+    return {"rain_72h_in": to_in(sum(r[-72:])), "rain_7d_in": to_in(sum(r)),
+            "et0_72h_in": to_in(sum(e[-72:])) if series["has_et0"] else None, "et0_7d_in": to_in(sum(e)) if series["has_et0"] else None}
+
+
+def wetness_in(series: dict[str, Any] | None, surface: str, params: dict[str, Any] | None = None) -> float | None:
+    """Ground-water bucket at the start, inches. ``surface`` is fast/medium/slow, or "mx" (motocross dry-out curve)."""
+    if not series:
+        return None
+    p = params or PARAMS
+    drain = p["wet_drain_mm_h"][surface]
+    et_mult = p["wet_et_mult"]
+    w = 0.0
+    for rain, et in zip(series["rain"], series["et0"]):
+        w = min(WET_CAP_MM, max(0.0, w + rain - et_mult * et - drain))
+    return round(w / MM_PER_IN, 2)
+
+
+def add_wetness(feat: dict[str, Any], series: dict[str, Any] | None, drainage: str, ball_sport: bool,
+                params: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Adds 72 h / 7 d rain, ET0 and the wetness bucket to the features (in place)."""
+    feat.update(wet_totals(series))
+    feat["wetness_in"] = wetness_in(series, drainage if ball_sport else "mx", params)
+    return feat
+
+
 def soak_index(feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None) -> tuple[float | None, float]:
     """(effective soak inches after drainage, raw weighted inches)."""
     p = params or PARAMS
+    model = p.get("soak_model")
+    if model == "wetness" and feat.get("wetness_in") is not None:
+        w = feat["wetness_in"]
+        return round(w * p.get("wet_scale", 1.0), 2), w
+    if model == "hybrid" and feat.get("wetness_in") is not None:
+        p_win = {**p, "soak_model": "window"}
+        win_soak, win_raw = soak_index(feat, drainage, p_win)
+        w = feat["wetness_in"]
+        return round(max(win_soak or 0.0, w * p.get("wet_scale", 1.0)), 2), max(win_raw, w)
     parts = (feat.get("earlier_today_in"), feat.get("prior_24h_in"), feat.get("prior_48h_in"))
     if all(v is None for v in parts):
         return None, 0.0
@@ -178,8 +237,14 @@ def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any
         pct -= soak_pts
         surface = {"fast": "turf drains fast", "medium": "grass or a tarped infield drains slowly",
                    "slow": "dirt holds water"}[drainage]
-        fell = sum(v or 0 for v in (feat.get("earlier_today_in"), feat.get("prior_24h_in"), feat.get("prior_48h_in")))
-        reasons.append(f"{fell:.2f} in of rain fell in the 2.5 days before the start ({surface}): -{soak_pts} points.")
+        if p.get("soak_model") in ("wetness", "hybrid") and feat.get("wetness_in") is not None:
+            et = feat.get("et0_7d_in")
+            reasons.append(f"{feat.get('rain_72h_in') or 0:.2f} in of rain in the last 72 h ({feat.get('rain_7d_in') or 0:.2f} in over 7 days"
+                           + (f", minus about {et:.2f} in of evaporation" if et is not None else "")
+                           + f") leaves the ground wet ({surface}): -{soak_pts} points.")
+        else:
+            fell = sum(v or 0 for v in (feat.get("earlier_today_in"), feat.get("prior_24h_in"), feat.get("prior_48h_in")))
+            reasons.append(f"{fell:.2f} in of rain fell in the 2.5 days before the start ({surface}): -{soak_pts} points.")
     storm_win, storm_day = storm_flags(feat, p)
     if storm_win:
         pct = min(pct - STORM_WINDOW_DROP, STORM_WINDOW_CAP)
@@ -213,6 +278,7 @@ def evaluate(observed: dict[datetime, dict[str, Any]], forecast: dict[datetime, 
              duration_h: float, drainage: str, params: dict[str, Any] | None = None, ball_sport: bool = True) -> dict[str, Any]:
     """features -> base -> adjust, in one call."""
     feat = features(observed, forecast, start, duration_h)
+    add_wetness(feat, wet_series(observed, start), drainage, ball_sport, params)
     base = base_percent(feat.get("window_pop") or 0, drainage, params)
     out = adjust(base, feat, drainage, params, ball_sport)
     return {**out, "base_percent": base, "features": feat}
