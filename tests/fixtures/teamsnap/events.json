@@ -1,0 +1,334 @@
+{
+ "collection": {
+  "version": "3.866.0",
+  "href": "https://api.teamsnap.com/v3/events",
+  "rel": "events",
+  "items": [
+   {
+    "href": "https://api.teamsnap.com/v3/events/5001",
+    "data": [
+     {
+      "name": "type",
+      "value": "event"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "label",
+      "value": null
+     },
+     {
+      "name": "is_tbd",
+      "value": false
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     },
+     {
+      "name": "time_zone",
+      "value": "Central Time (US & Canada)"
+     },
+     {
+      "name": "duration_in_minutes",
+      "value": 90
+     },
+     {
+      "name": "id",
+      "value": 5001
+     },
+     {
+      "name": "name",
+      "value": null
+     },
+     {
+      "name": "is_game",
+      "value": true
+     },
+     {
+      "name": "is_canceled",
+      "value": false
+     },
+     {
+      "name": "game_type",
+      "value": "Home"
+     },
+     {
+      "name": "start_date",
+      "value": "2026-10-31T23:00:00Z"
+     },
+     {
+      "name": "location_id",
+      "value": 7001
+     },
+     {
+      "name": "opponent_id",
+      "value": 8001
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/events/5002",
+    "data": [
+     {
+      "name": "type",
+      "value": "event"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "label",
+      "value": null
+     },
+     {
+      "name": "is_tbd",
+      "value": false
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     },
+     {
+      "name": "time_zone",
+      "value": "Central Time (US & Canada)"
+     },
+     {
+      "name": "duration_in_minutes",
+      "value": 90
+     },
+     {
+      "name": "id",
+      "value": 5002
+     },
+     {
+      "name": "name",
+      "value": "Practice"
+     },
+     {
+      "name": "is_game",
+      "value": false
+     },
+     {
+      "name": "is_canceled",
+      "value": false
+     },
+     {
+      "name": "game_type",
+      "value": null
+     },
+     {
+      "name": "start_date",
+      "value": "2026-11-01T15:00:00Z"
+     },
+     {
+      "name": "location_id",
+      "value": 7002
+     },
+     {
+      "name": "opponent_id",
+      "value": null
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/events/5003",
+    "data": [
+     {
+      "name": "type",
+      "value": "event"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "label",
+      "value": null
+     },
+     {
+      "name": "is_tbd",
+      "value": false
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     },
+     {
+      "name": "time_zone",
+      "value": "Central Time (US & Canada)"
+     },
+     {
+      "name": "duration_in_minutes",
+      "value": 90
+     },
+     {
+      "name": "id",
+      "value": 5003
+     },
+     {
+      "name": "name",
+      "value": null
+     },
+     {
+      "name": "is_game",
+      "value": true
+     },
+     {
+      "name": "is_canceled",
+      "value": true
+     },
+     {
+      "name": "game_type",
+      "value": "Away"
+     },
+     {
+      "name": "start_date",
+      "value": "2026-11-01T20:00:00Z"
+     },
+     {
+      "name": "location_id",
+      "value": 7002
+     },
+     {
+      "name": "opponent_id",
+      "value": 8002
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/events/5004",
+    "data": [
+     {
+      "name": "type",
+      "value": "event"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "label",
+      "value": null
+     },
+     {
+      "name": "is_tbd",
+      "value": false
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     },
+     {
+      "name": "time_zone",
+      "value": "Central Time (US & Canada)"
+     },
+     {
+      "name": "duration_in_minutes",
+      "value": 90
+     },
+     {
+      "name": "id",
+      "value": 5004
+     },
+     {
+      "name": "name",
+      "value": null
+     },
+     {
+      "name": "is_game",
+      "value": true
+     },
+     {
+      "name": "is_canceled",
+      "value": false
+     },
+     {
+      "name": "game_type",
+      "value": "Home"
+     },
+     {
+      "name": "start_date",
+      "value": "2026-11-03T00:30:00Z"
+     },
+     {
+      "name": "location_id",
+      "value": 7003
+     },
+     {
+      "name": "opponent_id",
+      "value": 8003
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/events/5005",
+    "data": [
+     {
+      "name": "type",
+      "value": "event"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "label",
+      "value": null
+     },
+     {
+      "name": "is_tbd",
+      "value": false
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     },
+     {
+      "name": "time_zone",
+      "value": "Central Time (US & Canada)"
+     },
+     {
+      "name": "duration_in_minutes",
+      "value": 90
+     },
+     {
+      "name": "id",
+      "value": 5005
+     },
+     {
+      "name": "name",
+      "value": null
+     },
+     {
+      "name": "is_game",
+      "value": true
+     },
+     {
+      "name": "is_canceled",
+      "value": false
+     },
+     {
+      "name": "game_type",
+      "value": "Home"
+     },
+     {
+      "name": "start_date",
+      "value": "2026-11-04T00:00:00Z"
+     },
+     {
+      "name": "location_id",
+      "value": 7004
+     },
+     {
+      "name": "opponent_id",
+      "value": 8001
+     }
+    ]
+   }
+  ]
+ }
+}

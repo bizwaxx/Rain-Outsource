@@ -1,0 +1,38 @@
+{
+ "collection": {
+  "version": "3.866.0",
+  "href": "https://api.teamsnap.com/v3/teams",
+  "rel": "teams",
+  "items": [
+   {
+    "href": "https://api.teamsnap.com/v3/teams/9000001",
+    "data": [
+     {
+      "name": "id",
+      "value": 9000001
+     },
+     {
+      "name": "type",
+      "value": "team"
+     },
+     {
+      "name": "name",
+      "value": "ATX Hawks 12U (TEST DATA)"
+     },
+     {
+      "name": "sport_id",
+      "value": 4
+     },
+     {
+      "name": "location_country",
+      "value": "United States"
+     },
+     {
+      "name": "time_zone_iana_name",
+      "value": "America/Chicago"
+     }
+    ]
+   }
+  ]
+ }
+}

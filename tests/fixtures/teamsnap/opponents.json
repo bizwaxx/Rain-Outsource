@@ -1,0 +1,72 @@
+{
+ "collection": {
+  "version": "3.866.0",
+  "href": "https://api.teamsnap.com/v3/opponents",
+  "rel": "opponents",
+  "items": [
+   {
+    "href": "https://api.teamsnap.com/v3/opponents/8001",
+    "data": [
+     {
+      "name": "id",
+      "value": 8001
+     },
+     {
+      "name": "type",
+      "value": "opponent"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Bats"
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/opponents/8002",
+    "data": [
+     {
+      "name": "id",
+      "value": 8002
+     },
+     {
+      "name": "type",
+      "value": "opponent"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Comets"
+     }
+    ]
+   },
+   {
+    "href": "https://api.teamsnap.com/v3/opponents/8003",
+    "data": [
+     {
+      "name": "id",
+      "value": 8003
+     },
+     {
+      "name": "type",
+      "value": "opponent"
+     },
+     {
+      "name": "team_id",
+      "value": 9000001
+     },
+     {
+      "name": "name",
+      "value": "Owls"
+     }
+    ]
+   }
+  ]
+ }
+}
