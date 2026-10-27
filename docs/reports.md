@@ -56,4 +56,4 @@ adjusted.
 - Reports are anonymous and unverified. No IP address is stored: the client address
   (`X-Forwarded-For`) is only hashed into a rate-limit key.
 - Rate limits per client: 3 reports per venue and 10 in total per clock hour. With the
-  memory backend these are per instance, so they're a speed bump, not a guarantee.
+  memory backend these are per instance, so they're a speed bump, not a hard limit.

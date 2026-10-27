@@ -287,11 +287,11 @@ Details: [docs/motocross.md](docs/motocross.md).
 
 ## Nationwide venues (OpenStreetMap)
 
-Beyond the hand-verified venues, Rainout Source knows tens of thousands of ball fields, soccer complexes and
+Beyond the hand-checked venues, Rainout Source knows tens of thousands of ball fields, soccer complexes and
 motocross tracks across the US, built from OpenStreetMap by a reproducible pipeline
 (`scripts/osm_venues.py`). They are labeled `verification_level: "osm_only"`: the name and location are
 community map data and there's no official status source, so answers use the forecast and the nearest NOAA
-station's 10-year monthly rain stats. Hand-verified venues stay `confirmed` and always win over OSM duplicates.
+station's 10-year monthly rain stats. Hand-checked venues stay `confirmed` and always win over OSM duplicates.
 
 ```text
 GET /v1/fields?q=Zilker&state=TX
@@ -322,7 +322,7 @@ headers. Details: `docs/weather-cache.md`.
 
 ## Venues and schema
 
-Rainout Source now covers 68 verified venues in TX, OK, LA and FL: 35 baseball/softball
+Rainout Source covers 68 hand-checked venues in TX, OK, LA and FL: 35 baseball/softball
 and multipurpose fields, 23 soccer complexes and 10 motocross tracks. Every venue follows
 `schema/venue.schema.json` (sport types, coordinates with their public source, address,
 operator, official status source, surface and drainage). Details, the verification

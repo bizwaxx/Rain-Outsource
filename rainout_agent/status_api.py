@@ -243,7 +243,7 @@ def fields_payload(sport: str | None = None, state: str | None = None, q: str | 
         payload["attribution"] = osm_venues.ATTRIBUTION
         payload["osm_coverage"] = osm_venues.coverage()
         payload["verification_levels"] = {
-            "confirmed": "Hand-verified venue with an official rainout source or phone where one exists.",
+            "confirmed": "Hand-checked venue with an official rainout source or phone where one exists.",
             "osm_only": "From OpenStreetMap only; name and location are community data and no official status source is configured.",
         }
     filters = {k: v for k, v in (("sport", sport), ("state", state), ("q", q), ("near", near)) if v}

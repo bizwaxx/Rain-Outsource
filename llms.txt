@@ -37,7 +37,7 @@ MCP (Streamable HTTP, no auth): https://rainout-agent-source.vercel.app/mcp
 - [Team games](https://rainout-agent-source.vercel.app/v1/teams/tsl-340-744621-4306365/games?date=today): `GET /v1/teams/{team_id}/games?date=today|YYYY-MM-DD` or `from=&to=` returns games with play_probability, reason, calendar_event and ics; `next_game` when the range is empty
 - `GET /v1/teams/{team_id}/calendar.ics`: subscribable feed with odds in each event
 - [Game status](https://rainout-agent-source.vercel.app/v1/status?field_id=Krieg&game_time=2026-10-16T20:20:00-05:00): `GET /v1/status?field_id=&game_time=` for one venue and time
-- [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=` lists hand-verified venues (verification_level `confirmed`)
+- [Venues](https://rainout-agent-source.vercel.app/v1/fields?state=TX): `GET /v1/fields?sport=&state=` lists hand-checked venues (verification_level `confirmed`)
 - [Venue search, nationwide](https://rainout-agent-source.vercel.app/v1/fields?q=Zilker&state=TX): `GET /v1/fields?q=&near=lat,lon&radius_km=&state=&sport=&verification=confirmed|osm_only|all&limit=&offset=` adds OpenStreetMap ball fields, soccer complexes and motocross tracks (verification_level `osm_only`: community map data, no official status source). Pass the field_id to /v1/status. Map data (c) OpenStreetMap contributors, ODbL
 - `POST /v1/reports` `{field_id, status: cancelled|delayed|field_closed|playing, game_time?, note?}` stores a user report (rate limited); `GET /v1/reports?field_id=&game_time=` lists recent ones
 - `GET|POST /v1/schedule/check`: score a whole schedule (ICS URL, JSON, CSV); repeating ICS events (RRULE) are expanded per occurrence
