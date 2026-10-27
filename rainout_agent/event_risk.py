@@ -254,12 +254,16 @@ def base_percent(window_pop: int, drainage: str, params: dict[str, Any] | None =
 
 
 def adjust(base: int, feat: dict[str, Any], drainage: str, params: dict[str, Any] | None = None,
-           ball_sport: bool = True, maintained: bool = False) -> dict[str, Any]:
-    """Apply soak, storm, wind, cold and humility rules to a base play probability."""
+           ball_sport: bool = True, maintained: bool = False, soak_memory: float = 1.0) -> dict[str, Any]:
+    """Apply soak, storm, wind, cold and humility rules to a base play probability.
+
+    ``soak_memory`` is the venue's learned drainage memory (rainout_agent.outcomes), a bounded multiplier."""
     p = params or PARAMS
     pct = float(base)
     reasons: list[str] = []
     soak, raw = soak_index(feat, drainage, p, maintained)
+    if soak is not None and soak_memory != 1.0:
+        soak = round(soak * soak_memory, 2)
     soak_pts = round(interp(soak, SOAK_PENALTY)) if soak is not None else 0
     if soak_pts:
         pct -= soak_pts

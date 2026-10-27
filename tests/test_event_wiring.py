@@ -124,3 +124,23 @@ def test_wetness_totals_are_reported(live):
     f = status()["model"]["features"]
     assert f["rain_72h_in"] == f["rain_7d_in"] == round(50 / 25.4, 2)
     assert f["et0_7d_in"] is not None and f["wetness_in"] is not None and f["wetness_in"] > 0
+
+
+def test_drainage_memory_softens_soak_and_explains(live):
+    from rainout_agent import outcomes, reports
+
+    reports._LOCAL_STORE.__init__(max_entries=4000)
+    wet = {START - timedelta(hours=h) for h in range(10, 20)}
+    live(payload(rain_mm_per_hour=5.0, wet_hours=wet))
+    before = status()
+    assert before["model"]["drainage_memory"]["active"] is False
+    recs = [{"id": str(i), "field_id": "austin-tx-downs-field-ambl", "date": f"2026-05-0{i}", "outcome": "played",
+             "reported_at": f"2026-05-0{i}T23:00:00+00:00", "test": False,
+             "prediction": {"play_probability_percent": 40, "soak_penalty": 30, "official_status": "unknown",
+                            "game_time": f"2026-05-0{i}T00:00:00+00:00"}} for i in range(1, 7)]
+    reports._LOCAL_STORE.set(outcomes._venue_key("austin-tx-downs-field-ambl"), recs, 3600)
+    after = status()
+    mem = after["model"]["drainage_memory"]
+    assert mem["active"] and mem["soak_multiplier"] < 1.0
+    assert after["game_time_play_probability_percent"] >= before["game_time_play_probability_percent"]
+    assert "played through 6 of 6 reported wet days" in after["reason"]
