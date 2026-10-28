@@ -67,15 +67,15 @@ def _key(field_id: str) -> str:
     return f"reports:{field_id}"
 
 
-def _parse_time(value: Any, now: datetime) -> datetime:
+def _parse_time(value: Any, now: datetime, field: dict[str, Any] | None = None) -> datetime:
+    """ISO 8601; a time with no UTC offset is the field's local time."""
     if value in (None, ""):
         return now
-    try:
-        parsed = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ReportError(400, "invalid_game_time", "game_time must be ISO 8601, e.g. 2026-10-20T19:00:00-05:00.") from exc
-    if parsed.tzinfo is None:
-        raise ReportError(400, "invalid_game_time", "game_time needs a UTC offset, e.g. 2026-10-20T19:00:00-05:00.")
+    from rainout_agent.game_time import parse_game_time
+
+    parsed = parse_game_time(value, field)
+    if parsed is None:
+        raise ReportError(400, "invalid_game_time", "game_time must be ISO 8601, e.g. 2026-10-20T19:00:00-05:00.")
     return parsed
 
 
@@ -126,7 +126,8 @@ def submit_report(data: dict[str, Any], client: str | None = None, now: datetime
     status = STATUS_ALIASES.get(raw_status)
     if not status:
         raise ReportError(400, "invalid_status", f"status must be one of: {', '.join(STATUSES)}.", allowed=list(STATUSES))
-    game_time = _parse_time(data.get("game_time"), now)
+    field = load_field(field_id)
+    game_time = _parse_time(data.get("game_time"), now, field)
     if not (now - GAME_PAST_LIMIT <= game_time <= now + GAME_FUTURE_LIMIT):
         raise ReportError(400, "game_time_out_of_range", "Reports are only accepted for games from 12 hours ago to 36 hours ahead.")
     note = data.get("note")
@@ -136,7 +137,6 @@ def submit_report(data: dict[str, Any], client: str | None = None, now: datetime
         note = _CTRL.sub(" ", note).strip()
         if len(note) > MAX_NOTE_CHARS:
             raise ReportError(400, "note_too_long", f"note must be at most {MAX_NOTE_CHARS} characters.")
-    field = load_field(field_id)
     game_date = game_time.astimezone(_field_zone(field)).date().isoformat()
 
     store = _store()

@@ -78,7 +78,10 @@ def venue_timezone(field: dict[str, Any] | None, default: str | None = None) -> 
         if zone:
             return zone
     if field and field.get("state") in STATE_TIMEZONES:
-        return ZoneInfo(STATE_TIMEZONES[field["state"]])
+        from rainout_agent.game_time import field_timezone
+
+        zone = field_timezone(field)  # state + coordinates (e.g. El Paso is Mountain time)
+        return zone if isinstance(zone, ZoneInfo) else ZoneInfo(STATE_TIMEZONES[field["state"]])
     return _zone(default) or ZoneInfo("America/Chicago")
 
 

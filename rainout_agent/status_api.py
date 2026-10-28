@@ -4,6 +4,8 @@ import json
 import re
 import urllib.request
 from datetime import datetime, timezone
+
+from rainout_agent.game_time import normalize_game_time
 from html import unescape
 from pathlib import Path
 from typing import Any
@@ -449,6 +451,7 @@ def build_status_result(
         "checked": False,
         "last_checked": None,
     }
+    game_time = normalize_game_time(game_time, field)  # no UTC offset = the field's local time
     if official_status is None:
         official_data = fetch_official_rainout_status(field, game_time=game_time)
     official_status_value = official_data.get("official_status") or "unknown"

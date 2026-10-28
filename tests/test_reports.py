@@ -49,12 +49,17 @@ def test_submit_and_read_back():
     assert "1.2.3.4" not in json.dumps(got)  # no client address stored or echoed
 
 
+def test_naive_game_time_is_venue_local():
+    code, _, data = post({"field_id": "Krieg", "status": "cancelled", "game_time": GAME[:19]})
+    assert code == 201 and data["report"]["game_date"] == "2026-06-05"
+
+
 @pytest.mark.parametrize("data,code,error", [
     ({"status": "cancelled"}, 400, "missing_field_id"),
     ({"field_id": "no such field anywhere zz", "status": "cancelled"}, 404, "unknown_field"),
     ({"field_id": "Krieg", "status": "maybe"}, 400, "invalid_status"),
     ({"field_id": "Krieg", "status": "cancelled", "game_time": "tomorrow"}, 400, "invalid_game_time"),
-    ({"field_id": "Krieg", "status": "cancelled", "game_time": "2026-06-05T19:00:00"}, 400, "invalid_game_time"),
+    ({"field_id": "Krieg", "status": "cancelled", "game_time": "2026-06-08T19:00:00"}, 400, "game_time_out_of_range"),
     ({"field_id": "Krieg", "status": "cancelled", "game_time": "2026-06-08T19:00:00-05:00"}, 400, "game_time_out_of_range"),
     ({"field_id": "Krieg", "status": "cancelled", "game_time": "2026-06-04T19:00:00-05:00"}, 400, "game_time_out_of_range"),
     ({"field_id": "Krieg", "status": "cancelled", "note": "x" * 281}, 400, "note_too_long"),
