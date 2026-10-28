@@ -444,7 +444,6 @@ def build_status_result(
         }
 
     field = load_field(field_id)
-    game_time = normalize_game_time(game_time, field)
     official_data = {
         "official_status": official_status or "unknown",
         "source_url": field.get("official_status_source_url"),
@@ -452,6 +451,7 @@ def build_status_result(
         "checked": False,
         "last_checked": None,
     }
+    game_time = normalize_game_time(game_time, field)  # no UTC offset = the field's local time
     if official_status is None:
         official_data = fetch_official_rainout_status(field, game_time=game_time)
     official_status_value = official_data.get("official_status") or "unknown"
