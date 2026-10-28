@@ -4,6 +4,8 @@ import json
 import re
 import urllib.request
 from datetime import datetime, timezone
+
+from rainout_agent.game_time import normalize_game_time
 from html import unescape
 from pathlib import Path
 from typing import Any
@@ -442,6 +444,7 @@ def build_status_result(
         }
 
     field = load_field(field_id)
+    game_time = normalize_game_time(game_time, field)
     official_data = {
         "official_status": official_status or "unknown",
         "source_url": field.get("official_status_source_url"),
